@@ -170,6 +170,12 @@ function renderDashboard() {
     scoreMotivationalEl.textContent = getMotivationalMessage(hs.score);
   }
 
+  // Insight Financiero
+  const insightContentEl = document.getElementById('dash-insight-content');
+  if (insightContentEl) {
+    insightContentEl.textContent = calcularInsights();
+  }
+
   // Sobres
   const sobresContainer = document.getElementById('dash-sobres-container');
   sobresContainer.innerHTML = '';
@@ -178,29 +184,46 @@ function renderDashboard() {
   if (!tienePresupuesto) {
     sobresContainer.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;">${window.appLang === 'pt' ? 'Configure seus envelopes no <b>Perfil</b>.' : 'Configura tus sobres en <b>Perfil</b>.'}</p>`;
   } else {
+    const grid = document.createElement('div');
+    grid.className = 'sobres-grid';
+    
     Object.entries(sobres).forEach(([nombre, presupuesto]) => {
       if (!presupuesto) return;
       const emoji = nombre.split(' ')[0];
       const cleanNombre = nombre.replace(/^[^\wÀ-ž]*/, '').trim();
-      const nombreTrad = emoji + ' ' + T('cat_' + cleanNombre);
+      const nombreTrad = T('cat_' + cleanNombre);
       const keyword = cleanNombre.toLowerCase();
       const gastadoSobre = txs
         .filter(t => t.tipo === 'g' && t.categoria && t.categoria.toLowerCase().includes(keyword))
         .reduce((s,t) => s + t.monto, 0);
-      const pct  = Math.min((gastadoSobre / presupuesto) * 100, 100);
+      const pct  = Math.round((gastadoSobre / presupuesto) * 100);
+      const pctWidth = Math.min(pct, 100);
       const over = gastadoSobre > presupuesto;
+      const restante = Math.max(0, presupuesto - gastadoSobre);
+      
       const item = document.createElement('div');
-      item.className = 'sobre-item';
+      item.className = 'sobre-card';
       item.innerHTML = `
-        <div class="sobre-header">
-          <span class="sobre-nombre">${nombreTrad}</span>
-          <span class="sobre-valores">${fmt(gastadoSobre)} / ${fmt(presupuesto)}</span>
+        <div class="sobre-card-header">
+          <div class="sobre-card-icon-title">
+            <span class="sobre-card-emoji">${emoji}</span>
+            <span class="sobre-card-title">${nombreTrad}</span>
+          </div>
+          <span class="sobre-card-pct${over?' over':''}">${pct}%</span>
         </div>
         <div class="sobre-bar-wrap">
-          <div class="sobre-bar${over?' over':''}" style="width:${pct}%"></div>
+          <div class="sobre-bar${over?' over':''}" style="width:${pctWidth}%"></div>
+        </div>
+        <div class="sobre-card-amounts">
+          <div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;font-weight:700;">${window.appLang === 'pt' ? 'Disponível' : 'Disponible'}</div>
+            <div class="sobre-card-leftover">${fmt(restante)}</div>
+          </div>
+          <span class="sobre-card-total">${window.appLang === 'pt' ? 'de' : 'de'} ${fmt(presupuesto)}</span>
         </div>`;
-      sobresContainer.appendChild(item);
+      grid.appendChild(item);
     });
+    sobresContainer.appendChild(grid);
   }
 
   // Últimos 8 movimientos
@@ -844,6 +867,55 @@ function getMotivationalMessage(score) {
   const lang = window.appLang === 'pt' ? 'pt' : 'es';
   const pool = score >= 80 ? messages[lang].high : score >= 40 ? messages[lang].medium : messages[lang].low;
   
+  const dayIndex = new Date().getDate() % pool.length;
+  return pool[dayIndex];
+}
+
+function calcularInsights() {
+  const txs = getTxsMes();
+  const ingresos = txs.filter(t => t.tipo === 'i').reduce((s,t) => s + t.monto, 0);
+  const gastos = txs.filter(t => t.tipo === 'g').reduce((s,t) => s + t.monto, 0);
+  
+  const ingresoMensual = data.config.ingresoMensual || 0;
+  const gastosFijos = data.config.gastosFijos || 0;
+  
+  const insights = {
+    es: [
+      "Registrar tus gastos todos los días reduce el gasto impulsivo en un 15%. ¡Sigue consistente! 📊",
+      "Tu meta de ahorro está bien encaminada. Automatiza un abono hoy para acelerar. 🎯"
+    ],
+    pt: [
+      "Registrar seus gastos todos os dias reduz as compras por impulso em 15%. Continue consistente! 📊",
+      "Sua meta de poupança está no caminho certo. Deposite hoje para acelerar. 🎯"
+    ]
+  };
+  
+  // Custom Dynamic Insights based on actual data
+  if (ingresoMensual > 0) {
+    const disponible = ingresoMensual - (gastos + gastosFijos);
+    if (disponible > 0) {
+      const p = Math.round((disponible / ingresoMensual) * 100);
+      if (window.appLang === 'pt') {
+        insights.pt.unshift(`Você ainda tem ${p}% da sua renda mensal disponível. Que tal direcionar parte disso para suas metas de poupança? 💰`);
+      } else {
+        insights.es.unshift(`Tienes el ${p}% de tu ingreso mensual libre. ¿Qué tal si abonas un extra a tu deudor foco hoy? 💰`);
+      }
+    }
+  }
+  
+  if (data.deudas && data.deudas.length > 0) {
+    const sb = calcularSnowball();
+    if (sb.mesesTotales) {
+      if (window.appLang === 'pt') {
+        insights.pt.unshift(`Seu plano Bola de Neve prevê que você estará 100% livre de dívidas em ${sb.mesesTotales} meses! 🚀`);
+      } else {
+        insights.es.unshift(`¡Tu plan Bola de Nieve calcula que estarás libre de deudas en ${sb.mesesTotales} meses! 🚀`);
+      }
+    }
+  }
+  
+  const lang = window.appLang === 'pt' ? 'pt' : 'es';
+  const pool = insights[lang];
   const dayIndex = new Date().getDate() % pool.length;
   return pool[dayIndex];
 }

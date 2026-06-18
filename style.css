@@ -449,3 +449,72 @@ main::-webkit-scrollbar { display: none; }
 .btn:active {
   transform: scale(0.97);
 }
+
+/* ===== BUDGET CARD SYSTEM (SOBRES REDESIGN) ===== */
+.sobres-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+.sobre-card {
+  background: var(--bg-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+.sobre-card:active {
+  transform: scale(0.98);
+}
+.sobre-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sobre-card-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sobre-card-emoji {
+  font-size: 20px;
+}
+.sobre-card-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.sobre-card-pct {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.sobre-card-pct.over {
+  background: rgba(255, 72, 66, 0.12);
+  color: var(--danger);
+}
+.sobre-card-amounts {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 4px;
+}
+.sobre-card-leftover {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.sobre-card-total {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
