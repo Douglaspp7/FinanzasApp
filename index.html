@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#10b981">
+  <title>SinDeudas — Sal de Deudas Paso a Paso</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="i18n.js"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="screen-login" class="auth-screen">
+  <div class="auth-overlay"></div>
+  <div class="auth-content">
+    <div style="font-size:56px;margin-bottom:12px;">💸</div>
+    <h1 class="title-serif" style="font-size:28px;margin-bottom:6px;">SinDeudas</h1>
+    <p class="auth-subtitle" id="login-subtitle"></p>
+    <div class="input-group">
+      <label id="login-label"></label>
+      <input type="email" id="input-email" autocomplete="email" inputmode="email">
+    </div>
+    <button class="btn btn-primary" id="btn-login"></button>
+    <p id="login-msg" style="margin-top:14px;font-size:13px;font-weight:600;color:var(--text-muted);min-height:18px;"></p>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="screen-onboarding" class="onboarding-screen hidden">
+  <div class="onb-step" id="onb-step-1">
+    <div class="onb-progress">
+      <div class="onb-dot active" id="odot-1"></div>
+      <div class="onb-dot" id="odot-2"></div>
+      <div class="onb-dot" id="odot-3"></div>
+    </div>
+    <div style="font-size:48px;margin-bottom:12px;">💰</div>
+    <h2 class="onb-titulo" id="onb-step1-titulo"></h2>
+    <p class="onb-sub" id="onb-step1-sub"></p>
+    <div class="input-group">
+      <label>Ingreso mensual ($)</label>
+      <input type="number" id="onb-ingreso" inputmode="decimal" placeholder="Ej: 15000">
+    </div>
+    <div class="input-group">
+      <label id="onb-step2-label-inline"></label>
+      <input type="number" id="onb-gastos-fijos" inputmode="decimal" placeholder="Ej: 8000">
+    </div>
+    <button class="btn btn-primary" id="btn-onb-1">Siguiente →</button>
+  </div>
+
+  <div class="onb-step hidden" id="onb-step-2">
+    <div class="onb-progress">
+      <div class="onb-dot" id="odot2-1"></div>
+      <div class="onb-dot active" id="odot2-2"></div>
+      <div class="onb-dot" id="odot2-3"></div>
+    </div>
+    <div style="font-size:48px;margin-bottom:12px;">💳</div>
+    <h2 class="onb-titulo" id="onb-step3-titulo"></h2>
+    <p class="onb-sub" id="onb-step3-sub"></p>
+    <div id="onb-deudas-list" style="margin-bottom:14px;"></div>
+    <div class="card" style="padding:14px;margin-bottom:14px;" id="onb-add-deuda-form">
+      <div class="input-group" style="margin-bottom:10px;">
+        <label>Nombre de la deuda</label>
+        <input type="text" id="onb-d-nombre" placeholder="Ej: Tarjeta Visa">
+      </div>
+      <div class="grid-2">
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Saldo actual ($)</label>
+          <input type="number" id="onb-d-saldo" inputmode="decimal" placeholder="5000">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Interés mensual (%)</label>
+          <input type="number" id="onb-d-tasa" inputmode="decimal" placeholder="3.5">
+        </div>
+      </div>
+      <div class="input-group" style="margin-top:10px;margin-bottom:10px;">
+        <label>Pago mínimo mensual ($)</label>
+        <input type="number" id="onb-d-minimo" inputmode="decimal" placeholder="200">
+      </div>
+      <button class="btn btn-secondary" id="btn-onb-add-deuda" style="min-height:42px;font-size:14px;">➕ Agregar deuda</button>
+    </div>
+    <button class="btn btn-primary" id="btn-onb-finalizar"></button>
+    <button class="btn btn-secondary" id="btn-onb-saltar" style="margin-top:10px;min-height:42px;font-size:14px;"></button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app-container hidden">
+  <header>
+    <div class="header-left">
+      <div class="header-saudacao" id="header-saludo"></div>
+      <div class="header-data" id="header-fecha"></div>
+    </div>
+    <div class="header-logo">
+      <span style="font-size:28px;">💸</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="btn-tema" title="Cambiar tema">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section id="v-dashboard" class="vista active">
+      <div class="dash-hero" id="dash-hero">
+        <div class="dash-label" id="dash-saldo-label"></div>
+        <div class="dash-value font-number" id="dash-saldo-valor">$0</div>
+        <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
+          <div style="text-align:center;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">Ingresos</div>
+            <div style="font-size:17px;font-weight:800;color:#fff;" id="dash-ingresos">$0</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">Gastos</div>
+            <div style="font-size:17px;font-weight:800;color:#fca5a5;" id="dash-gastos">$0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="font-size:16px;" id="dash-sobres-titulo"></h3>
+        </div>
+        <div id="dash-sobres-container"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px;margin-bottom:12px;" id="dash-mov-titulo"></h3>
+        <div id="dash-movimientos"></div>
+      </div>
+    </section>
+
+    <!-- PLAN SAL DE DEUDAS -->
+    <section id="v-deudas" class="vista">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:14px;" id="deudas-titulo"></h2>
+      <div id="libertad-hero-wrap"></div>
+      <div id="deudas-list"></div>
+      <div id="deudas-extra-wrap" style="margin-bottom:14px;"></div>
+      <button class="btn btn-secondary" id="btn-nueva-deuda"></button>
+    </section>
+
+    <!-- REGISTRO RÁPIDO -->
+    <section id="v-registro" class="vista">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="reg-titulo"></h2>
+      <div class="tipo-toggle">
+        <button class="tipo-btn active-i" id="tipo-ingreso">💚 Ingreso</button>
+        <button class="tipo-btn" id="tipo-gasto">🔴 Gasto</button>
+      </div>
+      <div class="input-group">
+        <label id="reg-monto-lbl"></label>
+        <input type="number" id="reg-monto" inputmode="decimal" placeholder="0.00" style="font-size:28px;font-weight:800;text-align:center;">
+      </div>
+      <div class="input-group">
+        <label id="reg-desc-lbl"></label>
+        <input type="text" id="reg-desc" placeholder="Ej: Sueldo quincenal">
+      </div>
+      <div class="input-group">
+        <label id="reg-cat-lbl"></label>
+        <div class="chips-container" id="reg-categorias"></div>
+      </div>
+      <button class="btn btn-primary" id="btn-registrar"></button>
+      <div style="margin-top:24px;">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Historial de este mes</h3>
+        <div id="historial-mes"></div>
+      </div>
+    </section>
+
+    <!-- METAS + RETOS -->
+    <section id="v-metas" class="vista">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-size:20px;font-weight:800;" id="metas-titulo"></h2>
+        <button class="btn-icon" id="btn-nueva-meta" style="width:auto;padding:0 14px;border-radius:99px;font-size:13px;font-weight:800;">➕ Meta</button>
+      </div>
+      <div id="metas-list"></div>
+      <div class="card" style="margin-top:8px;">
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" id="reto52-titulo"></h3>
+        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" id="reto52-sub"></p>
+        <div id="reto52-container"></div>
+      </div>
+    </section>
+
+    <!-- PERFIL -->
+    <section id="v-perfil" class="vista">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="perfil-titulo"></h2>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:24px;">💸</div>
+          <div>
+            <div style="font-weight:800;font-size:16px;" id="perfil-email-display">—</div>
+            <div style="font-size:12px;font-weight:700;color:var(--primary);" id="perfil-licencia"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-config-titulo"></h3>
+        <div class="input-group">
+          <label id="perfil-ingreso-lbl"></label>
+          <input type="number" id="cfg-ingreso" inputmode="decimal">
+        </div>
+        <div class="input-group">
+          <label id="perfil-gastosfijos-lbl"></label>
+          <input type="number" id="cfg-gastos-fijos" inputmode="decimal">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label id="perfil-moneda-lbl"></label>
+          <select id="cfg-moneda">
+            <option value="$">$ (Peso / Dólar)</option>
+            <option value="S/">S/ (Sol peruano)</option>
+            <option value="Q">Q (Quetzal)</option>
+            <option value="₡">₡ (Colón)</option>
+            <option value="Bs.">Bs. (Bolívar/Boliviano)</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" id="btn-save-config" style="margin-top:14px;min-height:44px;font-size:14px;">💾 Guardar configuración</button>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-sobres-titulo"></h3>
+        <div id="sobres-config-container"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-backup-titulo"></h3>
+        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">Exporta una copia de tus datos para no perderlos.</p>
+        <button class="btn btn-secondary" id="btn-backup" style="margin-bottom:10px;min-height:44px;">📥 Descargar Respaldo</button>
+        <button class="btn btn-secondary" id="btn-restore" style="min-height:44px;">📤 Restaurar Datos</button>
+        <input type="file" id="input-restore" accept=".json" style="display:none;">
+      </div>
+      <button class="btn btn-secondary" id="btn-logout" style="margin-top:8px;color:var(--danger);border-color:var(--danger);"></button>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="v-dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="nav-item" data-view="v-deudas">
+      <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Deudas</span>
+    </button>
+    <button class="nav-item" data-view="v-registro">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Registrar</span>
+    </button>
+    <button class="nav-item" data-view="v-metas">
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span>Metas</span>
+    </button>
+    <button class="nav-item" data-view="v-perfil">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Perfil</span>
+    </button>
+  </nav>
+</div>
+
+<!-- MODAL: DEUDA -->
+<div id="modal-deuda" class="modal-overlay">
+  <div class="modal-sheet">
+    <h3 id="md-titulo"></h3>
+    <div class="input-group">
+      <label>Nombre de la deuda</label>
+      <input type="text" id="md-nombre" placeholder="Ej: Tarjeta Visa">
+    </div>
+    <div class="grid-2">
+      <div class="input-group">
+        <label>Saldo actual ($)</label>
+        <input type="number" id="md-saldo" inputmode="decimal" placeholder="5000">
+      </div>
+      <div class="input-group">
+        <label>Interés mensual (%)</label>
+        <input type="number" id="md-tasa" inputmode="decimal" placeholder="3.5">
+      </div>
+    </div>
+    <div class="input-group">
+      <label>Saldo inicial ($)</label>
+      <input type="number" id="md-saldo-inicial" inputmode="decimal" placeholder="5000">
+    </div>
+    <div class="input-group">
+      <label>Pago mínimo mensual ($)</label>
+      <input type="number" id="md-minimo" inputmode="decimal" placeholder="200">
+    </div>
+    <button class="btn btn-primary" id="md-btn-guardar">Guardar</button>
+    <button class="btn btn-secondary" id="md-btn-eliminar" style="margin-top:10px;color:var(--danger);display:none;">🗑️ Eliminar deuda</button>
+    <button class="btn btn-secondary" id="md-btn-cancelar" style="margin-top:10px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: ABONO -->
+<div id="modal-abono" class="modal-overlay">
+  <div class="modal-sheet">
+    <h3 id="ma-titulo">💰 Registrar Abono</h3>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;" id="ma-deuda-nombre"></p>
+    <div class="input-group">
+      <label>Monto del abono ($)</label>
+      <input type="number" id="ma-monto" inputmode="decimal" placeholder="0.00">
+    </div>
+    <button class="btn btn-primary" id="ma-btn-guardar">Registrar Abono</button>
+    <button class="btn btn-secondary" style="margin-top:10px;" id="ma-btn-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: META -->
+<div id="modal-meta" class="modal-overlay">
+  <div class="modal-sheet">
+    <h3 id="mm-titulo"></h3>
+    <div class="input-group">
+      <label>Nombre de la meta</label>
+      <input type="text" id="mm-nombre" placeholder="Ej: Fondo de emergencia">
+    </div>
+    <div class="input-group">
+      <label>Monto objetivo ($)</label>
+      <input type="number" id="mm-monto" inputmode="decimal" placeholder="5000">
+    </div>
+    <div class="input-group" style="margin-bottom:0;">
+      <label>Emoji</label>
+      <input type="text" id="mm-emoji" placeholder="🎯" maxlength="2" style="width:80px;">
+    </div>
+    <button class="btn btn-primary" id="mm-btn-guardar" style="margin-top:14px;">Guardar</button>
+    <button class="btn btn-secondary" id="mm-btn-eliminar" style="margin-top:10px;color:var(--danger);display:none;">🗑️ Eliminar meta</button>
+    <button class="btn btn-secondary" id="mm-btn-cancelar" style="margin-top:10px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: ABONO META -->
+<div id="modal-abono-meta" class="modal-overlay">
+  <div class="modal-sheet">
+    <h3>💰 Abonar a Meta</h3>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;" id="mam-nombre"></p>
+    <div class="input-group">
+      <label>Monto a abonar ($)</label>
+      <input type="number" id="mam-monto" inputmode="decimal" placeholder="0.00">
+    </div>
+    <button class="btn btn-primary" id="mam-btn-guardar">Abonar</button>
+    <button class="btn btn-secondary" style="margin-top:10px;" id="mam-btn-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- PWA INSTALL BANNER (Android) -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:90px;left:16px;right:16px;max-width:528px;margin:0 auto;z-index:300;background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:16px 18px;box-shadow:var(--shadow-lg);align-items:center;gap:14px;">
+  <div style="font-size:36px;">💸</div>
+  <div style="flex:1;">
+    <div style="font-weight:800;font-size:15px;" id="pwa-titulo"></div>
+    <div style="font-size:12px;color:var(--text-muted);font-weight:600;" id="pwa-sub"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <button class="btn btn-primary" id="pwa-btn-instalar" style="min-height:36px;font-size:13px;padding:8px 14px;width:auto;"></button>
+    <button id="pwa-btn-despues" style="background:none;border:none;font-size:11px;font-weight:700;color:var(--text-muted);cursor:pointer;"></button>
+  </div>
+</div>
+
+<!-- PWA iOS modal -->
+<div id="modal-ios" class="modal-overlay">
+  <div class="modal-sheet" style="text-align:center;">
+    <h3 id="pwa-ios-titulo"></h3>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:18px;" id="pwa-ios-sub"></p>
+    <div style="text-align:left;">
+      <div class="check-item"><div class="box">1</div><span id="pwa-ios-paso1"></span></div>
+      <div class="check-item"><div class="box">2</div><span id="pwa-ios-paso2"></span></div>
+      <div class="check-item"><div class="box">3</div><span id="pwa-ios-paso3"></span></div>
+    </div>
+    <button class="btn btn-primary" id="pwa-ios-btn" style="margin-top:16px;"></button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
