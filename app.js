@@ -401,6 +401,75 @@ function renderDeudas() {
   } else if (data.config.ingresoMensual > 0) {
     extraWrap.innerHTML = `<div class="card"><p style="font-size:13px;font-weight:700;color:var(--danger);">${T('deudas_sin_extra')}</p></div>`;
   }
+
+  // Medallas
+  const medallasWrap = document.getElementById('deudas-medallas-wrap');
+  if (medallasWrap) {
+    medallasWrap.innerHTML = '';
+    const meds = calcularMedallas();
+    if (meds.length > 0) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.padding = '16px';
+      
+      let medsHtml = `<div style="font-weight:800;font-size:14px;margin-bottom:12px;color:var(--accent-gold);text-transform:uppercase;letter-spacing:1px;">🏅 ${window.appLang === 'pt' ? 'Medalhas Conquistadas' : 'Medallas Conquistadas'}</div>`;
+      medsHtml += `<div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+      meds.forEach(m => {
+        medsHtml += `
+          <div style="background:var(--bg-color);padding:8px 12px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;gap:8px;" title="${m.desc}">
+            <span style="font-size:14px;font-weight:800;color:var(--text-main);">${m.nombre}</span>
+          </div>`;
+      });
+      medsHtml += `</div>`;
+      card.innerHTML = medsHtml;
+      medallasWrap.appendChild(card);
+    }
+  }
+}
+
+// ===== FINANCIAL MEDALS =====
+function calcularMedallas() {
+  const deudas = data.deudas || [];
+  if (!deudas.length) return [];
+  
+  const deudasInicial = deudas.reduce((s,d) => s + (d.saldoInicial || d.saldoActual), 0);
+  const deudasActual = deudas.reduce((s,d) => s + d.saldoActual, 0);
+  
+  if (deudasInicial === 0) return [];
+  
+  const pctPagado = ((deudasInicial - deudasActual) / deudasInicial) * 100;
+  const medallas = [];
+  
+  if (pctPagado >= 25) {
+    medallas.push({
+      id: 'm_25',
+      nombre: window.appLang === 'pt' ? 'Iniciante 🎖️' : 'Iniciante 🎖️',
+      desc: window.appLang === 'pt' ? 'Pagou 25% da dívida inicial' : 'Pagaste 25% de tu deuda inicial'
+    });
+  }
+  if (pctPagado >= 50) {
+    medallas.push({
+      id: 'm_50',
+      nombre: window.appLang === 'pt' ? 'Metade 🛡️' : 'Mitad 🛡️',
+      desc: window.appLang === 'pt' ? 'Pagou 50% da dívida inicial' : 'Pagaste 50% de tu deuda inicial'
+    });
+  }
+  if (pctPagado >= 75) {
+    medallas.push({
+      id: 'm_75',
+      nombre: window.appLang === 'pt' ? 'Quase Livre 🚀' : 'Casi Libre 🚀',
+      desc: window.appLang === 'pt' ? 'Pagou 75% da dívida inicial' : 'Pagaste 75% de tu deuda inicial'
+    });
+  }
+  if (pctPagado >= 100) {
+    medallas.push({
+      id: 'm_100',
+      nombre: window.appLang === 'pt' ? '100% Livre! 🎉' : '100% Libre! 🎉',
+      desc: window.appLang === 'pt' ? 'Quitou todas as suas dívidas' : 'Liquidaste todas tus deudas'
+    });
+  }
+  
+  return medallas;
 }
 
 // ===== RENDER REGISTRO =====
