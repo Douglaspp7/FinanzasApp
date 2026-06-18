@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Imagens — SinDeudas</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#07120d;color:#eafaf2;font-size:16px;line-height:1.5;padding:20px;padding-bottom:60px}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:24px;margin-bottom:4px}
+  .sub{opacity:.7;font-size:14px;margin-bottom:20px}
+  .box{background:#10231a;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid rgba(255,255,255,.07)}
+  label{display:block;font-weight:700;font-size:13.5px;margin-bottom:6px;opacity:.85}
+  input[type=password],input[type=text],select{width:100%;padding:12px;font-size:15px;border-radius:10px;border:1.5px solid #1d3a2b;background:#07120d;color:#eafaf2}
+  .aviso{font-size:12.5px;opacity:.6;margin-top:8px}
+  .btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;background:#10b981;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:10px}
+  .btn:disabled{opacity:.4}
+  .btn.sec{background:#1d3a2b}
+  .cat{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#34d399;margin:18px 0 8px}
+  .item{display:flex;gap:12px;align-items:center;background:#10231a;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px;margin-bottom:10px}
+  .thumb{width:74px;height:74px;border-radius:10px;background:#1d3a2b;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:26px}
+  .info{flex:1;min-width:0}
+  .info b{display:block;font-size:15px}
+  .info .file{font-size:12px;opacity:.55;font-family:monospace}
+  .estado{font-size:12.5px;font-weight:700;margin-top:3px}
+  .e-ok{color:#4ADE80}.e-erro{color:#F87171}.e-go{color:#FBBF24}
+  .acoes{display:flex;flex-direction:column;gap:6px}
+  .mini{padding:8px 12px;border:none;border-radius:9px;font-weight:800;font-size:12.5px;cursor:pointer;background:#1d3a2b;color:#eafaf2}
+  .mini.dl{background:#10b981;color:#fff}
+  .progresso{font-weight:800;font-size:14px;text-align:center;margin:14px 0;color:#FBBF24}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💸 SinDeudas · Imagens de Impacto</h1>
+  <p class="sub">Gera as fotos emocionais e criativos de anúncio da landing · LATAM · pessoas reais, sem texto, sem logos</p>
+
+  <div class="box">
+    <label>Provedor de imagens</label>
+    <select id="prov">
+      <option value="gemini">Google Gemini (chave AIza..., grátis)</option>
+      <option value="openai">OpenAI (chave sk-..., pago: ~US$ 0,04/foto)</option>
+    </select>
+    <label style="margin-top:12px">Sua chave de API</label>
+    <input type="password" id="chave" placeholder="Cole sua chave aqui">
+    <p class="aviso">Gemini: aistudio.google.com → "Get API key" (grátis). OpenAI: platform.openai.com → API Keys. A chave fica salva só neste aparelho (localStorage). Nunca publique este arquivo num site e nunca cole sua chave em chats ou grupos.</p>
+    <button class="btn" id="btnTodas">▶ Gerar todas as imagens</button>
+    <button class="btn sec" id="btnBaixar" disabled>⬇ Baixar todas as prontas</button>
+  </div>
+
+  <div class="progresso" id="progresso"></div>
+  <div id="lista"></div>
+</div>
+
+<script>
+const ESTILO = "Hyper-realistic professional lifestyle photography, Latin American people, bright natural daylight, shallow depth of field, candid and authentic, warm and hopeful mood, cinematic color grading, no text, no logos, no watermarks, no brand names. Scene: ";
+
+const FOTOS = [
+ /* -------- LANDING · EMOCIONAL (herói + lifestyle) -------- */
+ {cat:"Landing · Herói e lifestyle", f:"hero-mujer.jpg", n:"Herói — mulher aliviada com o celular",
+  p:"a happy relieved Latin American woman around 35 years old smiling softly while looking at her smartphone, sitting on a sofa in a bright modern living room, soft morning light, genuine feeling of financial relief and hope, vertical portrait composition"},
+ {cat:"Landing · Herói e lifestyle", f:"familia-feliz.jpg", n:"Família feliz em casa",
+  p:"a joyful Latin American family — mother, father and two children — hugging and laughing together at home, cozy warm living room, bright natural light, feeling of security and financial peace, vertical composition"},
+ {cat:"Landing · Herói e lifestyle", f:"pareja-finanzas.jpg", n:"Casal planejando as contas (sem brigas)",
+  p:"a Latin American couple sitting together at a kitchen table with a smartphone and a notebook, calm and smiling at each other, planning their household budget together as a team, soft daylight, partnership and relief, horizontal composition"},
+ {cat:"Landing · Herói e lifestyle", f:"alivio-estres.jpg", n:"Alívio do estresse financeiro",
+  p:"a Latin American woman with eyes gently closed and one hand on her chest, breathing with relief and a peaceful smile, standing near a sunlit window at home, concept of freedom from financial stress, soft warm light, vertical composition"},
+
+ /* -------- ANÚNCIOS · CRIATIVOS DE META ADS -------- */
+ {cat:"Anúncios · Criativos Meta Ads", f:"libertad-deudas.jpg", n:"Cortando o cartão (libertdade)",
+  p:"close-up of two hands cutting a plain blank plastic card in half with scissors, powerful concept of breaking free from debt, clean bright neutral background, shallow depth of field, square composition"},
+ {cat:"Anúncios · Criativos Meta Ads", f:"og-anuncio.jpg", n:"Criativo principal (espaço p/ texto)",
+  p:"a confident Latin American woman around 35 holding a smartphone and smiling warmly at the camera while pointing at the phone screen, standing against a bright solid emerald-green studio background with plenty of empty negative space around her for text overlay, advertising style, square composition"},
+ {cat:"Anúncios · Criativos Meta Ads", f:"estres-deudas.jpg", n:'Dor — "o dinheiro some" (antes)',
+  p:"a worried Latin American woman around 35 sitting at a table at night looking stressed at a pile of bills and a calculator, dim warm lamp light, anxious expression, concept of being overwhelmed by debt, vertical composition"},
+
+ /* -------- DEPOIMENTOS · AVATARES -------- */
+ {cat:"Depoimentos · Avatares", f:"testi-maria.jpg", n:"Avatar — María (México)",
+  p:"friendly portrait headshot of a Latin American woman around 38 with a natural warm smile, simple softly-blurred home background, soft daylight, realistic, square composition"},
+ {cat:"Depoimentos · Avatares", f:"testi-jorge.jpg", n:"Avatar — Jorge (Colômbia)",
+  p:"friendly portrait headshot of a Latin American man around 42 with a warm confident smile, simple softly-blurred neutral background, soft daylight, realistic, square composition"},
+ {cat:"Depoimentos · Avatares", f:"testi-carolina.jpg", n:"Avatar — Carolina (Peru)",
+  p:"friendly portrait headshot of a cheerful young Latin American woman around 30 with a bright smile, simple softly-blurred light background, soft daylight, realistic, square composition"},
+];
+
+const $=id=>document.getElementById(id);
+const resultados={}; // f -> dataURL jpeg
+
+// chave persistida localmente
+$("chave").value = localStorage.getItem("sindeudas_img_key") || "";
+$("chave").addEventListener("change",()=>localStorage.setItem("sindeudas_img_key",$("chave").value.trim()));
+
+// montar lista (com cabeçalhos de categoria)
+let catAtual="";
+FOTOS.forEach((x,i)=>{
+  if(x.cat!==catAtual){
+    catAtual=x.cat;
+    const h=document.createElement("div");
+    h.className="cat";h.textContent=x.cat;
+    $("lista").appendChild(h);
+  }
+  const div=document.createElement("div");
+  div.className="item";
+  div.innerHTML=`
+    <div class="thumb" id="th-${i}">🖼️</div>
+    <div class="info">
+      <b>${x.n}</b>
+      <span class="file">${x.f}</span>
+      <div class="estado" id="es-${i}">aguardando</div>
+    </div>
+    <div class="acoes">
+      <button class="mini" onclick="gerar(${i})">Gerar</button>
+      <button class="mini dl" id="dl-${i}" style="display:none" onclick="baixar(${i})">Baixar</button>
+    </div>`;
+  $("lista").appendChild(div);
+});
+
+function setEstado(i,txt,cls){const e=$("es-"+i);e.textContent=txt;e.className="estado "+(cls||"");}
+
+async function gerar(i){
+  const chave=$("chave").value.trim();
+  if(!chave){alert("Cole sua chave de API primeiro.");return;}
+  localStorage.setItem("sindeudas_img_key",chave);
+  const x=FOTOS[i];
+  setEstado(i,"gerando…","e-go");
+  try{
+    const png = $("prov").value==="openai"
+      ? await gerarOpenAI(chave, ESTILO+x.p)
+      : await gerarGemini(chave, ESTILO+x.p);
+    const jpeg=await paraJpeg(png,900,0.82);
+    resultados[x.f]=jpeg;
+    $("th-"+i).outerHTML=`<img class="thumb" id="th-${i}" src="${jpeg}">`;
+    setEstado(i,"pronta ✓","e-ok");
+    $("dl-"+i).style.display="block";
+    $("btnBaixar").disabled=false;
+  }catch(e){
+    setEstado(i,"erro: "+e.message,"e-erro");
+  }
+}
+
+async function gerarGemini(chave,prompt){
+  const resp=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key="+encodeURIComponent(chave),{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{responseModalities:["TEXT","IMAGE"]}
+    })
+  });
+  if(!resp.ok){
+    if(resp.status===429) throw new Error("limite de velocidade — espere 1 min e tente de novo");
+    throw new Error("HTTP "+resp.status+" "+(await resp.text()).slice(0,120));
+  }
+  const data=await resp.json();
+  const partes=(data.candidates?.[0]?.content?.parts)||[];
+  const img=partes.find(p=>p.inlineData&&p.inlineData.data);
+  if(!img) throw new Error("a resposta não trouxe imagem — tente de novo");
+  return "data:"+(img.inlineData.mimeType||"image/png")+";base64,"+img.inlineData.data;
+}
+
+async function gerarOpenAI(chave,prompt){
+  // tenta gpt-image-1; se a conta não tiver acesso, cai para dall-e-3
+  for(const modelo of ["gpt-image-1","dall-e-3"]){
+    const body={model:modelo,prompt:prompt,n:1,size:"1024x1024"};
+    if(modelo==="gpt-image-1"){body.quality="medium";}
+    else{body.response_format="b64_json";body.quality="standard";}
+    const resp=await fetch("https://api.openai.com/v1/images/generations",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+chave},
+      body:JSON.stringify(body)
+    });
+    if(resp.ok){
+      const data=await resp.json();
+      const b64=data.data?.[0]?.b64_json;
+      if(!b64) throw new Error("a resposta não trouxe imagem");
+      return "data:image/png;base64,"+b64;
+    }
+    const t=await resp.text();
+    if(resp.status===429) throw new Error("limite de velocidade ou sem créditos — verifique seu saldo");
+    if(resp.status===401) throw new Error("chave inválida ou revogada");
+    if(modelo==="gpt-image-1" && (resp.status===403||resp.status===404||t.includes("must be verified")||t.includes("does not have access"))) continue;
+    throw new Error("HTTP "+resp.status+" "+t.slice(0,120));
+  }
+  throw new Error("nenhum modelo de imagem disponível nesta conta");
+}
+
+function paraJpeg(src,maxw,q){
+  return new Promise((res,rej)=>{
+    const im=new Image();
+    im.onload=()=>{
+      const esc=Math.min(1,maxw/im.width);
+      const c=document.createElement("canvas");
+      c.width=Math.round(im.width*esc);c.height=Math.round(im.height*esc);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",q));
+    };
+    im.onerror=rej;
+    im.src=src;
+  });
+}
+
+function baixar(i){
+  const x=FOTOS[i];
+  if(!resultados[x.f])return;
+  const a=document.createElement("a");
+  a.href=resultados[x.f];a.download=x.f;
+  document.body.appendChild(a);a.click();a.remove();
+}
+
+$("btnTodas").addEventListener("click",async()=>{
+  $("btnTodas").disabled=true;
+  for(let i=0;i<FOTOS.length;i++){
+    if(resultados[FOTOS[i].f]){continue;}
+    $("progresso").textContent=`Gerando ${i+1} de ${FOTOS.length}… (não feche a página)`;
+    await gerar(i);
+    if(i<FOTOS.length-1) await new Promise(r=>setTimeout(r,$("prov").value==="openai"?2500:7000));
+  }
+  $("progresso").textContent="✅ Concluído! Toque em 'Baixar todas as prontas'.";
+  $("btnTodas").disabled=false;
+});
+
+$("btnBaixar").addEventListener("click",async()=>{
+  for(let i=0;i<FOTOS.length;i++){
+    if(resultados[FOTOS[i].f]){baixar(i);await new Promise(r=>setTimeout(r,600));}
+  }
+});
+</script>
+</body>
+</html>

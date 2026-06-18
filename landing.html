@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SinDeudas — Sal de Deudas y Toma el Control de tu Salario</title>
+<meta name="description" content="El método guiado, paso a paso, para salir de deudas y hacer rendir el salario del mes. Sin hojas de Excel y sin conectar tu banco. App para toda la familia.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="SinDeudas — Sal de Deudas Paso a Paso">
+<meta property="og:description" content="No es otra app de finanzas. Es tu plan para salir de deudas y dejar de pelear por dinero a fin de mes.">
+<meta property="og:url" content="https://sindeudas.pages.dev/">
+<meta property="og:image" content="https://sindeudas.pages.dev/app-icon.png">
+<link rel="canonical" href="https://sindeudas.pages.dev/">
+
+<!-- ============================================ -->
+<!-- CONFIGURACIÓN: edita solo estas 3 líneas      -->
+<!-- ============================================ -->
+<script>
+  const CHECKOUT_URL = "https://pay.hotmart.com/TU_CODIGO_AQUI?checkoutMode=10";
+  const META_PIXEL_ID = "TU_PIXEL_ID";
+  const USD_PRICE     = 9.90; // precio de oferta en USD (referencia)
+</script>
+
+<!-- UTMfy: captura UTMs para atribución por creativo -->
+<script
+  src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+  data-utmify-prevent-subids
+  async
+  defer
+></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07120d;
+    --bg2:#0a1a12;
+    --card:#10231a;
+    --verde:#10b981;
+    --verde-osc:#047857;
+    --verde-claro:#34d399;
+    --oro:#fbbf24;
+    --rojo:#f87171;
+    --texto:#eafaf2;
+    --muted:#93b3a4;
+    --borde:rgba(255,255,255,.08);
+    --sombra:0 14px 40px rgba(0,0,0,.45);
+    --radio:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Outfit',system-ui,sans-serif}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--texto);line-height:1.55;overflow-x:hidden}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.5px}
+  section{padding:52px 0}
+  .display{font-family:'Lilita One',cursive;font-weight:400}
+
+  /* CTA */
+  .cta-btn{
+    display:block;width:100%;max-width:440px;margin:0 auto;
+    background:linear-gradient(135deg,var(--verde) 0%,var(--verde-osc) 100%);
+    color:#fff;text-align:center;text-decoration:none;
+    font-size:19px;font-weight:800;padding:18px 24px;border-radius:99px;
+    box-shadow:0 10px 26px rgba(16,185,129,.4);border:none;cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  .cta-btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(16,185,129,.55)}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+  .price-info{text-align:center;margin-top:12px;font-weight:700;font-size:15px}
+  .price-local{display:block;color:var(--verde-claro);font-size:20px;font-weight:900;margin-bottom:2px}
+  .price-local:empty{display:none}
+  .price-usd{color:var(--muted);font-size:14px}
+
+  /* HERO */
+  .hero{background:radial-gradient(circle at 50% -10%, #0f3a28 0%, var(--bg) 60%);padding:54px 0 40px;text-align:center}
+  .badge{display:inline-block;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:var(--verde-claro);
+    font-size:12.5px;font-weight:800;padding:7px 14px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:20px}
+  .hero h1{font-size:clamp(30px,8vw,44px);font-weight:900;margin-bottom:16px}
+  .hero h1 .hl{color:var(--verde-claro)}
+  .hero .sub{font-size:17px;color:var(--muted);max-width:520px;margin:0 auto 26px;font-weight:600}
+  .hero-foto{width:100%;max-width:360px;border-radius:22px;margin:4px auto 16px;display:block;box-shadow:var(--sombra);border:1px solid var(--borde)}
+  .band-foto{width:100%;max-width:540px;border-radius:18px;margin:0 auto 28px;display:block;box-shadow:var(--sombra);border:1px solid var(--borde)}
+  .hero-precio{font-size:16px;font-weight:800;margin:22px 0 16px;color:var(--oro)}
+  .hero-precio .antes{font-weight:700;opacity:.6;text-decoration:line-through;color:var(--texto);margin-right:8px}
+
+  /* PHONE MOCKUP */
+  .phone{width:230px;margin:8px auto 6px;border-radius:34px;background:#05100b;border:9px solid #0d1f16;
+    box-shadow:var(--sombra);overflow:hidden;position:relative}
+  .phone-notch{height:22px;background:#0d1f16;border-radius:0 0 14px 14px;width:120px;margin:0 auto}
+  .phone-screen{padding:14px 12px 18px}
+  .pm-hero{background:linear-gradient(135deg,var(--verde) 0%,var(--verde-osc) 100%);border-radius:16px;padding:14px;text-align:center;color:#fff;margin-bottom:10px}
+  .pm-hero .lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;opacity:.85}
+  .pm-hero .val{font-family:'Lilita One',cursive;font-size:30px;margin:2px 0}
+  .pm-row{display:flex;gap:8px;margin-bottom:10px}
+  .pm-mini{flex:1;background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:9px}
+  .pm-mini .t{font-size:8px;font-weight:800;color:var(--muted);text-transform:uppercase}
+  .pm-mini .n{font-size:17px;font-weight:900;margin-top:2px}
+  .pm-bar{height:5px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:6px;overflow:hidden}
+  .pm-bar i{display:block;height:100%;border-radius:99px;background:var(--verde-claro)}
+  .pm-list{background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:10px}
+  .pm-li{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;padding:5px 0;border-bottom:1px solid var(--borde)}
+  .pm-li:last-child{border:0}
+  .pm-li .pos{color:var(--verde-claro)} .pm-li .neg{color:var(--rojo)}
+
+  /* DOLOR */
+  .dolor{background:var(--bg2)}
+  .dolor h2{font-size:clamp(24px,6vw,32px);font-weight:900;text-align:center;margin-bottom:10px}
+  .dolor .lead{text-align:center;color:var(--muted);font-weight:600;max-width:520px;margin:0 auto 28px}
+  .dolor-list{display:flex;flex-direction:column;gap:12px;max-width:520px;margin:0 auto}
+  .dolor-item{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:15px 16px}
+  .dolor-item .ico{font-size:22px;flex-shrink:0}
+  .dolor-item b{display:block;font-size:15.5px;margin-bottom:2px}
+  .dolor-item p{font-size:13.5px;color:var(--muted);font-weight:600}
+
+  /* SECCIÓN GENÉRICA */
+  .sec-title{font-size:clamp(24px,6vw,32px);font-weight:900;text-align:center;margin-bottom:12px}
+  .sec-lead{text-align:center;color:var(--muted);font-weight:600;max-width:540px;margin:0 auto 30px}
+
+  /* PASOS */
+  .pasos-list{display:flex;flex-direction:column;gap:16px;max-width:540px;margin:0 auto}
+  .paso{display:flex;gap:16px;align-items:flex-start}
+  .paso .num{flex-shrink:0;width:42px;height:42px;border-radius:50%;background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.35);
+    color:var(--verde-claro);font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center}
+  .paso b{display:block;font-size:16.5px;margin-bottom:3px}
+  .paso p{font-size:14px;color:var(--muted);font-weight:600}
+
+  /* FEATURES / MÓDULOS */
+  .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px;margin:0 auto}
+  @media(max-width:520px){.feat-grid{grid-template-columns:1fr}}
+  .feat{background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:18px}
+  .feat .ico{font-size:26px;margin-bottom:8px}
+  .feat b{display:block;font-size:15.5px;margin-bottom:4px}
+  .feat p{font-size:13px;color:var(--muted);font-weight:600}
+  .feat .valor{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;color:var(--oro);background:rgba(251,191,36,.1);padding:3px 10px;border-radius:99px}
+
+  /* PRIVACIDAD */
+  .priv{background:linear-gradient(135deg,#0f3a28 0%, var(--bg2) 100%);text-align:center}
+  .priv .escudo{font-size:50px;margin-bottom:8px}
+  .priv h2{font-size:clamp(22px,5.5vw,28px);font-weight:900;margin-bottom:10px}
+  .priv p{color:var(--texto);opacity:.92;font-weight:600;max-width:500px;margin:0 auto;font-size:15.5px}
+
+  /* TESTIMONIOS */
+  .testi{display:flex;flex-direction:column;gap:14px;max-width:540px;margin:0 auto}
+  .testi-card{background:var(--card);border:1px solid var(--borde);border-radius:16px;padding:18px}
+  .testi-card .stars{color:var(--oro);font-size:15px;margin-bottom:8px}
+  .testi-card p{font-size:14.5px;font-weight:600;margin-bottom:12px}
+  .testi-card .autor{display:flex;align-items:center;gap:10px}
+  .testi-card .av{position:relative;overflow:hidden;width:38px;height:38px;border-radius:50%;background:var(--verde-osc);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:15px}
+  .testi-card .av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .testi-card .autor b{font-size:13.5px}
+  .testi-card .autor span{font-size:12px;color:var(--muted);font-weight:600}
+
+  /* GARANTÍA */
+  .garantia-sec{background:var(--bg2);text-align:center}
+  .garantia-card{max-width:480px;margin:0 auto;background:var(--card);border:1.5px solid rgba(16,185,129,.3);border-radius:20px;padding:30px 24px}
+  .garantia-card .escudo{font-size:54px;margin-bottom:10px}
+  .garantia-card b{display:block;font-size:20px;margin-bottom:8px}
+  .garantia-card p{font-size:15px;color:var(--muted);font-weight:600;line-height:1.5}
+
+  /* PRECIO */
+  .precio{background:radial-gradient(circle at 50% 0%, #0f3a28 0%, var(--bg) 70%);text-align:center}
+  .precio .anclado{font-size:18px;opacity:.6;text-decoration:line-through;font-weight:700}
+  .precio .grande{font-family:'Lilita One',cursive;font-size:clamp(56px,16vw,82px);line-height:1;margin:6px 0 2px;color:var(--verde-claro)}
+  .precio .unico{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:13px;color:var(--muted);margin-bottom:24px}
+  .precio .price-local{font-size:24px}
+  .incluye{list-style:none;max-width:380px;margin:0 auto 26px;text-align:left}
+  .incluye li{padding:8px 0;font-size:14.5px;font-weight:600;display:flex;gap:10px;align-items:flex-start}
+  .incluye li::before{content:"✅";flex-shrink:0}
+
+  /* FAQ */
+  .faq{max-width:560px;margin:0 auto}
+  .faq details{background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:4px 18px;margin-bottom:10px}
+  .faq summary{font-weight:800;font-size:15px;padding:14px 0;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";color:var(--verde-claro);font-size:22px;font-weight:800}
+  .faq details[open] summary::after{content:"–"}
+  .faq p{font-size:14px;color:var(--muted);font-weight:600;padding:0 0 16px}
+
+  /* BARRA FIJA */
+  .barra-fija{position:fixed;bottom:0;left:0;right:0;background:rgba(7,18,13,.96);backdrop-filter:blur(12px);
+    border-top:1px solid var(--borde);padding:10px 16px;display:flex;align-items:center;gap:12px;justify-content:space-between;
+    transform:translateY(110%);transition:transform .3s ease;z-index:60}
+  .barra-fija.visible{transform:translateY(0)}
+  .barra-fija .precio-mini{line-height:1.15}
+  .barra-fija .precio-mini .tach{font-size:11px;text-decoration:line-through;opacity:.5;display:block}
+  .barra-fija .precio-mini .ahora{font-family:'Lilita One',cursive;font-size:17px;color:var(--verde-claro)}
+  .barra-fija .precio-mini .local-mini{display:block;font-size:13px;color:var(--oro);font-weight:800}
+  .barra-fija .cta-btn{margin:0;width:auto;font-size:15px;padding:13px 20px;animation:none;flex-shrink:0}
+
+  footer{text-align:center;padding:40px 18px 90px;color:var(--muted);font-size:12.5px;font-weight:600}
+  footer a{color:var(--verde-claro);text-decoration:none}
+  .trust-row{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:18px 0;font-size:12.5px;color:var(--muted);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">💸 Para familias que viven endeudadas</span>
+    <h1>Sal de deudas <span class="hl">paso a paso</span> y haz que el salario te alcance todo el mes</h1>
+    <p class="sub">SinDeudas es la app que te dice <b>cuánto pagar de cada deuda</b>, en qué orden y cómo repartir tu sueldo — sin hojas de Excel y <b>sin conectar tu banco</b>.</p>
+
+    <img class="hero-foto" src="hero-mujer.jpg" alt="Mujer revisando sus finanzas con tranquilidad en SinDeudas" onerror="this.remove()">
+
+    <div class="phone" aria-hidden="true">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="pm-hero">
+          <div class="lbl">Dinero disponible este mes</div>
+          <div class="val">$4,250</div>
+        </div>
+        <div class="pm-row">
+          <div class="pm-mini"><div class="t">Libertad de deudas</div><div class="n">62%</div><div class="pm-bar"><i style="width:62%"></i></div></div>
+          <div class="pm-mini"><div class="t">Ahorro meta</div><div class="n">38%</div><div class="pm-bar"><i style="width:38%;background:var(--oro)"></i></div></div>
+        </div>
+        <div class="pm-list">
+          <div class="pm-li"><span>💼 Sueldo quincena</span><span class="pos">+$8,000</span></div>
+          <div class="pm-li"><span>💳 Tarjeta Visa</span><span class="neg">−$1,200</span></div>
+          <div class="pm-li"><span>🏠 Renta</span><span class="neg">−$2,500</span></div>
+          <div class="pm-li"><span>🔥 Racha: 14 días</span><span class="pos">Score 78</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="hero-precio"><span class="antes">Antes $97 USD</span> Hoy solo <b>$9.90 USD</b> · pago único</p>
+    <a class="cta-btn js-checkout" href="#precio">Quiero salir de deudas hoy 🚀</a>
+    <p class="price-info"><span class="price-local"></span><span class="price-usd">Pago único · $9.90 USD · acceso de por vida</span></p>
+    <div class="trust-row">
+      <span>🔒 Sin conectar tu banco</span>
+      <span>📲 Funciona sin internet</span>
+      <span>♾️ Pago único</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== DOLOR ===================== -->
+<section class="dolor">
+  <div class="wrap">
+    <h2>¿Trabajas todo el mes y el dinero <span style="color:var(--rojo)">desaparece</span>?</h2>
+    <p class="lead">No es que ganes poco. Es que nadie te enseñó a ordenar el sueldo cuando hay deudas de por medio.</p>
+    <div class="dolor-list">
+      <div class="dolor-item"><span class="ico">😰</span><div><b>Pagas el mínimo de la tarjeta… y la deuda no baja</b><p>Los intereses se comen tu pago y sientes que nunca avanzas.</p></div></div>
+      <div class="dolor-item"><span class="ico">🤯</span><div><b>No sabes a cuál deuda atacar primero</b><p>Pagas un poco de todo y al final no terminas de pagar ninguna.</p></div></div>
+      <div class="dolor-item"><span class="ico">📉</span><div><b>A mitad de mes ya no queda nada</b><p>Y vuelves a usar la tarjeta para llegar a fin de mes. El círculo no para.</p></div></div>
+      <div class="dolor-item"><span class="ico">😟</span><div><b>El dinero se volvió motivo de pelea en casa</b><p>El estrés de las deudas afecta a toda la familia.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SOLUCIÓN / PASOS ===================== -->
+<section>
+  <div class="wrap">
+    <h2 class="sec-title">Un plan claro, no más adivinanzas</h2>
+    <p class="sec-lead">SinDeudas convierte tu caos financiero en 3 pasos simples que haces desde el celular en minutos.</p>
+    <img class="band-foto" src="pareja-finanzas.jpg" alt="Pareja organizando juntos el presupuesto familiar" onerror="this.remove()">
+    <div class="pasos-list">
+      <div class="paso"><div class="num">1</div><div><b>Cuéntale tu situación</b><p>Ingresas tu sueldo, tus gastos fijos y tus deudas. En 2 minutos. Sin contraseñas de banco.</p></div></div>
+      <div class="paso"><div class="num">2</div><div><b>Recibe tu Plan Sal de Deudas</b><p>La app calcula a cuál deuda atacar primero (método bola de nieve) y tu <b>fecha exacta de libertad</b>.</p></div></div>
+      <div class="paso"><div class="num">3</div><div><b>Sigue el plan y ve cómo bajan</b><p>Registras cada gasto en segundos, repartes tu sueldo en "sobres" y miras tu deuda derretirse mes a mes.</p></div></div>
+    </div>
+    <div style="margin-top:34px">
+      <a class="cta-btn js-checkout" href="#precio">Empezar mi plan ahora 🚀</a>
+      <p class="price-info"><span class="price-local"></span><span class="price-usd">Pago único · acceso de por vida</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="dolor">
+  <div class="wrap">
+    <h2 class="sec-title">Todo lo que necesitas, en una sola app</h2>
+    <p class="sec-lead">No es otra app de "anotar gastos". Es un método completo para recuperar el control.</p>
+    <div class="feat-grid">
+      <div class="feat"><div class="ico">💳</div><b>Plan Sal de Deudas</b><p>Te dice el orden exacto para pagar y tu fecha de libertad financiera.</p><span class="valor">Incluido</span></div>
+      <div class="feat"><div class="ico">✉️</div><b>Sistema de Sobres</b><p>Reparte tu sueldo por categorías para que SIEMPRE alcance hasta fin de mes.</p><span class="valor">Incluido</span></div>
+      <div class="feat"><div class="ico">📊</div><b>Score de Salud Financiera</b><p>Una nota del 0 al 100 que te muestra si vas mejorando cada mes.</p><span class="valor">Incluido</span></div>
+      <div class="feat"><div class="ico">🎯</div><b>Metas y Reto 52 Semanas</b><p>Crea tu fondo de emergencia y ahorra sin sentirlo.</p><span class="valor">Incluido</span></div>
+      <div class="feat"><div class="ico">🔮</div><b>Mural de Sueños IA</b><p>Visualiza con imágenes tu casa, tu viaje o tu negocio para no rendirte.</p><span class="valor">Bonus</span></div>
+      <div class="feat"><div class="ico">📈</div><b>Reportes PDF y Excel</b><p>Exporta tu progreso en informes profesionales cuando quieras.</p><span class="valor">Bonus</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PRIVACIDAD ===================== -->
+<section class="priv" id="privacidad">
+  <div class="wrap">
+    <div class="escudo">🔒</div>
+    <h2>Tu dinero es tuyo. Tus datos también.</h2>
+    <p>A diferencia de otras apps, SinDeudas <b>nunca te pide la clave de tu banco</b>. Tú anotas lo que quieres, todo se guarda en tu celular y funciona <b>sin internet</b>. Cero riesgo, cero rastreo.</p>
+  </div>
+</section>
+
+<!-- ===================== TESTIMONIOS ===================== -->
+<section>
+  <div class="wrap">
+    <h2 class="sec-title">Familias que ya respiran tranquilas</h2>
+    <p class="sec-lead">Esto es lo que pasa cuando dejas de adivinar y sigues un plan.</p>
+    <div class="testi">
+      <div class="testi-card"><div class="stars">★★★★★</div><p>"Tenía 3 tarjetas y pagaba el mínimo de todas. La app me dijo cuál atacar primero y en 4 meses ya pagué la primera. Por fin siento que avanzo."</p><div class="autor"><div class="av"><img src="testi-maria.jpg" alt="" onerror="this.remove()">M</div><div><b>María F.</b><br><span>México</span></div></div></div>
+      <div class="testi-card"><div class="stars">★★★★★</div><p>"Lo de los sobres me cambió la vida. Antes a mitad de mes ya no tenía. Ahora reparto el sueldo apenas me pagan y me alcanza."</p><div class="autor"><div class="av"><img src="testi-jorge.jpg" alt="" onerror="this.remove()">J</div><div><b>Jorge L.</b><br><span>Colombia</span></div></div></div>
+      <div class="testi-card"><div class="stars">★★★★★</div><p>"Mi esposo y yo dejamos de pelear por el dinero porque ahora los dos vemos el mismo plan. Ver bajar la deuda cada mes motiva un montón."</p><div class="autor"><div class="av"><img src="testi-carolina.jpg" alt="" onerror="this.remove()">C</div><div><b>Carolina R.</b><br><span>Perú</span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GARANTÍA ===================== -->
+<section class="garantia-sec" id="garantia">
+  <div class="wrap">
+    <div class="garantia-card">
+      <div class="escudo">🛡️</div>
+      <b>7 días de garantía total</b>
+      <p>Usa SinDeudas una semana completa: arma tu plan, reparte tu sueldo y mira tu deuda. Si no es para ti, nos escribes y te devolvemos el 100% — <b>sin preguntas</b>. Tú no arriesgas nada.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PRECIO ===================== -->
+<section class="precio" id="precio">
+  <div class="wrap">
+    <h2 class="sec-title" style="margin-bottom:6px">Empieza hoy a salir de deudas</h2>
+    <p class="sec-lead">Un solo pago. Acceso de por vida. Todas las actualizaciones incluidas.</p>
+    <div class="anclado">Antes $97 USD</div>
+    <div class="grande">$9.90</div>
+    <div class="unico">USD · Pago único · Acceso de por vida</div>
+    <p class="price-info" style="margin-bottom:24px"><span class="price-local"></span><span class="price-usd">Precio en tu moneda local</span></p>
+
+    <ul class="incluye">
+      <li>App SinDeudas completa (Android, iPhone y PC)</li>
+      <li>Plan Sal de Deudas personalizado con fecha de libertad</li>
+      <li>Sistema de Sobres + Score de Salud Financiera</li>
+      <li>Metas, Reto 52 Semanas y Mural de Sueños IA</li>
+      <li>Reportes PDF/Excel y respaldo de tus datos</li>
+      <li>Funciona sin internet · sin conectar tu banco</li>
+    </ul>
+
+    <a class="cta-btn js-checkout" href="#">Quiero mi acceso ahora 🚀</a>
+    <p class="price-info"><span class="price-local"></span><span class="price-usd">Pago 100% seguro vía Hotmart</span></p>
+
+    <div class="garantia-card" style="margin-top:28px">
+      <div class="escudo">🛡️</div>
+      <b>Garantía de 7 días</b>
+      <p>Si no te sirve, te devolvemos todo. Sin preguntas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section class="dolor">
+  <div class="wrap">
+    <h2 class="sec-title">Preguntas frecuentes</h2>
+    <div class="faq" style="margin-top:24px">
+      <details><summary>¿Tengo que conectar mi cuenta de banco?</summary><p>No. Nunca. Tú anotas lo que quieres a mano y todo se guarda en tu celular. Tus datos no salen de tu dispositivo.</p></details>
+      <details><summary>¿Funciona en mi celular?</summary><p>Sí. Funciona en Android, iPhone y computadora. Se instala como app desde el navegador en segundos y funciona incluso sin internet.</p></details>
+      <details><summary>¿Es un pago mensual?</summary><p>No. Es un único pago. Pagas una vez y tienes acceso de por vida, con todas las actualizaciones incluidas.</p></details>
+      <details><summary>No soy bueno con los números, ¿me servirá?</summary><p>Justamente para eso es. La app hace los cálculos por ti: solo ingresas tus datos y ella te dice qué pagar y cómo repartir tu sueldo.</p></details>
+      <details><summary>¿Y si no me gusta?</summary><p>Tienes 7 días de garantía total. Si no es para ti, te devolvemos el 100% sin preguntas.</p></details>
+      <details><summary>¿Cómo recibo el acceso?</summary><p>Apenas confirmas el pago, recibes el acceso en tu correo de inmediato. En menos de 2 minutos ya estás armando tu plan.</p></details>
+    </div>
+    <div style="margin-top:34px">
+      <a class="cta-btn js-checkout" href="#precio">Sí, quiero salir de deudas 🚀</a>
+      <p class="price-info"><span class="price-local"></span><span class="price-usd">Pago único · garantía de 7 días</span></p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><b>SinDeudas</b> — Tu método guiado para salir de deudas y ahorrar.</p>
+  <p style="margin-top:8px">Este producto no promete resultados de inversión ni asesoría financiera profesional. Los resultados dependen de tu compromiso con el plan.</p>
+  <p style="margin-top:8px">Pago procesado de forma segura por Hotmart.</p>
+</footer>
+
+<!-- ===================== BARRA FIJA ===================== -->
+<div class="barra-fija" id="barraFija">
+  <div class="precio-mini">
+    <span class="tach">$97</span>
+    <span class="ahora">$9.90 USD</span>
+    <span class="local-mini" id="barraLocalPrice"></span>
+  </div>
+  <a class="cta-btn js-checkout" href="#precio">Quiero mi acceso</a>
+</div>
+
+<script>
+  // ===== Meta Pixel (solo si configuraste tu ID) =====
+  if (META_PIXEL_ID && META_PIXEL_ID !== "TU_PIXEL_ID") {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', META_PIXEL_ID);
+    fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {content_name: 'SinDeudas Landing'});
+  }
+
+  // ===== Todos los CTA llevan al checkout + InitiateCheckout =====
+  document.querySelectorAll('.js-checkout').forEach(btn => {
+    btn.addEventListener('click', e => {
+      if (CHECKOUT_URL.includes('TU_CODIGO_AQUI')) return; // aún no configurado: scroll a #precio
+      e.preventDefault();
+      if (typeof fbq === 'function') fbq('track', 'InitiateCheckout', {value: USD_PRICE, currency: 'USD'});
+      var qs = window.location.search.replace(/^\?/, '');
+      var sep = CHECKOUT_URL.indexOf('?') > -1 ? '&' : '?';
+      window.location.href = qs ? CHECKOUT_URL + sep + qs : CHECKOUT_URL;
+    });
+  });
+
+  // ===== Barra fija aparece tras el hero =====
+  const barra = document.getElementById('barraFija');
+  const hero = document.querySelector('.hero');
+  window.addEventListener('scroll', () => {
+    barra.classList.toggle('visible', window.scrollY > hero.offsetHeight);
+  }, {passive:true});
+
+  // ===== Tracking de profundidad de scroll (diagnóstico de embudo) =====
+  (function(){
+    if (typeof fbq !== 'function') return;
+    var fired = {};
+    function fire(name){ if (fired[name]) return; fired[name] = true; fbq('trackCustom', name); }
+    function onScroll(){
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - doc.clientHeight;
+      if (max <= 0) return;
+      var pct = (window.scrollY || doc.scrollTop) / max * 100;
+      if (pct >= 25) fire('Scroll_25');
+      if (pct >= 50) fire('Scroll_50');
+      if (pct >= 75) fire('Scroll_75');
+      if (pct >= 90) fire('Scroll_100');
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+    function watch(sel, name){
+      var el = document.querySelector(sel);
+      if (!el || !('IntersectionObserver' in window)) return;
+      var io = new IntersectionObserver(function(entries){
+        if (entries[0].isIntersecting){ fire(name); io.disconnect(); }
+      }, {threshold:0.4});
+      io.observe(el);
+    }
+    watch('#garantia', 'Vio_Garantia');
+    watch('#precio', 'Vio_Precio');
+  })();
+
+  // ===== Precio local dinámico (moneda local + IVA) — LATAM =====
+  (function () {
+    const PAISES = {
+      MX: { cur: 'MXN', sym: '$',   loc: 'es-MX', iva: 0.16, fx: 18.5 },
+      CO: { cur: 'COP', sym: '$',   loc: 'es-CO', iva: 0.19, fx: 4100 },
+      PE: { cur: 'PEN', sym: 'S/',  loc: 'es-PE', iva: 0.18, fx: 3.75 },
+      CL: { cur: 'CLP', sym: '$',   loc: 'es-CL', iva: 0.19, fx: 950 },
+      AR: { cur: 'ARS', sym: '$',   loc: 'es-AR', iva: 0.21, fx: 1150 },
+      EC: { cur: 'USD', sym: '$',   loc: 'es-EC', iva: 0.15, fx: 1 },
+      VE: { cur: 'VES', sym: 'Bs.', loc: 'es-VE', iva: 0.16, fx: 145 },
+      BO: { cur: 'BOB', sym: 'Bs',  loc: 'es-BO', iva: 0.13, fx: 6.96 },
+      PY: { cur: 'PYG', sym: '₲',   loc: 'es-PY', iva: 0.10, fx: 7400 },
+      UY: { cur: 'UYU', sym: '$',   loc: 'es-UY', iva: 0.22, fx: 40 },
+      CR: { cur: 'CRC', sym: '₡',   loc: 'es-CR', iva: 0.13, fx: 510 },
+      GT: { cur: 'GTQ', sym: 'Q',   loc: 'es-GT', iva: 0.12, fx: 7.7 },
+      PA: { cur: 'USD', sym: '$',   loc: 'es-PA', iva: 0.07, fx: 1 },
+      DO: { cur: 'DOP', sym: 'RD$', loc: 'es-DO', iva: 0.18, fx: 60 },
+      HN: { cur: 'HNL', sym: 'L',   loc: 'es-HN', iva: 0.15, fx: 25 },
+      SV: { cur: 'USD', sym: '$',   loc: 'es-SV', iva: 0.13, fx: 1 },
+      NI: { cur: 'NIO', sym: 'C$',  loc: 'es-NI', iva: 0.15, fx: 36.8 },
+      ES: { cur: 'EUR', sym: '€',   loc: 'es-ES', iva: 0.21, fx: 0.92 }
+    };
+
+    function paisPorIdioma() {
+      const langs = navigator.languages || [navigator.language || ''];
+      for (const l of langs) {
+        const m = /[-_]([A-Za-z]{2})$/.exec(l || '');
+        if (m) return m[1].toUpperCase();
+      }
+      return null;
+    }
+    async function detectarPais() {
+      const fuentes = [
+        async () => { const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) }); if(!r.ok) throw 0; const j = await r.json(); return j.country_code || j.country; },
+        async () => { const r = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4000) }); if(!r.ok) throw 0; const j = await r.json(); return j.country_code; },
+        async () => { const r = await fetch('https://get.geojs.io/v1/ip/country.json', { signal: AbortSignal.timeout(4000) }); if(!r.ok) throw 0; const j = await r.json(); return j.country; }
+      ];
+      for (const f of fuentes) { try { const c = await f(); if (c) return String(c).toUpperCase(); } catch (e) {} }
+      return paisPorIdioma();
+    }
+    async function tasaCambio(cur, respaldo) {
+      if (cur === 'USD') return 1;
+      try { const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(4000) });
+        if (r.ok) { const j = await r.json(); if (j && j.rates && j.rates[cur]) return j.rates[cur]; } } catch (e) {}
+      return respaldo;
+    }
+    async function loadLocalPrice() {
+      try {
+        const code = await detectarPais();
+        const p = code && PAISES[code];
+        if (!p) return;
+        const fx = await tasaCambio(p.cur, p.fx);
+        const total = USD_PRICE * fx * (1 + p.iva);
+        let mostrado;
+        if (total >= 1000) mostrado = Math.round(total / 100) * 100;
+        else if (total >= 100) mostrado = Math.round(total / 10) * 10;
+        else mostrado = Math.round(total * 100) / 100;
+        const dec = total < 100 ? 2 : 0;
+        const fmt = mostrado.toLocaleString(p.loc, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+        const suf = p.iva > 0 ? ' (con imp.)' : '';
+        document.querySelectorAll('.price-local').forEach(function (el) { el.textContent = '≈ ' + p.sym + ' ' + fmt + ' ' + p.cur + suf; });
+        const barraLocal = document.getElementById('barraLocalPrice');
+        if (barraLocal) barraLocal.textContent = '≈ ' + p.sym + ' ' + fmt + ' ' + p.cur;
+      } catch (e) {}
+    }
+    loadLocalPrice();
+  })();
+</script>
+</body>
+</html>
