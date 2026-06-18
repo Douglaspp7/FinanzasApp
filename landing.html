@@ -79,6 +79,8 @@
   .hero h1{font-size:clamp(30px,8vw,44px);font-weight:900;margin-bottom:16px}
   .hero h1 .hl{color:var(--verde-claro)}
   .hero .sub{font-size:17px;color:var(--muted);max-width:520px;margin:0 auto 26px;font-weight:600}
+  .hero-foto{width:100%;max-width:360px;border-radius:22px;margin:4px auto 16px;display:block;box-shadow:var(--sombra);border:1px solid var(--borde)}
+  .band-foto{width:100%;max-width:540px;border-radius:18px;margin:0 auto 28px;display:block;box-shadow:var(--sombra);border:1px solid var(--borde)}
   .hero-precio{font-size:16px;font-weight:800;margin:22px 0 16px;color:var(--oro)}
   .hero-precio .antes{font-weight:700;opacity:.6;text-decoration:line-through;color:var(--texto);margin-right:8px}
 
@@ -144,7 +146,8 @@
   .testi-card .stars{color:var(--oro);font-size:15px;margin-bottom:8px}
   .testi-card p{font-size:14.5px;font-weight:600;margin-bottom:12px}
   .testi-card .autor{display:flex;align-items:center;gap:10px}
-  .testi-card .av{width:38px;height:38px;border-radius:50%;background:var(--verde-osc);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:15px}
+  .testi-card .av{position:relative;overflow:hidden;width:38px;height:38px;border-radius:50%;background:var(--verde-osc);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:15px}
+  .testi-card .av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .testi-card .autor b{font-size:13.5px}
   .testi-card .autor span{font-size:12px;color:var(--muted);font-weight:600}
 
@@ -199,6 +202,8 @@
     <h1>Sal de deudas <span class="hl">paso a paso</span> y haz que el salario te alcance todo el mes</h1>
     <p class="sub">SinDeudas es la app que te dice <b>cuánto pagar de cada deuda</b>, en qué orden y cómo repartir tu sueldo — sin hojas de Excel y <b>sin conectar tu banco</b>.</p>
 
+    <img class="hero-foto" src="hero-mujer.jpg" alt="Mujer revisando sus finanzas con tranquilidad en SinDeudas" onerror="this.remove()">
+
     <div class="phone" aria-hidden="true">
       <div class="phone-notch"></div>
       <div class="phone-screen">
@@ -249,6 +254,7 @@
   <div class="wrap">
     <h2 class="sec-title">Un plan claro, no más adivinanzas</h2>
     <p class="sec-lead">SinDeudas convierte tu caos financiero en 3 pasos simples que haces desde el celular en minutos.</p>
+    <img class="band-foto" src="pareja-finanzas.jpg" alt="Pareja organizando juntos el presupuesto familiar" onerror="this.remove()">
     <div class="pasos-list">
       <div class="paso"><div class="num">1</div><div><b>Cuéntale tu situación</b><p>Ingresas tu sueldo, tus gastos fijos y tus deudas. En 2 minutos. Sin contraseñas de banco.</p></div></div>
       <div class="paso"><div class="num">2</div><div><b>Recibe tu Plan Sal de Deudas</b><p>La app calcula a cuál deuda atacar primero (método bola de nieve) y tu <b>fecha exacta de libertad</b>.</p></div></div>
@@ -292,9 +298,9 @@
     <h2 class="sec-title">Familias que ya respiran tranquilas</h2>
     <p class="sec-lead">Esto es lo que pasa cuando dejas de adivinar y sigues un plan.</p>
     <div class="testi">
-      <div class="testi-card"><div class="stars">★★★★★</div><p>"Tenía 3 tarjetas y pagaba el mínimo de todas. La app me dijo cuál atacar primero y en 4 meses ya pagué la primera. Por fin siento que avanzo."</p><div class="autor"><div class="av">M</div><div><b>María F.</b><br><span>México</span></div></div></div>
-      <div class="testi-card"><div class="stars">★★★★★</div><p>"Lo de los sobres me cambió la vida. Antes a mitad de mes ya no tenía. Ahora reparto el sueldo apenas me pagan y me alcanza."</p><div class="autor"><div class="av">J</div><div><b>Jorge L.</b><br><span>Colombia</span></div></div></div>
-      <div class="testi-card"><div class="stars">★★★★★</div><p>"Mi esposo y yo dejamos de pelear por el dinero porque ahora los dos vemos el mismo plan. Ver bajar la deuda cada mes motiva un montón."</p><div class="autor"><div class="av">C</div><div><b>Carolina R.</b><br><span>Perú</span></div></div></div>
+      <div class="testi-card"><div class="stars">★★★★★</div><p>"Tenía 3 tarjetas y pagaba el mínimo de todas. La app me dijo cuál atacar primero y en 4 meses ya pagué la primera. Por fin siento que avanzo."</p><div class="autor"><div class="av"><img src="testi-maria.jpg" alt="" onerror="this.remove()">M</div><div><b>María F.</b><br><span>México</span></div></div></div>
+      <div class="testi-card"><div class="stars">★★★★★</div><p>"Lo de los sobres me cambió la vida. Antes a mitad de mes ya no tenía. Ahora reparto el sueldo apenas me pagan y me alcanza."</p><div class="autor"><div class="av"><img src="testi-jorge.jpg" alt="" onerror="this.remove()">J</div><div><b>Jorge L.</b><br><span>Colombia</span></div></div></div>
+      <div class="testi-card"><div class="stars">★★★★★</div><p>"Mi esposo y yo dejamos de pelear por el dinero porque ahora los dos vemos el mismo plan. Ver bajar la deuda cada mes motiva un montón."</p><div class="autor"><div class="av"><img src="testi-carolina.jpg" alt="" onerror="this.remove()">C</div><div><b>Carolina R.</b><br><span>Perú</span></div></div></div>
     </div>
   </div>
 </section>
