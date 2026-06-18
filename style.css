@@ -15,14 +15,18 @@
   --bg-2: #0E161A;
   --card-bg: #141F24;
   --card-bg-2: #1B2930;
+  --bg-gradient: radial-gradient(ellipse at 50% 0%, #0d171b 0%, #060b0d 100%);
+  --card-gradient: linear-gradient(135deg, #142128 0%, #0f181c 100%);
+  --border-light: rgba(255, 255, 255, 0.06);
   --text-main: #E2E8F0;
   --text-muted: #64748B;
-  --border: rgba(16, 185, 129, 0.12);
+  --border: rgba(255, 255, 255, 0.06); /* Thin highlight border */
+  --border-primary: rgba(16, 185, 129, 0.15);
   --radius-sm: 12px;
   --radius-md: 16px;
   --radius-lg: 22px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.6);
   --font: 'Outfit', 'Inter', -apple-system, sans-serif;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -32,11 +36,15 @@
   --bg-2: #F1F5F9;
   --card-bg: #FFFFFF;
   --card-bg-2: #E2E8F0;
+  --bg-gradient: radial-gradient(ellipse at 50% 0%, #fbfcfd 0%, #f1f5f9 100%);
+  --card-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  --border-light: rgba(15, 23, 42, 0.02);
   --text-main: #0F172A;
   --text-muted: #475569;
-  --border: rgba(16, 185, 129, 0.15);
-  --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 8px 40px rgba(15, 23, 42, 0.1);
+  --border: rgba(15, 23, 42, 0.08);
+  --border-primary: rgba(16, 185, 129, 0.2);
+  --shadow: 0 8px 32px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.08);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,7 +52,7 @@
 html, body {
   height: 100%;
   font-family: var(--font);
-  background: var(--bg-color);
+  background: var(--bg-gradient);
   color: var(--text-main);
   font-size: 16px;
   -webkit-tap-highlight-color: transparent;
@@ -137,12 +145,13 @@ main::-webkit-scrollbar { display: none; }
 
 /* ===== CARDS ===== */
 .card {
-  background: var(--card-bg);
+  background: var(--card-gradient, var(--card-bg));
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 20px;
   margin-bottom: 14px;
   box-shadow: var(--shadow);
+  position: relative;
 }
 .card-glass {
   background: rgba(255,255,255,0.04);
@@ -308,7 +317,7 @@ main::-webkit-scrollbar { display: none; }
 
 /* ===== DEBT CARDS ===== */
 .deuda-card {
-  background: var(--card-bg); border: 1.5px solid var(--border);
+  background: var(--card-gradient, var(--card-bg)); border: 1.5px solid var(--border);
   border-radius: var(--radius-md); padding: 18px; margin-bottom: 12px;
   position: relative; overflow: hidden;
 }
