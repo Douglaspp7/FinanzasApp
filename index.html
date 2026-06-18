@@ -180,15 +180,106 @@
 
     <!-- METAS + RETOS -->
     <section id="v-metas" class="vista">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="font-size:20px;font-weight:800;" id="metas-titulo" data-i18n="metas_titulo"></h2>
-        <button class="btn-icon" id="btn-nueva-meta" style="width:auto;padding:0 14px;border-radius:99px;font-size:13px;font-weight:800;" data-i18n="metas_btn_nueva">➕ Meta</button>
+      <!-- Sub-tabs system -->
+      <div class="pill-tab" style="margin-bottom: 16px;">
+        <button class="tab-btn active" id="tab-metas-objetivos" onclick="switchMetasTab('objetivos')" data-i18n="dreams_tab_objetivos">🎯 Metas & Retos</button>
+        <button class="tab-btn" id="tab-metas-mural" onclick="switchMetasTab('mural')" data-i18n="dreams_tab_mural">🔮 Mural de Sueños IA</button>
       </div>
-      <div id="metas-list"></div>
-      <div class="card" style="margin-top:8px;">
-        <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" id="reto52-titulo" data-i18n="reto52_titulo"></h3>
-        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" id="reto52-sub" data-i18n="reto52_sub"></p>
-        <div id="reto52-container"></div>
+
+      <!-- Tab Content: Objetivos & Retos -->
+      <div id="section-metas-objetivos">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h2 style="font-size:18px;font-weight:800;" id="metas-titulo" data-i18n="metas_titulo"></h2>
+          <button class="btn-icon" id="btn-nueva-meta" style="width:auto;padding:0 14px;border-radius:99px;font-size:13px;font-weight:800;" data-i18n="metas_btn_nueva">➕ Meta</button>
+        </div>
+        <div id="metas-list"></div>
+        <div class="card" style="margin-top:8px;">
+          <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" id="reto52-titulo" data-i18n="reto52_titulo"></h3>
+          <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" id="reto52-sub" data-i18n="reto52_sub"></p>
+          <div id="reto52-container"></div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Mural de Sueños IA -->
+      <div id="section-metas-mural" class="hidden">
+        <!-- Warning / Paste keys box (shown if keys are missing) -->
+        <div id="dream-keys-warning" class="card" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); display: none; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+          <h4 style="font-size:14.5px; font-weight:800; color:var(--primary); display:flex; align-items:center; gap:6px; margin: 0;">
+            🔑 Configurar Llaves de IA
+          </h4>
+          <p style="font-size:12.5px; font-weight:600; color:var(--text-muted); line-height:1.45; margin: 0;">
+            Para visualizar tu futuro libre de deudas con imágenes IA, ingresa tu llave de API (se almacena localmente y de forma segura en tu navegador).
+          </p>
+          <div class="input-group" style="margin-bottom:8px;">
+            <label style="font-size:11px;">OpenAI API Key (DALL-E)</label>
+            <input type="password" id="dream-key-openai" placeholder="sk-proj-..." style="padding:10px; font-size:13.5px;">
+          </div>
+          <div class="input-group" style="margin-bottom:8px;">
+            <label style="font-size:11px;">Gemini API Key</label>
+            <input type="password" id="dream-key-gemini" placeholder="AIzaSy..." style="padding:10px; font-size:13.5px;">
+          </div>
+          <button class="btn btn-primary" onclick="saveDreamKeysInline()" style="min-height:38px; font-size:13px; font-weight:800; padding:8px 16px; border-radius:10px;">
+            💾 Guardar Llaves
+          </button>
+        </div>
+
+        <!-- Main Generator UI -->
+        <div class="card" id="dream-generator-box" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(16, 185, 129, 0.03) 100%);">
+          <h3 style="font-size:16px; font-weight:800; margin-bottom:6px;" data-i18n="dreams_title">Mural de Sueños IA</h3>
+          <p style="font-size:13px; color:var(--text-muted); font-weight:600; margin-bottom:16px;" data-i18n="dreams_sub"></p>
+          
+          <div class="input-group">
+            <label data-i18n="dreams_select_provider">Proveedor de IA</label>
+            <select id="dream-provider" style="background: var(--bg-color); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; color: var(--text-main); font-weight:600;">
+              <option value="openai">OpenAI (DALL-E 3)</option>
+              <option value="openai-dalle2">OpenAI (DALL-E 2)</option>
+              <option value="gemini">Gemini 2.5 Flash Image</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label id="dream-prompt-label" data-i18n="dreams_prompt_label"></label>
+            <textarea id="dream-prompt" rows="3" placeholder="Ej: Una hermosa casa de campo al atardecer, estilo realista" style="background: var(--bg-color); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; width: 100%; color: var(--text-main); font-family: var(--font); font-size: 14px; font-weight: 600; resize: none;"></textarea>
+          </div>
+
+          <!-- Quick Presets -->
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Sugerencias Rápidas:</label>
+            <div class="chips-container" style="margin-top: 6px;">
+              <span class="chip" onclick="setDreamPreset('Una hermosa casa propia con un jardín verde y flores, día soleado, hiperrealista')">🏠 Casa Propia</span>
+              <span class="chip" onclick="setDreamPreset('Mi propio negocio de café acogedor y moderno con clientes felices, luz cinematográfica')">☕ Mi Negocio</span>
+              <span class="chip" onclick="setDreamPreset('Viaje de vacaciones familiares en un resort tropical frente al mar, tarde dorada')">✈️ Viaje Familiar</span>
+              <span class="chip" onclick="setDreamPreset('Una persona feliz y en paz sentada en una montaña al amanecer con los brazos abiertos')">🧘 Paz Mental</span>
+            </div>
+          </div>
+
+          <!-- Error Console -->
+          <div id="dream-error" class="error-console" style="margin-bottom: 14px;"></div>
+
+          <!-- Loader -->
+          <div id="dream-loader" style="display:none; flex-direction:column; align-items:center; gap:12px; margin: 20px 0; text-align:center;">
+            <div class="premium-spinner"></div>
+            <p style="font-size:13px; font-weight:700; color:var(--text-main);" id="dream-loader-text">Conectando con la IA...</p>
+          </div>
+
+          <button class="btn btn-primary" id="btn-generate-dream" onclick="generateDreamImage()">
+            <span>🪄 <span data-i18n="dreams_btn_generate">Generar Imagen</span></span>
+          </button>
+
+          <!-- Image Result Preview -->
+          <div id="dream-preview-container" style="display:none; flex-direction:column; align-items:center; margin-top:18px; border:1px dashed var(--border); padding:16px; border-radius:var(--radius-md); background:rgba(0,0,0,0.1);">
+            <img id="dream-preview-img" src="" alt="Dream Preview" style="width:100%; border-radius:var(--radius-sm); margin-bottom:12px; box-shadow:var(--shadow);">
+            <button class="btn btn-primary" id="btn-save-dream" onclick="saveDreamImageToBoard()" style="min-height:44px; font-size:14px;">
+              💾 <span data-i18n="dreams_btn_save">Guardar en mi Mural</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Saved Dreams Board -->
+        <div style="margin-top: 24px;">
+          <h3 style="font-size:16px; font-weight:800; margin-bottom:12px;" data-i18n="dreams_my_board">Mi Mural de Sueños</h3>
+          <div id="dreams-gallery-grid"></div>
+        </div>
       </div>
     </section>
 
@@ -225,6 +316,19 @@
           </select>
         </div>
         <button class="btn btn-secondary" id="btn-save-config" style="margin-top:14px;min-height:44px;font-size:14px;" data-i18n="modal_guardar">💾 Guardar configuración</button>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;">🔮 Inteligencia Artificial</h3>
+        <p style="font-size:12.5px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">Configura tus llaves de API (se guardan localmente) para habilitar el Mural de Sueños.</p>
+        <div class="input-group">
+          <label>Chave OpenAI (DALL-E)</label>
+          <input type="password" id="cfg-key-openai" placeholder="sk-proj-..." style="font-size:14px; padding:12px;">
+        </div>
+        <div class="input-group">
+          <label>Chave Gemini</label>
+          <input type="password" id="cfg-key-gemini" placeholder="AIzaSy..." style="font-size:14px; padding:12px;">
+        </div>
+        <button class="btn btn-secondary" id="btn-save-keys" style="min-height:44px;font-size:14px;" onclick="saveProfileKeys()">💾 Guardar Llaves</button>
       </div>
       <div class="card">
         <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-sobres-titulo" data-i18n="perfil_sobres_titulo"></h3>

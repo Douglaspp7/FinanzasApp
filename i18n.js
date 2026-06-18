@@ -139,7 +139,16 @@ const STRINGS = {
     import_err: 'Archivo inválido. Usa un respaldo de SinDeudas.',
     toast_copiado: 'Copiado ✓',
     modal_guardar: 'Guardar',
-    modal_cancelar: 'Cancelar'
+    modal_cancelar: 'Cancelar',
+    dreams_title: 'Mural de Sueños IA',
+    dreams_sub: 'Visualiza tu futuro libre de deudas. Genera imágenes de tus metas para mantener la motivación.',
+    dreams_prompt_label: '¿Qué sueñas para tu futuro financiero?',
+    dreams_btn_generate: 'Generar Sueño con IA',
+    dreams_btn_save: 'Guardar en mi Mural',
+    dreams_my_board: 'Mi Mural de Sueños',
+    dreams_select_provider: 'Proveedor de IA',
+    dreams_tab_objetivos: '🎯 Metas & Retos',
+    dreams_tab_mural: '🔮 Mural de Sueños IA'
   },
   pt: {
     app_title: 'SemDívidas — Saia das Dívidas Passo a Passo',
@@ -277,7 +286,16 @@ const STRINGS = {
     import_err: 'Arquivo inválido. Use um backup do SemDívidas.',
     toast_copiado: 'Copiado ✓',
     modal_guardar: 'Salvar',
-    modal_cancelar: 'Cancelar'
+    modal_cancelar: 'Cancelar',
+    dreams_title: 'Mural de Sonhos IA',
+    dreams_sub: 'Visualize seu futuro livre de dívidas. Gere imagens das suas metas para manter a motivação.',
+    dreams_prompt_label: 'O que você sonha para o seu futuro financeiro?',
+    dreams_btn_generate: 'Gerar Sonho com IA',
+    dreams_btn_save: 'Salvar no meu Mural',
+    dreams_my_board: 'Meu Mural de Sonhos',
+    dreams_select_provider: 'Provedor de IA',
+    dreams_tab_objetivos: '🎯 Metas & Desafios',
+    dreams_tab_mural: '🔮 Mural de Sonhos IA'
   }
 };
 

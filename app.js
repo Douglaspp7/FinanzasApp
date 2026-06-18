@@ -22,7 +22,8 @@ const DEFAULT_DATA = {
   pagosDeuda: [],
   metas: [],
   reto52: { activo: false, montoSemanal: 50, semanas: [] },
-  streaks: { count: 0, lastActiveDate: null }
+  streaks: { count: 0, lastActiveDate: null },
+  suenos: []
 };
 
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -54,6 +55,7 @@ function loadData() {
       data.config.sobres = Object.assign({}, DEFAULT_DATA.config.sobres, (parsed.config || {}).sobres || {});
       data.reto52 = Object.assign({}, DEFAULT_DATA.reto52, parsed.reto52 || {});
       data.streaks = Object.assign({}, DEFAULT_DATA.streaks, parsed.streaks || {});
+      data.suenos = parsed.suenos || [];
     }
   } catch(e) {
     data = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -570,6 +572,7 @@ function renderMetas() {
     );
   }
   renderReto52();
+  renderDreamsBoard();
 }
 
 function renderReto52() {
@@ -650,6 +653,10 @@ function renderPerfil() {
     item.innerHTML = `<label>${emoji} ${nombreTrad}</label><input type="number" inputmode="decimal" data-sobre="${nombre}" value="${valor || ''}" placeholder="0">`;
     sobresContainer.appendChild(item);
   });
+
+  // AI keys config
+  document.getElementById('cfg-key-openai').value = localStorage.getItem('key-openai') || '';
+  document.getElementById('cfg-key-gemini').value = localStorage.getItem('key-gemini') || '';
 }
 
 // ===== MODALS: DEUDA =====
@@ -1193,3 +1200,293 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initPWA();
 });
+
+// ===== MURAL DE SUEÑOS IA =====
+function switchMetasTab(tab) {
+  const btnObj = document.getElementById('tab-metas-objetivos');
+  const btnMural = document.getElementById('tab-metas-mural');
+  const secObj = document.getElementById('section-metas-objetivos');
+  const secMural = document.getElementById('section-metas-mural');
+  
+  if (tab === 'objetivos') {
+    btnObj.classList.add('active');
+    btnMural.classList.remove('active');
+    secObj.classList.remove('hidden');
+    secMural.classList.add('hidden');
+  } else {
+    btnObj.classList.remove('active');
+    btnMural.classList.add('active');
+    secObj.classList.add('hidden');
+    secMural.classList.remove('hidden');
+    checkDreamKeysStatus();
+    renderDreamsBoard();
+  }
+}
+
+function checkDreamKeysStatus() {
+  const hasOpenAI = !!localStorage.getItem('key-openai');
+  const hasGemini = !!localStorage.getItem('key-gemini');
+  
+  const warningBox = document.getElementById('dream-keys-warning');
+  const generatorBox = document.getElementById('dream-generator-box');
+  
+  if (!hasOpenAI && !hasGemini) {
+    warningBox.style.display = 'flex';
+    generatorBox.style.display = 'none';
+    document.getElementById('dream-key-openai').value = localStorage.getItem('key-openai') || '';
+    document.getElementById('dream-key-gemini').value = localStorage.getItem('key-gemini') || '';
+  } else {
+    warningBox.style.display = 'none';
+    generatorBox.style.display = 'block';
+  }
+}
+
+function saveDreamKeysInline() {
+  const openai = document.getElementById('dream-key-openai').value.trim();
+  const gemini = document.getElementById('dream-key-gemini').value.trim();
+  localStorage.setItem('key-openai', openai);
+  localStorage.setItem('key-gemini', gemini);
+  toast(window.appLang === 'pt' ? 'Chaves salvas! ✓' : '¡Llaves guardadas! ✓');
+  checkDreamKeysStatus();
+}
+
+function saveProfileKeys() {
+  const openai = document.getElementById('cfg-key-openai').value.trim();
+  const gemini = document.getElementById('cfg-key-gemini').value.trim();
+  localStorage.setItem('key-openai', openai);
+  localStorage.setItem('key-gemini', gemini);
+  toast(window.appLang === 'pt' ? 'Chaves de IA salvas! ✓' : '¡Llaves de IA guardadas! ✓');
+}
+
+function setDreamPreset(preset) {
+  document.getElementById('dream-prompt').value = preset;
+}
+
+// Client-side image compression to fit local storage limit (~15-25KB per dream)
+function compressAndSaveDream(promptText, imageUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const maxDim = 320;
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        }
+      } else {
+        if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      try {
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        resolve(compressedBase64);
+      } catch (err) {
+        resolve(imageUrl); // Fallback to raw URL
+      }
+    };
+    img.onerror = () => reject(new Error('No se pudo cargar la imagen para compresión'));
+    img.src = imageUrl;
+  });
+}
+
+async function generateDreamImage() {
+  const provider = document.getElementById('dream-provider').value;
+  const prompt = document.getElementById('dream-prompt').value.trim();
+  const errorConsole = document.getElementById('dream-error');
+  const loader = document.getElementById('dream-loader');
+  const previewContainer = document.getElementById('dream-preview-container');
+  const previewImg = document.getElementById('dream-preview-img');
+  const btnGenerate = document.getElementById('btn-generate-dream');
+  const loaderText = document.getElementById('dream-loader-text');
+
+  errorConsole.style.display = 'none';
+  errorConsole.textContent = '';
+  previewContainer.style.display = 'none';
+  
+  if (!prompt) {
+    toast(window.appLang === 'pt' ? 'Descreva o seu sonho!' : '¡Describe tu sueño!');
+    return;
+  }
+
+  loader.style.display = 'flex';
+  btnGenerate.disabled = true;
+
+  try {
+    if (provider.startsWith('openai')) {
+      const model = provider === 'openai-dalle2' ? 'dalle2' : 'dalle3';
+      loaderText.textContent = window.appLang === 'pt' ? 'Conectando ao DALL-E (OpenAI)...' : 'Conectando a DALL-E (OpenAI)...';
+      await callDreamOpenAI(prompt, model);
+    } else if (provider === 'gemini') {
+      loaderText.textContent = window.appLang === 'pt' ? 'Gerando com Gemini 2.5 Flash...' : 'Generando con Gemini 2.5 Flash...';
+      await callDreamGemini(prompt);
+    }
+  } catch (err) {
+    errorConsole.style.display = 'block';
+    errorConsole.textContent = 'Error:\n' + err.message;
+  } finally {
+    loader.style.display = 'none';
+    btnGenerate.disabled = false;
+  }
+}
+
+async function callDreamOpenAI(prompt, model) {
+  const key = localStorage.getItem('key-openai');
+  if (!key) throw new Error(window.appLang === 'pt' ? 'Chave OpenAI não configurada.' : 'Llave de OpenAI no configurada.');
+
+  const openAiModel = model === 'dalle2' ? 'dall-e-2' : 'dall-e-3';
+  const response = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + key
+    },
+    body: JSON.stringify({
+      model: openAiModel,
+      prompt: prompt,
+      n: 1,
+      size: openAiModel === 'dall-e-3' ? '1024x1024' : '512x512',
+      quality: 'standard'
+    })
+  });
+
+  const dataResponse = await response.json();
+  if (!response.ok) {
+    throw new Error(dataResponse.error?.message || 'Error en la API de OpenAI.');
+  }
+
+  const url = dataResponse.data[0].url;
+  displayDreamPreview(url);
+}
+
+async function callDreamGemini(prompt) {
+  const key = localStorage.getItem('key-gemini');
+  if (!key) throw new Error(window.appLang === 'pt' ? 'Chave Gemini não configurada.' : 'Llave de Gemini no configurada.');
+
+  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=' + key, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: {
+        parts: [
+          { text: prompt }
+        ]
+      },
+      generationConfig: {
+        responseModalities: ["IMAGE"]
+      }
+    })
+  });
+
+  const dataResponse = await response.json();
+  if (!response.ok) {
+    throw new Error(dataResponse.error?.message || 'Error en la API de Gemini.');
+  }
+
+  const part = dataResponse.candidates?.[0]?.content?.parts?.[0];
+  if (part && part.inlineData && part.inlineData.data) {
+    const base64 = part.inlineData.data;
+    const mime = part.inlineData.mimeType || 'image/png';
+    const url = `data:${mime};base64,${base64}`;
+    displayDreamPreview(url);
+  } else {
+    throw new Error('Nenhum dado de imagem retornado pela Gemini API.');
+  }
+}
+
+let tempDreamBase64 = null;
+let tempDreamPrompt = "";
+
+function displayDreamPreview(url) {
+  const previewContainer = document.getElementById('dream-preview-container');
+  const previewImg = document.getElementById('dream-preview-img');
+  
+  tempDreamPrompt = document.getElementById('dream-prompt').value.trim();
+  tempDreamBase64 = null;
+  previewImg.src = url;
+  previewContainer.style.display = 'flex';
+  
+  compressAndSaveDream(tempDreamPrompt, url)
+    .then(b64 => {
+      tempDreamBase64 = b64;
+    })
+    .catch(() => {
+      tempDreamBase64 = url;
+    });
+}
+
+function saveDreamImageToBoard() {
+  if (!tempDreamPrompt) return;
+  const imageToSave = tempDreamBase64 || document.getElementById('dream-preview-img').src;
+  
+  if (!data.suenos) data.suenos = [];
+  data.suenos.push({
+    id: uid(),
+    prompt: tempDreamPrompt,
+    image: imageToSave,
+    fecha: new Date().toISOString()
+  });
+  
+  saveData();
+  toast(window.appLang === 'pt' ? 'Sonho salvo no seu Mural! 🔮' : '¡Sueño guardado en tu Mural! 🔮');
+  
+  document.getElementById('dream-preview-container').style.display = 'none';
+  document.getElementById('dream-prompt').value = '';
+  tempDreamPrompt = "";
+  tempDreamBase64 = null;
+  
+  renderDreamsBoard();
+}
+
+function renderDreamsBoard() {
+  const grid = document.getElementById('dreams-gallery-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  
+  if (!data.suenos) data.suenos = [];
+  
+  if (data.suenos.length === 0) {
+    grid.innerHTML = `<p style="grid-column: span 2; font-size:13px; color:var(--text-muted); font-weight:600; text-align:center; margin: 20px 0;">${window.appLang === 'pt' ? 'Seu Mural de Sonhos está vazio. Escreva e gere um acima!' : 'Tu Mural de Sueños está vacío. ¡Genera uno arriba!'}</p>`;
+    return;
+  }
+  
+  data.suenos.forEach(dream => {
+    const card = document.createElement('div');
+    card.className = 'dream-card';
+    card.innerHTML = `
+      <img src="${dream.image}" alt="Dream Visualized">
+      <div class="dream-card-title">${dream.prompt}</div>
+      <div class="dream-card-actions">
+        <button class="dream-card-btn-delete" data-delete-dream="${dream.id}">${window.appLang === 'pt' ? 'Excluir' : 'Eliminar'}</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  
+  grid.querySelectorAll('[data-delete-dream]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-delete-dream');
+      deleteDream(id);
+    });
+  });
+}
+
+function deleteDream(id) {
+  if (confirm(window.appLang === 'pt' ? 'Excluir este sonho do seu Mural?' : '¿Eliminar este sueño de tu Mural?')) {
+    data.suenos = data.suenos.filter(d => d.id !== id);
+    saveData();
+    renderDreamsBoard();
+    toast(window.appLang === 'pt' ? 'Sonho excluído' : 'Sueño eliminado');
+  }
+}
