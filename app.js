@@ -41,9 +41,6 @@ const CATS_INGRESO = ['💼 Sueldo','💻 Freelance','🎁 Regalo','📈 Extra',
 const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIAS_ES  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
-const MESES_PT = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const DIAS_PT  = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-
 // ===== STORAGE =====
 function loadData() {
   try {
@@ -74,7 +71,7 @@ function uid() {
 function fmt(n) {
   const sym = (data.config && data.config.moneda) ? data.config.moneda : '$';
   const num = Number(n) || 0;
-  return sym + num.toLocaleString(window.appLang === 'pt' ? 'pt-BR' : 'es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return sym + num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function toast(msg, duration) {
   duration = duration || 2800;
@@ -184,7 +181,7 @@ function renderDashboard() {
   const sobres = data.config.sobres;
   const tienePresupuesto = Object.values(sobres).some(v => v > 0);
   if (!tienePresupuesto) {
-    sobresContainer.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;">${window.appLang === 'pt' ? 'Configure seus envelopes no <b>Perfil</b>.' : 'Configura tus sobres en <b>Perfil</b>.'}</p>`;
+    sobresContainer.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;">Configura tus sobres en <b>Perfil</b>.</p>`;
   } else {
     const grid = document.createElement('div');
     grid.className = 'sobres-grid';
@@ -218,10 +215,10 @@ function renderDashboard() {
         </div>
         <div class="sobre-card-amounts">
           <div>
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;font-weight:700;">${window.appLang === 'pt' ? 'Disponível' : 'Disponible'}</div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;font-weight:700;">Disponible</div>
             <div class="sobre-card-leftover">${fmt(restante)}</div>
           </div>
-          <span class="sobre-card-total">${window.appLang === 'pt' ? 'de' : 'de'} ${fmt(presupuesto)}</span>
+          <span class="sobre-card-total">de ${fmt(presupuesto)}</span>
         </div>`;
       grid.appendChild(item);
     });
@@ -244,9 +241,7 @@ function buildMovRow(tx, showDelete) {
   row.className = 'mov-row';
   const icon    = tx.tipo === 'i' ? '💚' : (tx.categoria ? tx.categoria.split(' ')[0] : '📊');
   const d       = new Date(tx.fecha);
-  const dateStr = window.appLang === 'pt'
-    ? d.getDate() + ' de ' + MESES_PT[d.getMonth()]
-    : d.getDate() + ' de ' + MESES_ES[d.getMonth()];
+  const dateStr = d.getDate() + ' de ' + MESES_ES[d.getMonth()];
   const sign    = tx.tipo === 'i' ? '+' : '-';
   const color   = tx.tipo === 'i' ? 'var(--ok)' : 'var(--danger)';
   const cleanCat = (tx.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim();
@@ -264,7 +259,7 @@ function buildMovRow(tx, showDelete) {
 }
 
 window.eliminarMovimiento = function(id) {
-  if (confirm(window.appLang === 'pt' ? 'Excluir esta movimentação?' : '¿Eliminar este movimiento?')) {
+  if (confirm('¿Eliminar este movimiento?')) {
     data.transacciones = data.transacciones.filter(t => t.id !== id);
     saveData();
     toast(T('reg_eliminar_toast'));
@@ -341,7 +336,7 @@ function renderDeudas() {
   extraWrap.innerHTML = '';
 
   if (!data.deudas.length) {
-    listEl.innerHTML = `<div class="card" style="text-align:center;padding:32px 20px;"><div style="font-size:40px;margin-bottom:10px;">🎉</div><p style="font-weight:800;font-size:17px;">${T('deudas_sin')}</p><p style="font-size:13px;color:var(--text-muted);margin-top:8px;">${window.appLang === 'pt' ? 'Adicione suas dívidas para calcular seu Plano Sem Dívidas.' : 'Agrega tus deudas para calcular tu Plan Snowball.'}</p></div>`;
+    listEl.innerHTML = `<div class="card" style="text-align:center;padding:32px 20px;"><div style="font-size:40px;margin-bottom:10px;">🎉</div><p style="font-weight:800;font-size:17px;">${T('deudas_sin')}</p><p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Agrega tus deudas para calcular tu Plan Snowball.</p></div>`;
     return;
   }
 
@@ -350,18 +345,15 @@ function renderDeudas() {
   // Hero Fecha de Libertad
   if (sb.fechaLibertad) {
     const f = sb.fechaLibertad;
-    const mesLibre = window.appLang === 'pt' ? MESES_PT[f.getMonth()] : MESES_ES[f.getMonth()];
-    const mesesLabel = window.appLang === 'pt' ? 'meses' : 'meses';
-    const deudaTotalLabel = window.appLang === 'pt' ? 'dívida total' : 'deuda total';
+    const mesLibre = MESES_ES[f.getMonth()];
     heroWrap.innerHTML = `
       <div class="libertad-hero">
         <div class="libertad-sub">🗓️ ${T('deudas_libertad')}</div>
         <div class="libertad-fecha">${mesLibre.charAt(0).toUpperCase()+mesLibre.slice(1)} ${f.getFullYear()}</div>
-        <div class="libertad-sub">${window.appLang === 'pt' ? 'em' : 'en'} ${sb.mesesTotales} ${mesesLabel} · ${fmt(data.deudas.reduce((s,d)=>s+d.saldoActual,0))} ${deudaTotalLabel}</div>
+        <div class="libertad-sub">en ${sb.mesesTotales} meses · ${fmt(data.deudas.reduce((s,d)=>s+d.saldoActual,0))} de deuda total</div>
       </div>`;
   }
 
-  // Tarjetas de deuda
   // Tarjetas de deuda (Snowball timeline)
   const timelineDiv = document.createElement('div');
   timelineDiv.className = 'deuda-timeline';
@@ -379,8 +371,8 @@ function renderDeudas() {
     let libreStr = '';
     if (d.fechaLibre) {
       const f = d.fechaLibre;
-      const mesLibre = window.appLang === 'pt' ? MESES_PT[f.getMonth()] : MESES_ES[f.getMonth()];
-      libreStr = `${window.appLang === 'pt' ? 'Livre em' : 'Libre en'} ${d.mesLibre} ${window.appLang === 'pt' ? 'meses' : 'meses'} · ${mesLibre} ${f.getFullYear()}`;
+      const mesLibre = MESES_ES[f.getMonth()];
+      libreStr = `Libre en ${d.mesLibre} meses · ${mesLibre} ${f.getFullYear()}`;
     }
     
     item.innerHTML = `
@@ -391,8 +383,8 @@ function renderDeudas() {
         <div class="deuda-nombre">${d.nombre}</div>
         <div class="deuda-saldo">${fmt(d.saldoActual)}</div>
         <div class="deuda-meta-row">
-          <span>${window.appLang === 'pt' ? 'Mín/mês' : 'Mín/mes'}: ${fmt(d.pagoMinimo)}</span>
-          ${d.tasaInteres ? '<span>'+d.tasaInteres+ (window.appLang === 'pt' ? '% mensal' : '% mensual') + '</span>' : ''}
+          <span>Mín/mes: ${fmt(d.pagoMinimo)}</span>
+          ${d.tasaInteres ? '<span>'+d.tasaInteres+'% mensual</span>' : ''}
         </div>
         <div class="deuda-progress-wrap">
           <div class="deuda-progress-bar${isPagada?' pagada':''}" style="width:${pct}%"></div>
@@ -419,8 +411,8 @@ function renderDeudas() {
     extraWrap.innerHTML = `<div class="card" style="display:flex;align-items:center;gap:12px;">
       <span style="font-size:24px;">💡</span>
       <div>
-        <div style="font-weight:800;font-size:14px;">${window.appLang === 'pt' ? 'Extra disponível para dívidas' : 'Extra disponible para deudas'}</div>
-        <div style="font-size:18px;font-weight:800;color:var(--primary);">${fmt(sb.extraMensual)}/${window.appLang === 'pt' ? 'mês' : 'mes'}</div>
+        <div style="font-weight:800;font-size:14px;">Extra disponible para deudas</div>
+        <div style="font-size:18px;font-weight:800;color:var(--primary);">${fmt(sb.extraMensual)}/mes</div>
       </div>
     </div>`;
   } else if (data.config.ingresoMensual > 0) {
@@ -437,7 +429,7 @@ function renderDeudas() {
       card.className = 'card';
       card.style.padding = '16px';
       
-      let medsHtml = `<div style="font-weight:800;font-size:14px;margin-bottom:12px;color:var(--accent-gold);text-transform:uppercase;letter-spacing:1px;">🏅 ${window.appLang === 'pt' ? 'Medalhas Conquistadas' : 'Medallas Conquistadas'}</div>`;
+      let medsHtml = `<div style="font-weight:800;font-size:14px;margin-bottom:12px;color:var(--accent-gold);text-transform:uppercase;letter-spacing:1px;">🏅 Medallas Conquistadas</div>`;
       medsHtml += `<div style="display:flex;gap:12px;flex-wrap:wrap;">`;
       meds.forEach(m => {
         medsHtml += `
@@ -468,29 +460,29 @@ function calcularMedallas() {
   if (pctPagado >= 25) {
     medallas.push({
       id: 'm_25',
-      nombre: window.appLang === 'pt' ? 'Iniciante 🎖️' : 'Iniciante 🎖️',
-      desc: window.appLang === 'pt' ? 'Pagou 25% da dívida inicial' : 'Pagaste 25% de tu deuda inicial'
+      nombre: 'Principiante 🎖️',
+      desc: 'Pagaste 25% de tu deuda inicial'
     });
   }
   if (pctPagado >= 50) {
     medallas.push({
       id: 'm_50',
-      nombre: window.appLang === 'pt' ? 'Metade 🛡️' : 'Mitad 🛡️',
-      desc: window.appLang === 'pt' ? 'Pagou 50% da dívida inicial' : 'Pagaste 50% de tu deuda inicial'
+      nombre: 'Mitad del Camino 🛡️',
+      desc: 'Pagaste 50% de tu deuda inicial'
     });
   }
   if (pctPagado >= 75) {
     medallas.push({
       id: 'm_75',
-      nombre: window.appLang === 'pt' ? 'Quase Livre 🚀' : 'Casi Libre 🚀',
-      desc: window.appLang === 'pt' ? 'Pagou 75% da dívida inicial' : 'Pagaste 75% de tu deuda inicial'
+      nombre: 'Casi Libre 🚀',
+      desc: 'Pagaste 75% de tu deuda inicial'
     });
   }
   if (pctPagado >= 100) {
     medallas.push({
       id: 'm_100',
-      nombre: window.appLang === 'pt' ? '100% Livre! 🎉' : '100% Libre! 🎉',
-      desc: window.appLang === 'pt' ? 'Quitou todas as suas dívidas' : 'Liquidaste todas tus deudas'
+      nombre: '100% Libre! 🎉',
+      desc: 'Liquidaste todas tus deudas'
     });
   }
   
@@ -1050,16 +1042,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateStreaks();
   applyLang();
 
-  // Flag emoji update on button
-  const btnLang = document.getElementById('btn-lang');
-  if (btnLang) {
-    btnLang.textContent = window.appLang === 'es' ? '🇪🇸' : '🇧🇷';
-    btnLang.addEventListener('click', () => {
-      const nextLang = window.appLang === 'es' ? 'pt' : 'es';
-      localStorage.setItem('sd_lang', nextLang);
-      window.location.reload();
-    });
-  }
+
 
   // Set initial labels for types toggle
   document.getElementById('tipo-ingreso').textContent = '💚 ' + T('reg_ingreso');
