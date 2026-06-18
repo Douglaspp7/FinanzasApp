@@ -144,6 +144,50 @@ function renderDashboard() {
   const gastos   = txs.filter(t => t.tipo === 'g').reduce((s,t) => s + t.monto, 0);
   const saldo    = ingresos - gastos;
 
+  // Libertad de Deudas Widget
+  const totalInicialDeuda = data.deudas.reduce((sum, d) => sum + (parseFloat(d.saldoInicial) || parseFloat(d.saldoActual) || 0), 0);
+  const totalActualDeuda = data.deudas.reduce((sum, d) => sum + (parseFloat(d.saldoActual) || 0), 0);
+  const deudasPagadas = Math.max(0, totalInicialDeuda - totalActualDeuda);
+  const pctLibertad = totalInicialDeuda > 0 ? Math.round((deudasPagadas / totalInicialDeuda) * 100) : 100;
+  const pctLibertadClamped = Math.min(100, Math.max(0, pctLibertad));
+
+  const libPctEl = document.getElementById('widget-libertad-pct');
+  const libBarEl = document.getElementById('widget-libertad-bar');
+  const libDescEl = document.getElementById('widget-libertad-desc');
+
+  if (libPctEl && libBarEl && libDescEl) {
+    libPctEl.textContent = `${pctLibertadClamped}%`;
+    libBarEl.style.width = `${pctLibertadClamped}%`;
+    if (totalActualDeuda === 0) {
+      libDescEl.textContent = '🎉 ¡Estás libre de deudas!';
+    } else {
+      libDescEl.textContent = `Faltan ${fmt(totalActualDeuda)} por pagar`;
+    }
+  }
+
+  // Progreso de Ahorros Widget
+  const totalMetaObjetivo = data.metas.reduce((sum, m) => sum + (parseFloat(m.montoObjetivo) || 0), 0);
+  const totalMetaAhorrado = data.metas.reduce((sum, m) => sum + (parseFloat(m.ahorrado) || 0), 0);
+  const pctAhorros = totalMetaObjetivo > 0 ? Math.round((totalMetaAhorrado / totalMetaObjetivo) * 100) : 0;
+  const pctAhorrosClamped = Math.min(100, Math.max(0, pctAhorros));
+
+  const savePctEl = document.getElementById('widget-ahorros-pct');
+  const saveBarEl = document.getElementById('widget-ahorros-bar');
+  const saveDescEl = document.getElementById('widget-ahorros-desc');
+
+  if (savePctEl && saveBarEl && saveDescEl) {
+    savePctEl.textContent = `${pctAhorrosClamped}%`;
+    saveBarEl.style.width = `${pctAhorrosClamped}%`;
+    if (totalMetaObjetivo === 0) {
+      saveDescEl.textContent = 'Crea tu primera meta';
+    } else {
+      saveDescEl.textContent = `${fmt(totalMetaAhorrado)} ahorrados de ${fmt(totalMetaObjetivo)}`;
+    }
+  }
+
+  // Draw Cash Flow Chart
+  drawCashFlowChart();
+
   document.getElementById('dash-saldo-label').textContent = '💰 ' + T('dash_saldo');
   const saldoEl = document.getElementById('dash-saldo-valor');
   saldoEl.textContent = fmt(saldo);
@@ -274,20 +318,23 @@ window.eliminarMovimiento = function(id) {
 // ===== SNOWBALL METHOD =====
 function calcularSnowball() {
   const deudas = data.deudas;
-  if (!deudas.length) return { deudas: [], fechaLibertad: null, extraMensual: 0 };
+  if (!deudas.length) return { deudas: [], fechaLibertad: null, extraMensual: 0, interesAhorrado: 0, mesesAhorrados: 0 };
 
-  const totalMinimos  = deudas.reduce((s,d) => s + (d.pagoMinimo || 0), 0);
-  const extraMensual  = Math.max(0, (data.config.ingresoMensual || 0) - (data.config.gastosFijos || 0) - totalMinimos);
+  const totalMinimos  = deudas.reduce((s,d) => s + (parseFloat(d.pagoMinimo) || 0), 0);
+  const extraMensual  = Math.max(0, (parseFloat(data.config.ingresoMensual) || 0) - (parseFloat(data.config.gastosFijos) || 0) - totalMinimos);
 
-  const hoy    = new Date();
+  const hoy = new Date();
+  
+  // 1. Simulación Snowball (acumulando interés pagado)
   const saldos = deudas.map(d => ({
     ...d,
-    saldo:     d.saldoActual,
+    saldo:     parseFloat(d.saldoActual) || 0,
     mesLibre:  null,
     fechaLibre: null
   })).sort((a,b) => a.saldoActual - b.saldoActual);
 
   let extraPool = extraMensual;
+  let interesTotalSnowball = 0;
 
   for (let mes = 1; mes <= 600; mes++) {
     const activos = saldos.filter(d => d.saldo > 0.01);
@@ -295,9 +342,10 @@ function calcularSnowball() {
     const focus = activos[0];
 
     for (const d of activos) {
-      const interes = d.saldo * ((d.tasaInteres || 0) / 100);
+      const interes = d.saldo * ((parseFloat(d.tasaInteres) || 0) / 100);
+      interesTotalSnowball += interes;
       d.saldo += interes;
-      let pago = d.pagoMinimo || 0;
+      let pago = parseFloat(d.pagoMinimo) || 0;
       if (d.id === focus.id) pago += extraPool;
       pago = Math.min(pago, d.saldo);
       d.saldo -= pago;
@@ -307,19 +355,51 @@ function calcularSnowball() {
         const f = new Date(hoy);
         f.setMonth(f.getMonth() + mes);
         d.fechaLibre = f;
-        extraPool += (d.pagoMinimo || 0);
+        extraPool += (parseFloat(d.pagoMinimo) || 0);
       }
     }
   }
 
   const pagadas   = saldos.filter(d => d.fechaLibre);
   const ultimaDeu = pagadas.sort((a,b) => b.mesLibre - a.mesLibre)[0];
+  const mesesTotales = ultimaDeu ? ultimaDeu.mesLibre : 0;
+
+  // 2. Simulación Solo Mínimos (para calcular el ahorro)
+  const saldosMinimos = deudas.map(d => ({
+    ...d,
+    saldo: parseFloat(d.saldoActual) || 0
+  }));
+  let interesTotalMinimos = 0;
+  let mesesMinimos = 0;
+  for (let mes = 1; mes <= 600; mes++) {
+    const activos = saldosMinimos.filter(d => d.saldo > 0.01);
+    if (!activos.length) {
+      mesesMinimos = mes - 1;
+      break;
+    }
+    for (const d of activos) {
+      const interes = d.saldo * ((parseFloat(d.tasaInteres) || 0) / 100);
+      interesTotalMinimos += interes;
+      d.saldo += interes;
+      let pago = parseFloat(d.pagoMinimo) || 0;
+      pago = Math.min(pago, d.saldo);
+      d.saldo -= pago;
+    }
+    if (mes === 600) {
+      mesesMinimos = 600;
+    }
+  }
+
+  const interesAhorrado = Math.max(0, interesTotalMinimos - interesTotalSnowball);
+  const mesesAhorrados = Math.max(0, mesesMinimos - mesesTotales);
 
   return {
     deudas:        saldos,
     fechaLibertad: ultimaDeu ? ultimaDeu.fechaLibre : null,
     mesesTotales:  ultimaDeu ? ultimaDeu.mesLibre   : null,
-    extraMensual
+    extraMensual,
+    interesAhorrado,
+    mesesAhorrados
   };
 }
 
@@ -346,11 +426,23 @@ function renderDeudas() {
   if (sb.fechaLibertad) {
     const f = sb.fechaLibertad;
     const mesLibre = MESES_ES[f.getMonth()];
+    const totalDeuda = data.deudas.reduce((s,d) => s + (parseFloat(d.saldoActual) || 0), 0);
     heroWrap.innerHTML = `
       <div class="libertad-hero">
-        <div class="libertad-sub">🗓️ ${T('deudas_libertad')}</div>
-        <div class="libertad-fecha">${mesLibre.charAt(0).toUpperCase()+mesLibre.slice(1)} ${f.getFullYear()}</div>
-        <div class="libertad-sub">en ${sb.mesesTotales} meses · ${fmt(data.deudas.reduce((s,d)=>s+d.saldoActual,0))} de deuda total</div>
+        <div class="libertad-sub" style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">🗓️ ${T('deudas_libertad')}</div>
+        <div class="libertad-fecha" style="font-size:30px;font-weight:800;color:#fff;margin:4px 0 8px 0;">${mesLibre.charAt(0).toUpperCase()+mesLibre.slice(1)} ${f.getFullYear()}</div>
+        <div class="libertad-sub" style="font-size:12.5px;color:rgba(255,255,255,0.85);font-weight:600;">en ${sb.mesesTotales} meses · Deuda total: ${fmt(totalDeuda)}</div>
+        
+        <div class="grid-2" style="margin-top:16px; width:100%; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px; gap:12px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.5px;">Interés Ahorrado</div>
+            <div style="font-size:15px;font-weight:800;color:#34d399;">${fmt(sb.interesAhorrado)}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.5px;">Meses Ahorrados</div>
+            <div style="font-size:15px;font-weight:800;color:#34d399;">${sb.mesesAhorrados} meses</div>
+          </div>
+        </div>
       </div>`;
   }
 
@@ -510,6 +602,21 @@ function renderRegistro() {
   document.getElementById('reg-desc-lbl').textContent   = T('reg_desc');
   document.getElementById('reg-cat-lbl').textContent    = T('reg_cat');
   document.getElementById('btn-registrar').textContent  = T('reg_btn');
+  
+  // Set currency symbol in keypad
+  const monedaEl = document.getElementById('calc-moneda');
+  if (monedaEl) {
+    monedaEl.textContent = data.config.moneda || '$';
+  }
+  
+  // Reset calculator input
+  window.calcInput = '0';
+  const calcValEl = document.getElementById('calc-valor');
+  if (calcValEl) {
+    calcValEl.textContent = '0';
+  }
+  document.getElementById('reg-monto').value = '';
+
   renderCategoryChips();
   renderHistorialMes();
 }
@@ -552,6 +659,23 @@ function renderMetas() {
         </div>
         <div class="meta-progress-wrap">
           <div class="meta-progress-bar${lograda?' lograda':''}" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);margin-top:8px;">
+          ${(() => {
+            const totalMinimos  = data.deudas.reduce((s,d) => s + (parseFloat(d.pagoMinimo) || 0), 0);
+            const surplus = Math.max(0, (parseFloat(data.config.ingresoMensual) || 0) - (parseFloat(data.config.gastosFijos) || 0) - totalMinimos);
+            if (lograda) return '';
+            if (surplus > 0) {
+              const falta = Math.max(0, meta.montoObjetivo - meta.ahorrado);
+              const meses = falta / surplus;
+              const hoy = new Date();
+              hoy.setMonth(hoy.getMonth() + Math.ceil(meses));
+              const mesNom = MESES_ES[hoy.getMonth()];
+              return `📅 Completado estimado: ${mesNom.charAt(0).toUpperCase() + mesNom.slice(1)} ${hoy.getFullYear()} (en ${Math.ceil(meses)} mes${Math.ceil(meses) > 1 ? 'es' : ''})`;
+            } else {
+              return `💡 Define margen en Perfil para planificar logro`;
+            }
+          })()}
         </div>
         <button class="btn btn-secondary" style="margin-top:12px;min-height:38px;font-size:13px;" data-abono-meta="${meta.id}">💰 Abonar</button>`;
       listEl.appendChild(card);
@@ -1045,7 +1169,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     saveData();
     toast(selectedTipo === 'i' ? T('reg_toast_ingreso') : T('reg_toast_gasto'));
+    
+    // Reset keypad and amount input
     document.getElementById('reg-monto').value = '';
+    window.calcInput = '0';
+    const calcValEl = document.getElementById('calc-valor');
+    if (calcValEl) {
+      calcValEl.textContent = '0';
+    }
+    
     document.getElementById('reg-desc').value  = '';
     renderHistorialMes();
     renderDashboard();
@@ -1098,6 +1230,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('input-restore').addEventListener('change', e => {
     if (e.target.files[0]) importarDatos(e.target.files[0]);
   });
+
+  // Custom Executive Reports Click Listeners
+  const btnExcel = document.getElementById('btn-export-excel');
+  if (btnExcel) btnExcel.addEventListener('click', exportarExcelPremium);
+  
+  const btnPdf = document.getElementById('btn-export-pdf');
+  if (btnPdf) btnPdf.addEventListener('click', generarReportePDF);
 
   // Onboarding paso 1
   document.getElementById('btn-onb-1').addEventListener('click', () => {
@@ -1345,7 +1484,7 @@ async function callDreamGemini(prompt) {
     const url = `data:${mime};base64,${base64}`;
     displayDreamPreview(url);
   } else {
-    throw new Error('Nenhum dado de imagem retornado pela Gemini API.');
+    throw new Error('Ningún dato de imagen devuelto por la API de Gemini.');
   }
 }
 
@@ -1433,4 +1572,746 @@ function deleteDream(id) {
     renderDreamsBoard();
     toast('Sueño eliminado');
   }
+}
+
+// ===== CUSTOM CALCULATOR KEYPAD LOGIC =====
+window.calcInput = '0';
+function pressKey(key) {
+  const displayVal = document.getElementById('calc-valor');
+  const inputEl = document.getElementById('reg-monto');
+  if (!displayVal || !inputEl) return;
+
+  if (key === 'C') {
+    window.calcInput = '0';
+  } else if (key === '⌫') {
+    window.calcInput = window.calcInput.slice(0, -1);
+    if (window.calcInput === '' || window.calcInput === '-') {
+      window.calcInput = '0';
+    }
+  } else if (key === '.') {
+    if (!window.calcInput.includes('.')) {
+      window.calcInput += '.';
+    }
+  } else {
+    // Digit
+    if (window.calcInput === '0') {
+      window.calcInput = key;
+    } else {
+      if (window.calcInput.length < 9) {
+        window.calcInput += key;
+      }
+    }
+  }
+  displayVal.textContent = window.calcInput;
+  inputEl.value = window.calcInput === '0' ? '' : window.calcInput;
+}
+
+// ===== SVG CHARTING ENGINE =====
+function drawCashFlowChart() {
+  const container = document.getElementById('dashboard-cashflow-chart-container');
+  if (!container) return;
+
+  const months = [];
+  const now = new Date();
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const label = d.toLocaleString('es-MX', { month: 'short' });
+    months.push({ key, label, income: 0, expense: 0 });
+  }
+
+  data.transacciones.forEach(tx => {
+    if (!tx.fecha) return;
+    const txDate = new Date(tx.fecha);
+    const key = txDate.getFullYear() + '-' + String(txDate.getMonth() + 1).padStart(2, '0');
+    const monthObj = months.find(m => m.key === key);
+    if (monthObj) {
+      if (tx.tipo === 'i') {
+        monthObj.income += parseFloat(tx.monto) || 0;
+      } else if (tx.tipo === 'g') {
+        monthObj.expense += parseFloat(tx.monto) || 0;
+      }
+    }
+  });
+
+  const totalAct = months.reduce((s, m) => s + m.income + m.expense, 0);
+  let isDemo = false;
+  if (totalAct === 0) {
+    isDemo = true;
+    months[0].income = 1200; months[0].expense = 950;
+    months[1].income = 1400; months[1].expense = 1100;
+    months[2].income = 1100; months[2].expense = 1200;
+    months[3].income = 1600; months[3].expense = 1300;
+    months[4].income = 1800; months[4].expense = 1400;
+  }
+
+  const maxVal = Math.max(...months.map(m => Math.max(m.income, m.expense, 100)));
+
+  const width = 350;
+  const height = 180;
+  const paddingLeft = 45;
+  const paddingRight = 10;
+  const paddingTop = 20;
+  const paddingBottom = 25;
+
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+
+  const gridLines = [];
+  const gridCount = 4;
+  for (let i = 0; i <= gridCount; i++) {
+    const yVal = maxVal * (i / gridCount);
+    const y = paddingTop + chartHeight - (yVal / maxVal) * chartHeight;
+    gridLines.push(`
+      <line class="chart-grid-line" x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" />
+      <text class="chart-axis-text" x="${paddingLeft - 8}" y="${y + 3}" text-anchor="end">${Math.round(yVal)}</text>
+    `);
+  }
+
+  const barWidth = 12;
+  const colGap = chartWidth / months.length;
+  const barsMarkup = [];
+  const monthLabelsMarkup = [];
+
+  months.forEach((m, idx) => {
+    const colX = paddingLeft + idx * colGap + colGap / 2;
+    const incX = colX - barWidth - 2;
+    const expX = colX + 2;
+
+    const incH = (m.income / maxVal) * chartHeight;
+    const expH = (m.expense / maxVal) * chartHeight;
+
+    const incY = paddingTop + chartHeight - incH;
+    const expY = paddingTop + chartHeight - expH;
+
+    barsMarkup.push(`
+      <rect class="chart-bar-rect income" x="${incX}" y="${incY}" width="${barWidth}" height="${incH}" rx="3" ry="3">
+        <title>Ingresos: ${fmt(m.income)}</title>
+      </rect>
+      <rect class="chart-bar-rect expense" x="${expX}" y="${expY}" width="${barWidth}" height="${expH}" rx="3" ry="3">
+        <title>Gastos: ${fmt(m.expense)}</title>
+      </rect>
+    `);
+
+    monthLabelsMarkup.push(`
+      <text class="chart-axis-text" x="${colX}" y="${height - 8}" text-anchor="middle">${m.label.toUpperCase()}</text>
+    `);
+  });
+
+  const demoBadge = isDemo ? `
+    <rect x="${width - 110}" y="${paddingTop}" width="100" height="18" rx="4" fill="rgba(245, 158, 11, 0.15)" stroke="var(--warning)" stroke-width="0.5" />
+    <text x="${width - 60}" y="${paddingTop + 12}" fill="var(--warning)" font-size="8" font-weight="800" text-anchor="middle" font-family="var(--font)">DATOS DE EJEMPLO</text>
+  ` : '';
+
+  container.innerHTML = `
+    <svg class="chart-svg" viewBox="0 0 ${width} ${height}">
+      <g>${gridLines.join('')}</g>
+      <line class="chart-axis-line" x1="${paddingLeft}" y1="${paddingTop + chartHeight}" x2="${width - paddingRight}" y2="${paddingTop + chartHeight}" />
+      <g>${barsMarkup.join('')}</g>
+      <g>${monthLabelsMarkup.join('')}</g>
+      ${demoBadge}
+    </svg>
+  `;
+}
+
+// ===== EXCEL PREMIUM EXPORT ENGINE =====
+function exportarExcelPremium() {
+  const hs = calcularHealthScore();
+  const sb = calcularSnowball();
+  const totalDeuda = data.deudas.reduce((s,d) => s + (parseFloat(d.saldoActual) || 0), 0);
+  const totalMinimos = data.deudas.reduce((s,d) => s + (parseFloat(d.pagoMinimo) || 0), 0);
+  const deudasPagadas = data.deudas.reduce((s,d) => s + (Math.max(0, (parseFloat(d.saldoInicial) || parseFloat(d.saldoActual) || 0) - (parseFloat(d.saldoActual) || 0))), 0);
+  const totalInicial = data.deudas.reduce((s,d) => s + (parseFloat(d.saldoInicial) || parseFloat(d.saldoActual) || 0), 0);
+  const pctLibertad = totalInicial > 0 ? (deudasPagadas / totalInicial) : 1;
+
+  const totalMetaObjetivo = data.metas.reduce((sum, m) => sum + (parseFloat(m.montoObjetivo) || 0), 0);
+  const totalMetaAhorrado = data.metas.reduce((sum, m) => sum + (parseFloat(m.ahorrado) || 0), 0);
+  const pctAhorros = totalMetaObjetivo > 0 ? (totalMetaAhorrado / totalMetaObjetivo) : 0;
+  const surplus = Math.max(0, (parseFloat(data.config.ingresoMensual) || 0) - (parseFloat(data.config.gastosFijos) || 0) - totalMinimos);
+
+  const txs = getTxsMes();
+
+  let xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+  <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+    <Author>SinDeudas</Author>
+    <Created>\${new Date().toISOString()}</Created>
+  </DocumentProperties>
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal">
+      <Alignment ss:Vertical="Bottom"/>
+      <Borders/>
+      <Font ss:FontName="Segoe UI" x:Family="Swiss" ss:Size="11" ss:Color="#1E293B"/>
+      <Interior/>
+      <NumberFormat/>
+      <Protection/>
+    </Style>
+    <Style ss:ID="Header">
+      <Font ss:FontName="Segoe UI" x:Family="Swiss" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/>
+      <Interior ss:Color="#0F766E" ss:Pattern="Solid"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+    </Style>
+    <Style ss:ID="Title">
+      <Font ss:FontName="Segoe UI" x:Family="Swiss" ss:Size="16" ss:Bold="1" ss:Color="#0F766E"/>
+    </Style>
+    <Style ss:ID="Label">
+      <Font ss:FontName="Segoe UI" x:Family="Swiss" ss:Size="11" ss:Bold="1" ss:Color="#475569"/>
+    </Style>
+    <Style ss:ID="Number">
+      <NumberFormat ss:Format="$#,##0.00"/>
+    </Style>
+    <Style ss:ID="Percent">
+      <NumberFormat ss:Format="0.0%"/>
+    </Style>
+    <Style ss:ID="Date">
+      <NumberFormat ss:Format="YYYY-MM-DD"/>
+    </Style>
+  </Styles>
+  `;
+
+  xml += `
+  <Worksheet ss:Name="Resumen Dashboard">
+    <Table>
+      <Column ss:Width="180"/>
+      <Column ss:Width="120"/>
+      <Row ss:Height="30">
+        <Cell ss:StyleID="Title"><Data ss:Type="String">SinDeudas — Dashboard de Salud Financiera</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="Label"><Data ss:Type="String">Indicador</Data></Cell>
+        <Cell ss:StyleID="Label"><Data ss:Type="String">Valor</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Salud Financiera (Score 0-100)</Data></Cell>
+        <Cell><Data ss:Type="Number">\${hs.score}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Nivel de Salud</Data></Cell>
+        <Cell><Data ss:Type="String">\${hs.level}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Ingreso Mensual Declarado</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(data.config.ingresoMensual) || 0}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Gastos Fijos Declarados</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(data.config.gastosFijos) || 0}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Deuda Consolidada Actual</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${totalDeuda}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Deudas Pagadas (Monto)</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${deudasPagadas}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Libertad de Deudas (%)</Data></Cell>
+        <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pctLibertad}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Metas de Ahorro Total</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${totalMetaObjetivo}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Ahorrado Consolidado</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${totalMetaAhorrado}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Progreso de Ahorros (%)</Data></Cell>
+        <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pctAhorros}</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  `;
+
+  xml += `
+  <Worksheet ss:Name="Ingresos">
+    <Table>
+      <Column ss:Width="100"/>
+      <Column ss:Width="150"/>
+      <Column ss:Width="120"/>
+      <Column ss:Width="100"/>
+      <Row ss:Height="24">
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Fecha</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Descripción</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Categoría</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Monto</Data></Cell>
+      </Row>
+  `;
+  const ingresosTxs = data.transacciones.filter(t => t.tipo === 'i');
+  if (ingresosTxs.length === 0) {
+    xml += `
+      <Row>
+        <Cell colspan="4"><Data ss:Type="String">No hay ingresos registrados en el mes actual.</Data></Cell>
+      </Row>
+    `;
+  } else {
+    ingresosTxs.forEach(t => {
+      xml += `
+        <Row>
+          <Cell><Data ss:Type="String">\${(t.fecha || '').split('T')[0]}</Data></Cell>
+          <Cell><Data ss:Type="String">\${escapeXml(t.descripcion || '')}</Data></Cell>
+          <Cell><Data ss:Type="String">\${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(t.monto) || 0}</Data></Cell>
+        </Row>
+      `;
+    });
+  }
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  xml += `
+  <Worksheet ss:Name="Gastos">
+    <Table>
+      <Column ss:Width="100"/>
+      <Column ss:Width="150"/>
+      <Column ss:Width="120"/>
+      <Column ss:Width="100"/>
+      <Row ss:Height="24">
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Fecha</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Descripción</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Categoría</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Monto</Data></Cell>
+      </Row>
+  `;
+  const gastosTxs = data.transacciones.filter(t => t.tipo === 'g');
+  if (gastosTxs.length === 0) {
+    xml += `
+      <Row>
+        <Cell colspan="4"><Data ss:Type="String">No hay gastos registrados en el mes actual.</Data></Cell>
+      </Row>
+    `;
+  } else {
+    gastosTxs.forEach(t => {
+      xml += `
+        <Row>
+          <Cell><Data ss:Type="String">\${(t.fecha || '').split('T')[0]}</Data></Cell>
+          <Cell><Data ss:Type="String">\${escapeXml(t.descripcion || '')}</Data></Cell>
+          <Cell><Data ss:Type="String">\${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(t.monto) || 0}</Data></Cell>
+        </Row>
+      `;
+    });
+  }
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  xml += `
+  <Worksheet ss:Name="Plan de Deudas">
+    <Table>
+      <Column ss:Width="150"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="80"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="180"/>
+      <Row ss:Height="24">
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Nombre de Deuda</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Saldo Inicial</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Saldo Actual</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Tasa Interés (%)</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Pago Mínimo</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Predicción de Libertad</Data></Cell>
+      </Row>
+  `;
+  if (sb.deudas.length === 0) {
+    xml += `
+      <Row>
+        <Cell colspan="6"><Data ss:Type="String">No hay deudas registradas.</Data></Cell>
+      </Row>
+    `;
+  } else {
+    sb.deudas.forEach(d => {
+      const isPagada = d.saldoActual <= 0.01;
+      let libreStr = 'Pagada';
+      if (!isPagada && d.fechaLibre) {
+        const f = d.fechaLibre;
+        const mesLibre = MESES_ES[f.getMonth()];
+        libreStr = \`Mes \${d.mesLibre} (\${mesLibre} \${f.getFullYear()})\`;
+      }
+      xml += `
+        <Row>
+          <Cell><Data ss:Type="String">\${escapeXml(d.nombre)}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(d.saldoInicial) || parseFloat(d.saldoActual) || 0}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(d.saldoActual) || 0}</Data></Cell>
+          <Cell><Data ss:Type="Number">\${parseFloat(d.tasaInteres) || 0}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(d.pagoMinimo) || 0}</Data></Cell>
+          <Cell><Data ss:Type="String">\${libreStr}</Data></Cell>
+        </Row>
+      `;
+    });
+  }
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  xml += `
+  <Worksheet ss:Name="Metas de Ahorro">
+    <Table>
+      <Column ss:Width="150"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="80"/>
+      <Column ss:Width="150"/>
+      <Row ss:Height="24">
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Meta</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Objetivo</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Ahorrado</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Progreso (%)</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Fecha Estimada</Data></Cell>
+      </Row>
+  `;
+  if (data.metas.length === 0) {
+    xml += `
+      <Row>
+        <Cell colspan="5"><Data ss:Type="String">No hay metas de ahorro registradas.</Data></Cell>
+      </Row>
+    `;
+  } else {
+    data.metas.forEach(m => {
+      const pct = m.montoObjetivo > 0 ? (m.ahorrado / m.montoObjetivo) : 0;
+      const lograda = pct >= 1;
+      let forecastStr = 'Completado';
+      if (surplus > 0 && !lograda) {
+        const falta = Math.max(0, m.montoObjetivo - m.ahorrado);
+        const meses = falta / surplus;
+        const hoy = new Date();
+        hoy.setMonth(hoy.getMonth() + Math.ceil(meses));
+        const mesNom = MESES_ES[hoy.getMonth()];
+        forecastStr = \`\${mesNom} \${hoy.getFullYear()} (en \${Math.ceil(meses)} meses)\`;
+      } else if (!lograda) {
+        forecastStr = 'Sin plan activo';
+      }
+      xml += `
+        <Row>
+          <Cell><Data ss:Type="String">\${m.emoji || '🎯'} \${escapeXml(m.nombre)}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(m.montoObjetivo) || 0}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(m.ahorrado) || 0}</Data></Cell>
+          <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pct}</Data></Cell>
+          <Cell><Data ss:Type="String">\${forecastStr}</Data></Cell>
+        </Row>
+      `;
+    });
+  }
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  xml += `
+  <Worksheet ss:Name="Sobres de Presupuesto">
+    <Table>
+      <Column ss:Width="150"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="100"/>
+      <Column ss:Width="80"/>
+      <Row ss:Height="24">
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Sobre (Categoría)</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Presupuesto</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Gastado</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Restante</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Porcentaje Usado</Data></Cell>
+      </Row>
+  `;
+  const sobresEntries = Object.entries(data.config.sobres).filter(([_, val]) => val > 0);
+  if (sobresEntries.length === 0) {
+    xml += `
+      <Row>
+        <Cell colspan="5"><Data ss:Type="String">No hay presupuestos configurados para los sobres.</Data></Cell>
+      </Row>
+    `;
+  } else {
+    sobresEntries.forEach(([nombre, presupuesto]) => {
+      const cleanNombre = nombre.replace(/^[^\wÀ-ž]*/, '').trim();
+      const keyword = cleanNombre.toLowerCase();
+      const gastadoSobre = txs
+        .filter(t => t.tipo === 'g' && t.categoria && t.categoria.toLowerCase().includes(keyword))
+        .reduce((s,t) => s + t.monto, 0);
+      const pct = presupuesto > 0 ? (gastadoSobre / presupuesto) : 0;
+      const restante = Math.max(0, presupuesto - gastadoSobre);
+      xml += `
+        <Row>
+          <Cell><Data ss:Type="String">\${escapeXml(nombre)}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${presupuesto}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${gastadoSobre}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${restante}</Data></Cell>
+          <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pct}</Data></Cell>
+        </Row>
+      `;
+    });
+  }
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  xml += `</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'SinDeudas_Reporte_Premium_' + new Date().toISOString().split('T')[0] + '.xls';
+  a.click();
+}
+
+function escapeXml(unsafe) {
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+    }
+  });
+}
+
+// ===== PDF EXECUTIVE REPORT GENERATOR =====
+function generarReportePDF() {
+  const printEl = document.getElementById('print-report-view');
+  if (!printEl) return;
+
+  const hs = calcularHealthScore();
+  const sb = calcularSnowball();
+  const totalDeuda = data.deudas.reduce((s,d) => s + (parseFloat(d.saldoActual) || 0), 0);
+  const totalMinimos = data.deudas.reduce((s,d) => s + (parseFloat(d.pagoMinimo) || 0), 0);
+  
+  const totalMetaObjetivo = data.metas.reduce((sum, m) => sum + (parseFloat(m.montoObjetivo) || 0), 0);
+  const totalMetaAhorrado = data.metas.reduce((sum, m) => sum + (parseFloat(m.ahorrado) || 0), 0);
+  const surplus = Math.max(0, (parseFloat(data.config.ingresoMensual) || 0) - (parseFloat(data.config.gastosFijos) || 0) - totalMinimos);
+
+  let html = `
+    <div style="font-family:'Segoe UI', sans-serif; color:#1E293B; max-width:800px; margin:0 auto; padding:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #0f766e; padding-bottom:14px; margin-bottom:24px;">
+        <div>
+          <h1 style="margin:0; font-size:26px; color:#0f766e; font-weight:800; letter-spacing:-0.5px;">INFORME DE SALUD FINANCIERA</h1>
+          <p style="margin:4px 0 0 0; font-size:12px; color:#64748B; font-weight:600;">Generado por SinDeudas PWA · Plan de Recuperación de Deudas</p>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:24px; font-weight:800; margin:0;">💸 <span style="font-size:20px; color:#0f766e;">SinDeudas</span></div>
+          <div style="font-size:11px; color:#64748B; font-weight:700; margin-top:4px;">Fecha: \${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+        <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
+          <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Salud Financiera</div>
+          <div style="font-size:20px; font-weight:800; color:\${hs.color}; margin-top:4px;">\${hs.score} / 100</div>
+          <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">\${hs.level}</div>
+        </div>
+        <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
+          <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Deuda Consolidada</div>
+          <div style="font-size:20px; font-weight:800; color:#ef4444; margin-top:4px;">\${fmt(totalDeuda)}</div>
+          <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">Plan: Snowball (Bola de Nieve)</div>
+        </div>
+        <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
+          <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Surplus Mensual (Ahorro)</div>
+          <div style="font-size:20px; font-weight:800; color:#10b981; margin-top:4px;">\${fmt(surplus)}</div>
+          <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">Capacidad de pago extra</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <h3 style="font-size:14px; border-left:4px solid #0f766e; padding-left:8px; margin:0 0 12px 0; color:#0f766e;">⚙️ Parámetros Mensuales</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <tr>
+            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#475569; width:50%;">Ingresos Mensuales Declarados</td>
+            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right;">\${fmt(data.config.ingresoMensual)}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#475569;">Gastos Fijos Mensuales</td>
+            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right; color:#ef4444;">\${fmt(data.config.gastosFijos)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <h3 style="font-size:14px; border-left:4px solid #0f766e; padding-left:8px; margin:0 0 12px 0; color:#0f766e;">💳 Plan de Libertad de Deudas (Bola de Nieve)</h3>
+        <p style="font-size:11px; color:#64748b; margin:-6px 0 12px 0;">El método Snowball prioriza liquidar primero las deudas de menor saldo para ganar motivación rápido.</p>
+        
+        <table style="width:100%; border-collapse:collapse; font-size:11px;">
+          <thead>
+            <tr style="background:#e2e8f0;">
+              <th style="padding:8px; text-align:left; border-bottom:2px solid #cbd5e1;">Prioridad / Deuda</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Saldo Inicial</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Saldo Actual</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Tasa</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Mínimo</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Proyección de Pago</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+
+  if (sb.deudas.length === 0) {
+    html += `<tr><td colspan="6" style="padding:12px; text-align:center; color:#64748b;">No hay deudas activas registradas. ¡Felicidades!</td></tr>`;
+  } else {
+    sb.deudas.forEach((d, idx) => {
+      const isPagada = d.saldoActual <= 0.01;
+      const saldoInicial = d.saldoInicial || d.saldoActual;
+      let libreStr = 'Pagada';
+      if (!isPagada && d.fechaLibre) {
+        const f = d.fechaLibre;
+        const mesLibre = MESES_ES[f.getMonth()];
+        libreStr = \`\dots \${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} \${f.getFullYear()} (en \${d.mesLibre} mes\${d.mesLibre > 1 ? 'es' : ''})\`;
+      }
+      html += `
+        <tr style="border-bottom:1px solid #e2e8f0; background:\${isPagada ? '#f0fdf4' : 'none'};">
+          <td style="padding:8px; font-weight:700; color:#334155;">#\${idx+1} \dots \${d.nombre} \${isPagada ? '✅' : ''}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(saldoInicial)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:\${isPagada ? '#10b981' : '#ef4444'}">\${fmt(d.saldoActual)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\${d.tasaInteres || 0}% mes</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\dots \${fmt(d.pagoMinimo)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">\${libreStr}</td>
+        </tr>
+      `;
+    });
+  }
+
+  html += `
+          </tbody>
+        </table>
+  `;
+
+  if (sb.fechaLibertad) {
+    const f = sb.fechaLibertad;
+    const mesLibre = MESES_ES[f.getMonth()];
+    html += `
+      <div style="background:#ecfdf5; border:1.5px solid #10b981; padding:14px; border-radius:8px; margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:10px; font-weight:800; color:#047857; text-transform:uppercase; letter-spacing:0.5px;">Predicción Libre de Deudas</div>
+          <div style="font-size:16px; font-weight:800; color:#065f46; margin-top:2px;">\${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} \${f.getFullYear()} (en \${sb.mesesTotales} meses)</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px; font-weight:700; color:#047857;">Ahorro de Intereses: <span style="font-weight:800;">\${fmt(sb.interesAhorrado)}</span></div>
+          <div style="font-size:11px; font-weight:700; color:#047857; margin-top:2px;">Meses Ahorrados con Snowball: <span style="font-weight:800;">\${sb.mesesAhorrados} meses</span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <h3 style="font-size:14px; border-left:4px solid #0f766e; padding-left:8px; margin:0 0 12px 0; color:#0f766e;">🎯 Metas de Ahorro Colectivas</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:11px;">
+          <thead>
+            <tr style="background:#e2e8f0;">
+              <th style="padding:8px; text-align:left; border-bottom:2px solid #cbd5e1;">Meta / Emoji</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Monto Objetivo</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Monto Ahorrado</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Progreso %</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Estimado de Logro</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+
+  if (data.metas.length === 0) {
+    html += `<tr><td colspan="5" style="padding:12px; text-align:center; color:#64748b;">No hay metas de ahorro activas.</td></tr>`;
+  } else {
+    data.metas.forEach(m => {
+      const pct = m.montoObjetivo > 0 ? Math.min((m.ahorrado / m.montoObjetivo) * 100, 100) : 0;
+      const lograda = pct >= 100;
+      let forecastStr = 'Completado';
+      if (surplus > 0 && !lograda) {
+        const falta = Math.max(0, m.montoObjetivo - m.ahorrado);
+        const meses = falta / surplus;
+        const hoy = new Date();
+        hoy.setMonth(hoy.getMonth() + Math.ceil(meses));
+        const mesNom = MESES_ES[hoy.getMonth()];
+        forecastStr = \`\${mesNom} \${hoy.getFullYear()} (en \${Math.ceil(meses)} m)\`;
+      } else if (!lograda) {
+        forecastStr = 'Sin plan activo';
+      }
+      html += `
+        <tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:8px; font-weight:700; color:#334155;">\${m.emoji || '🎯'} \${escapeXml(m.nombre)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(m.montoObjetivo)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">\${fmt(m.ahorrado)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\${Math.round(pct)}%</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#475569;">\dots \${forecastStr}</td>
+        </tr>
+      `;
+    });
+  }
+
+  html += `
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <h3 style="font-size:14px; border-left:4px solid #0f766e; padding-left:8px; margin:0 0 12px 0; color:#0f766e;">📊 Sobres de Presupuesto Mensual</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:11px;">
+          <thead>
+            <tr style="background:#e2e8f0;">
+              <th style="padding:8px; text-align:left; border-bottom:2px solid #cbd5e1;">Categoría</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Presupuesto Asignado</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Monto Gastado</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Monto Disponible</th>
+              <th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Límite Usado</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+
+  const txs = getTxsMes();
+  const sobres = data.config.sobres;
+  const entries = Object.entries(sobres).filter(([_, val]) => val > 0);
+
+  if (entries.length === 0) {
+    html += `<tr><td colspan="5" style="padding:12px; text-align:center; color:#64748b;">No hay presupuestos asignados a sobres.</td></tr>`;
+  } else {
+    entries.forEach(([nombre, presupuesto]) => {
+      const cleanNombre = nombre.replace(/^[^\wÀ-ž]*/, '').trim();
+      const nombreTrad = T('cat_' + cleanNombre);
+      const keyword = cleanNombre.toLowerCase();
+      const gastadoSobre = txs
+        .filter(t => t.tipo === 'g' && t.categoria && t.categoria.toLowerCase().includes(keyword))
+        .reduce((s,t) => s + t.monto, 0);
+      const pct = Math.round((gastadoSobre / presupuesto) * 100);
+      const restante = Math.max(0, presupuesto - gastadoSobre);
+      const over = gastadoSobre > presupuesto;
+
+      html += `
+        <tr style="border-bottom:1px solid #e2e8f0; background:\${over ? '#fef2f2' : 'none'};">
+          <td style="padding:8px; font-weight:700; color:#334155;">\${nombreTrad}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(presupuesto)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:\${over ? '#ef4444' : '#334155'}">\${fmt(gastadoSobre)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:\${over ? '#ef4444' : '#10b981'}">\${fmt(restante)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:\${over ? '#ef4444' : '#0f766e'}">\${pct}%</td>
+        </tr>
+      `;
+    });
+  }
+
+  html += `
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align:center; border-top:1px solid #e2e8f0; padding-top:16px; margin-top:36px; font-size:10px; color:#94a3b8; font-weight:600;">
+        "Recuperando el control del dinero y construyendo paz financiera."<br>
+        SinDeudas PWA — Software de Recuperación Financiera para América Latina.
+      </div>
+    </div>
+  `;
+
+  printEl.innerHTML = html;
+  window.print();
 }

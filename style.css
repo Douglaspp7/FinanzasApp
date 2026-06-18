@@ -3,39 +3,40 @@
 :root {
   --primary: #10b981;
   --primary-2: #34d399;
-  --primary-light: rgba(16,185,129,0.10);
-  --primary-glow: rgba(16,185,129,0.22);
+  --primary-light: rgba(16, 185, 129, 0.08);
+  --primary-glow: rgba(16, 185, 129, 0.16);
   --accent: #0ea5e9;
   --danger: #EF4444;
-  --ok: #22C55E;
-  --bg-color: #F0FAF4;
-  --bg-2: #E6F7ED;
-  --card-bg: #FFFFFF;
-  --card-bg-2: #F5FDF8;
-  --text-main: #0f2318;
-  --text-muted: #4a7a5c;
-  --border: rgba(16,185,129,0.15);
+  --warning: #F59E0B;
+  --accent-purple: #8B5CF6;
+  --accent-gold: #FACC15;
+  --ok: #10b981;
+  --bg-color: #080D0F;      /* Default premium dark background */
+  --bg-2: #0E161A;
+  --card-bg: #141F24;
+  --card-bg-2: #1B2930;
+  --text-main: #E2E8F0;
+  --text-muted: #64748B;
+  --border: rgba(16, 185, 129, 0.12);
   --radius-sm: 12px;
   --radius-md: 16px;
   --radius-lg: 22px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
-  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+  --font: 'Outfit', 'Inter', -apple-system, sans-serif;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-[data-theme="dark"] {
-  --bg-color: #0a130e;
-  --bg-2: #0f1d14;
-  --card-bg: #0f1d14;
-  --card-bg-2: #142019;
-  --text-main: #e8f5ec;
-  --text-muted: #7ab892;
-  --border: rgba(16,185,129,0.13);
-  --primary-light: rgba(16,185,129,0.12);
-  --primary-glow: rgba(16,185,129,0.18);
-  --shadow: 0 4px 20px rgba(0,0,0,0.35);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+[data-theme="light"] {
+  --bg-color: #F8FAFC;
+  --bg-2: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --card-bg-2: #E2E8F0;
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  --border: rgba(16, 185, 129, 0.15);
+  --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 8px 40px rgba(15, 23, 42, 0.1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -517,6 +518,322 @@ main::-webkit-scrollbar { display: none; }
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 600;
+}
+
+/* ===== PILL TABS ===== */
+.pill-tab {
+  display: flex;
+  background: var(--bg-2) !important;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  border: 1.5px solid var(--border);
+}
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font);
+}
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff !important;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+/* ===== DREAM BOARD GALLERY ===== */
+#dreams-gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 480px) {
+  #dreams-gallery-grid {
+    grid-template-columns: 1fr 1fr; /* 2 columns on mobile is perfect for gallery cards */
+  }
+}
+.dream-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.dream-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.dream-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--bg-color);
+}
+.dream-card-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  height: 34px; /* fixed height for alignment */
+}
+.dream-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.dream-card-btn-delete {
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: var(--danger);
+  font-weight: 800;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.dream-card-btn-delete:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+.premium-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Console */
+.error-console {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #fca5a5;
+  display: none;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ===== GOOGLE FONTS IMPORT ===== */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;600;700;800&display=swap');
+
+/* ===== CUSTOM CALCULATOR KEYPAD (ONE-THUMB OPERATION) ===== */
+.calc-container {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 14px;
+  gap: 16px;
+}
+.calc-display-wrap {
+  position: relative;
+  background: rgba(0,0,0,0.2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.calc-display-currency {
+  position: absolute;
+  left: 18px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.calc-display-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-main);
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  width: 100%;
+  padding-left: 24px;
+}
+.calc-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.calc-key {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+  user-select: none;
+}
+.calc-key:active {
+  transform: scale(0.92);
+  background: var(--primary-glow);
+  border-color: var(--primary);
+}
+.calc-key.action {
+  color: var(--danger);
+  font-size: 16px;
+}
+.calc-key.submit {
+  background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
+  color: #fff;
+  font-size: 18px;
+}
+.calc-key.submit:active {
+  background: #059669;
+}
+
+/* ===== SVG ANIMATED CHARTS ===== */
+.chart-container {
+  position: relative;
+  width: 100%;
+  margin-top: 14px;
+}
+.chart-svg {
+  width: 100%;
+  height: 200px;
+  overflow: visible;
+}
+.chart-axis-line {
+  stroke: var(--border);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.chart-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4, 4;
+}
+.chart-axis-text {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font);
+}
+.chart-line-path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-chart 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.chart-area-path {
+  fill: url(#area-grad);
+  opacity: 0.12;
+  stroke: none;
+}
+.chart-bar-rect {
+  fill: var(--primary);
+  rx: 4px;
+  transition: height 0.5s ease, y 0.5s ease, fill 0.3s;
+}
+.chart-bar-rect.income {
+  fill: var(--primary);
+}
+.chart-bar-rect.expense {
+  fill: var(--danger);
+}
+.chart-bar-rect:hover {
+  filter: brightness(1.2);
+}
+.chart-donut-circle {
+  fill: none;
+  stroke-width: 12px;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dasharray 0.8s ease;
+}
+@keyframes draw-chart {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ===== SKELETON LOADING ===== */
+.skeleton {
+  background: linear-gradient(90deg, var(--card-bg) 25%, var(--card-bg-2) 50%, var(--card-bg) 75%);
+  background-size: 200% 100%;
+  animation: loading-pulse 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+.skeleton-title {
+  height: 20px;
+  width: 50%;
+  margin-bottom: 12px;
+}
+.skeleton-text {
+  height: 14px;
+  width: 90%;
+  margin-bottom: 8px;
+}
+.skeleton-chart {
+  height: 150px;
+  width: 100%;
+  margin-top: 14px;
+}
+@keyframes loading-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== PRINT OVERLAYS (EXPORTS: PDF FINANCIAL REPORT) ===== */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12px;
+  }
+  .app-container, header, .bottom-nav, .btn, .btn-icon, .modal-overlay, #screen-onboarding {
+    display: none !important;
+  }
+  #print-report-view {
+    display: block !important;
+    width: 100%;
+    padding: 24px;
+  }
+}
+#print-report-view {
+  display: none;
 }
 
 /* ===== PILL TABS ===== */
