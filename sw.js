@@ -1,4 +1,4 @@
-const CACHE = 'sindeudas-v5';
+const CACHE = 'sindeudas-v6';
 const SHELL = ['./','./index.html','./style.css','./app.js','./i18n.js','./manifest.json','./app-icon.png'];
 
 self.addEventListener('install', e => {

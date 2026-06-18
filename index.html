@@ -117,7 +117,10 @@
           <div id="score-number" style="position:absolute; font-size:16px; font-weight:800; color:var(--text-main);">0</div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;" data-i18n="perfil_config_titulo">Salud Financiera</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;" data-i18n="perfil_config_titulo">Salud Financiera</div>
+            <div id="dash-streak-badge" style="font-size:11px; font-weight:800; color:var(--accent-gold); display:flex; align-items:center; gap:3px;">🔥 0 días</div>
+          </div>
           <div id="score-label" style="font-size:15px; font-weight:800; color:var(--text-main); margin-top:2px;">Calculando...</div>
           <div id="dash-motivational-msg" style="font-size:12.5px; color:var(--text-muted); font-weight:600; margin-top:4px;"></div>
         </div>
@@ -154,6 +157,17 @@
         </div>
         <div id="dashboard-cashflow-chart-container" class="chart-container">
           <!-- Will render SVG chart dynamically -->
+        </div>
+      </div>
+
+      <!-- Upcoming Payments Card -->
+      <div class="card" id="upcoming-payments-card" style="margin-bottom: 14px; display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="font-size:15px; font-weight:800; color:var(--text-main);">🗓️ Próximos Pagos</h3>
+          <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Control Mensual</span>
+        </div>
+        <div id="upcoming-payments-list" style="display:flex; flex-direction:column; gap:10px;">
+          <!-- Will render upcoming payments dynamically -->
         </div>
       </div>
 

@@ -81,6 +81,72 @@ function toast(msg, duration) {
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), duration);
 }
+function triggerConfetti() {
+  const canvas = document.createElement('canvas');
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '9999';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const particles = [];
+  const colors = ['#10b981', '#34d399', '#0ea5e9', '#38bdf8', '#f59e0b', '#fbbf24', '#8b5cf6', '#a78bfa', '#ec4899'];
+
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * -height - 20,
+      size: Math.random() * 6 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: Math.random() * 4 - 2,
+      speedY: Math.random() * 5 + 3,
+      rotation: Math.random() * 360,
+      rotationSpeed: Math.random() * 10 - 5
+    });
+  }
+
+  let startTime = Date.now();
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    let active = false;
+    particles.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      p.rotation += p.rotationSpeed;
+
+      if (p.y < height) {
+        active = true;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
+    });
+
+    if (active && Date.now() - startTime < 3000) {
+      requestAnimationFrame(animate);
+    } else {
+      canvas.remove();
+    }
+  }
+
+  animate();
+}
 function openModal(id) {
   document.getElementById(id).classList.add('open');
 }
@@ -213,6 +279,13 @@ function renderDashboard() {
     scoreMotivationalEl.textContent = getMotivationalMessage(hs.score);
   }
 
+  // Racha activa (Streak)
+  const streakBadgeEl = document.getElementById('dash-streak-badge');
+  if (streakBadgeEl) {
+    const streakCount = (data.streaks && data.streaks.count) ? data.streaks.count : 0;
+    streakBadgeEl.textContent = `🔥 ${streakCount} ${streakCount === 1 ? 'día' : 'días'}`;
+  }
+
   // Insight Financiero
   const insightContentEl = document.getElementById('dash-insight-content');
   if (insightContentEl) {
@@ -267,6 +340,57 @@ function renderDashboard() {
       grid.appendChild(item);
     });
     sobresContainer.appendChild(grid);
+  }
+
+  // Próximos Pagos Widget
+  const upcomingCard = document.getElementById('upcoming-payments-card');
+  const upcomingList = document.getElementById('upcoming-payments-list');
+  if (upcomingCard && upcomingList) {
+    const activeDeudas = data.deudas.filter(d => d.saldoActual > 0.01);
+    if (activeDeudas.length === 0) {
+      upcomingCard.style.display = 'none';
+    } else {
+      upcomingCard.style.display = 'block';
+      upcomingList.innerHTML = '';
+      
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
+      activeDeudas.forEach(d => {
+        const pagadoEsteMes = data.pagosDeuda.some(p => {
+          if (p.deudaId !== d.id) return false;
+          const pDate = new Date(p.fecha);
+          return pDate.getMonth() === currentMonth && pDate.getFullYear() === currentYear;
+        });
+        
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg-2); border:1px solid var(--border); border-radius:10px;';
+        
+        if (pagadoEsteMes) {
+          row.innerHTML = `
+            <div>
+              <div style="font-size:13.5px; font-weight:800; color:var(--text-muted); text-decoration:line-through;">${d.nombre}</div>
+              <div style="font-size:11px; color:#10b981; font-weight:700; margin-top:2px;">✅ Pagado este mes</div>
+            </div>
+            <div style="font-size:13.5px; font-weight:800; color:var(--text-muted); text-decoration:line-through;">${fmt(d.pagoMinimo)}</div>
+          `;
+        } else {
+          row.innerHTML = `
+            <div>
+              <div style="font-size:13.5px; font-weight:800; color:var(--text-main);">${d.nombre}</div>
+              <div style="font-size:11px; color:var(--warning); font-weight:700; margin-top:2px;">⏳ Pago mínimo pendiente</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:13.5px; font-weight:800; color:var(--text-main);">${fmt(d.pagoMinimo)}</span>
+              <button class="btn btn-primary" style="min-height:30px; padding:6px 12px; font-size:11.5px; width:auto; border-radius:6px;" data-pay-deuda="${d.id}">Pagar</button>
+            </div>
+          `;
+          const btn = row.querySelector('[data-pay-deuda]');
+          btn.addEventListener('click', () => openAbonoModal(d.id));
+        }
+        upcomingList.appendChild(row);
+      });
+    }
   }
 
   // Últimos 8 movimientos
@@ -726,8 +850,18 @@ function renderReto52() {
       cell.className = 'reto-semana' + (done ? ' done' : '');
       cell.textContent = i + 1;
       cell.addEventListener('click', () => {
+        const wasDone = data.reto52.semanas[i];
         data.reto52.semanas[i] = !data.reto52.semanas[i];
         saveData();
+
+        if (!wasDone && data.reto52.semanas[i]) {
+          const comp = data.reto52.semanas.filter(Boolean).length;
+          if (comp === 52) {
+            triggerConfetti();
+          } else {
+            toast(`💪 ¡Semana ${i + 1} completada! Sigue así.`);
+          }
+        }
         renderReto52();
       });
       grid.appendChild(cell);
@@ -824,7 +958,18 @@ function saveAbono() {
   if (!monto || monto <= 0) { toast(T('modal_abono_err')); return; }
   const d = data.deudas.find(d => d.id === abonoDeudaId);
   if (!d) return;
+
+  const deudasInicial = data.deudas.reduce((s,x) => s + (x.saldoInicial || x.saldoActual || 0), 0);
+  const deudasActualAntes = data.deudas.reduce((s,x) => s + (x.saldoActual || 0), 0);
+  const pctAntes = deudasInicial > 0 ? ((deudasInicial - deudasActualAntes) / deudasInicial) * 100 : 0;
+
+  const wasPagada = d.saldoActual > 0.01;
   d.saldoActual = Math.max(0, d.saldoActual - monto);
+  const isPagada = d.saldoActual <= 0.01;
+
+  const deudasActualDespues = data.deudas.reduce((s,x) => s + (x.saldoActual || 0), 0);
+  const pctDespues = deudasInicial > 0 ? ((deudasInicial - deudasActualDespues) / deudasInicial) * 100 : 0;
+
   data.pagosDeuda.push({ id: uid(), deudaId: abonoDeudaId, fecha: new Date().toISOString(), monto });
   data.transacciones.push({
     id: uid(), tipo: 'g', monto,
@@ -832,7 +977,36 @@ function saveAbono() {
     categoria: '💳 Deudas',
     fecha: new Date().toISOString()
   });
-  saveData(); closeModal('modal-abono'); toast(T('modal_abono_toast')); renderDeudas(); renderDashboard();
+
+  saveData();
+  closeModal('modal-abono');
+
+  if (wasPagada && isPagada) {
+    triggerConfetti();
+    toast('🎉 ¡FELICIDADES! Deuda liquidada.');
+  } else {
+    toast(T('modal_abono_toast'));
+  }
+
+  // Detectar y celebrar nuevas medallas conquistadas
+  const thresholds = [25, 50, 75, 100];
+  const medalNames = {
+    25: 'Principiante 🎖️',
+    50: 'Mitad del Camino 🛡️',
+    75: 'Casi Libre 🚀',
+    100: '100% Libre! 🎉'
+  };
+  for (const t of thresholds) {
+    if (pctAntes < t && pctDespues >= t) {
+      setTimeout(() => {
+        triggerConfetti();
+        toast(`🏅 ¡LOGRO CONQUISTADO: ${medalNames[t]}!`);
+      }, 1200);
+    }
+  }
+
+  renderDeudas();
+  renderDashboard();
 }
 
 // ===== MODALS: META =====
@@ -880,14 +1054,30 @@ function saveAbonoMeta() {
   if (!monto || monto <= 0) { toast(T('reg_err')); return; }
   const m = data.metas.find(m => m.id === abonoMetaId);
   if (!m) return;
+
+  const wasLograda = (m.ahorrado || 0) >= m.montoObjetivo;
   m.ahorrado = (m.ahorrado || 0) + monto;
+  const isLograda = m.ahorrado >= m.montoObjetivo;
+
   data.transacciones.push({
     id: uid(), tipo: 'g', monto,
     descripcion: 'Abono meta: ' + m.nombre,
     categoria: 'Otros',
     fecha: new Date().toISOString()
   });
-  saveData(); closeModal('modal-abono-meta'); toast(T('metas_abonar_toast')); renderMetas(); renderDashboard();
+
+  saveData();
+  closeModal('modal-abono-meta');
+
+  if (!wasLograda && isLograda) {
+    triggerConfetti();
+    toast(`🎉 ¡FELICIDADES! Lograste tu meta: ${m.nombre}`);
+  } else {
+    toast(T('metas_abonar_toast'));
+  }
+
+  renderMetas();
+  renderDashboard();
 }
 
 // ===== FINANCIAL HEALTH SCORE & MOTIVATION =====
@@ -1054,6 +1244,7 @@ function updateStreaks() {
       // Consecutive day!
       data.streaks.count += 1;
       data.streaks.lastActiveDate = todayStr;
+      window.streakIncreased = data.streaks.count;
     } else if (diffDays > 1) {
       // Streak broken!
       data.streaks.count = 1;
@@ -1126,6 +1317,12 @@ document.addEventListener('DOMContentLoaded', () => {
   loadData();
   updateStreaks();
   applyLang();
+
+  if (window.streakIncreased) {
+    setTimeout(() => {
+      toast(`🔥 ¡Racha de ${window.streakIncreased} días activos! Sigue así.`);
+    }, 1500);
+  }
 
 
 
