@@ -1,4 +1,4 @@
-// ===== SinDeudas app.js — Modo prueba (sin auth) =====
+// ===== SinDeudas/SemDívidas app.js — Modo prueba (sin auth) =====
 
 const DEFAULT_DATA = {
   version: 1,
@@ -35,8 +35,12 @@ let deferredInstallPrompt = null;
 
 const CATS_GASTO  = ['🍎 Alimentación','🏠 Vivienda','🚗 Transporte','💊 Salud','🎬 Ocio','💡 Servicios','📚 Educación','📦 Otros'];
 const CATS_INGRESO = ['💼 Sueldo','💻 Freelance','🎁 Regalo','📈 Extra','📦 Otros'];
+
 const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIAS_ES  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+const MESES_PT = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const DIAS_PT  = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 
 // ===== STORAGE =====
 function loadData() {
@@ -66,7 +70,7 @@ function uid() {
 function fmt(n) {
   const sym = (data.config && data.config.moneda) ? data.config.moneda : '$';
   const num = Number(n) || 0;
-  return sym + num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return sym + num.toLocaleString(window.appLang === 'pt' ? 'pt-BR' : 'es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function toast(msg, duration) {
   duration = duration || 2800;
@@ -106,9 +110,13 @@ function setTipo(tipo) {
   if (tipo === 'i') {
     btnI.className = 'tipo-btn active-i';
     btnG.className = 'tipo-btn';
+    btnI.textContent = '💚 ' + T('reg_ingreso');
+    btnG.textContent = '🔴 ' + T('reg_gasto');
   } else {
     btnG.className = 'tipo-btn active-g';
     btnI.className = 'tipo-btn';
+    btnI.textContent = '💚 ' + T('reg_ingreso');
+    btnG.textContent = '🔴 ' + T('reg_gasto');
   }
   renderCategoryChips();
 }
@@ -135,14 +143,14 @@ function renderDashboard() {
   const gastos   = txs.filter(t => t.tipo === 'g').reduce((s,t) => s + t.monto, 0);
   const saldo    = ingresos - gastos;
 
-  document.getElementById('dash-saldo-label').textContent = '💰 Dinero disponible este mes';
+  document.getElementById('dash-saldo-label').textContent = '💰 ' + T('dash_saldo');
   const saldoEl = document.getElementById('dash-saldo-valor');
   saldoEl.textContent = fmt(saldo);
   saldoEl.style.color = saldo >= 0 ? '#fff' : '#fca5a5';
   document.getElementById('dash-ingresos').textContent = fmt(ingresos);
   document.getElementById('dash-gastos').textContent   = fmt(gastos);
-  document.getElementById('dash-sobres-titulo').textContent = '📊 Mis Sobres';
-  document.getElementById('dash-mov-titulo').textContent    = '🕐 Últimos movimientos';
+  document.getElementById('dash-sobres-titulo').textContent = '📊 ' + T('dash_sobres_titulo');
+  document.getElementById('dash-mov-titulo').textContent    = '🕐 ' + T('dash_movimientos');
 
   // Sobres
   const sobresContainer = document.getElementById('dash-sobres-container');
@@ -150,11 +158,14 @@ function renderDashboard() {
   const sobres = data.config.sobres;
   const tienePresupuesto = Object.values(sobres).some(v => v > 0);
   if (!tienePresupuesto) {
-    sobresContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);font-weight:600;">Configura tus sobres en <b>Perfil</b>.</p>';
+    sobresContainer.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;">${window.appLang === 'pt' ? 'Configure seus envelopes no <b>Perfil</b>.' : 'Configura tus sobres en <b>Perfil</b>.'}</p>`;
   } else {
     Object.entries(sobres).forEach(([nombre, presupuesto]) => {
       if (!presupuesto) return;
-      const keyword = nombre.replace(/^[^\wÀ-ž]*/, '').split(' ')[0].toLowerCase();
+      const emoji = nombre.split(' ')[0];
+      const cleanNombre = nombre.replace(/^[^\wÀ-ž]*/, '').trim();
+      const nombreTrad = emoji + ' ' + T('cat_' + cleanNombre);
+      const keyword = cleanNombre.toLowerCase();
       const gastadoSobre = txs
         .filter(t => t.tipo === 'g' && t.categoria && t.categoria.toLowerCase().includes(keyword))
         .reduce((s,t) => s + t.monto, 0);
@@ -164,7 +175,7 @@ function renderDashboard() {
       item.className = 'sobre-item';
       item.innerHTML = `
         <div class="sobre-header">
-          <span class="sobre-nombre">${nombre}</span>
+          <span class="sobre-nombre">${nombreTrad}</span>
           <span class="sobre-valores">${fmt(gastadoSobre)} / ${fmt(presupuesto)}</span>
         </div>
         <div class="sobre-bar-wrap">
@@ -179,7 +190,7 @@ function renderDashboard() {
   movContainer.innerHTML = '';
   const last8 = [...data.transacciones].sort((a,b) => new Date(b.fecha)-new Date(a.fecha)).slice(0,8);
   if (!last8.length) {
-    movContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);font-weight:600;">Sin movimientos este mes.</p>';
+    movContainer.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;">${T('dash_sin_mov')}</p>`;
   } else {
     last8.forEach(tx => movContainer.appendChild(buildMovRow(tx, false)));
   }
@@ -190,33 +201,39 @@ function buildMovRow(tx, showDelete) {
   row.className = 'mov-row';
   const icon    = tx.tipo === 'i' ? '💚' : (tx.categoria ? tx.categoria.split(' ')[0] : '📊');
   const d       = new Date(tx.fecha);
-  const dateStr = d.getDate() + ' ' + MESES_ES[d.getMonth()];
+  const dateStr = window.appLang === 'pt'
+    ? d.getDate() + ' de ' + MESES_PT[d.getMonth()]
+    : d.getDate() + ' de ' + MESES_ES[d.getMonth()];
   const sign    = tx.tipo === 'i' ? '+' : '-';
   const color   = tx.tipo === 'i' ? 'var(--ok)' : 'var(--danger)';
+  const cleanCat = (tx.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim();
+  const catTrad  = T('cat_' + cleanCat);
+  const nomeTrad = tx.descripcion || catTrad || (tx.tipo==='i' ? T('reg_ingreso') : T('reg_gasto'));
   row.innerHTML = `
     <div class="mov-emoji">${icon}</div>
     <div class="mov-info">
-      <div class="mov-nome">${tx.descripcion || tx.categoria || (tx.tipo==='i'?'Ingreso':'Gasto')}</div>
-      <div class="mov-data">${tx.categoria || ''} · ${dateStr}</div>
+      <div class="mov-nome">${nomeTrad}</div>
+      <div class="mov-data">${catTrad} · ${dateStr}</div>
     </div>
-    <div class="mov-valor" style="color:${color}">${sign}${fmt(tx.monto)}</div>`;
-  if (showDelete) {
-    const btn = document.createElement('button');
-    btn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;padding:6px;min-width:36px;min-height:36px;color:var(--text-muted);';
-    btn.textContent = '🗑️';
-    btn.addEventListener('click', () => {
-      data.transacciones = data.transacciones.filter(t => t.id !== tx.id);
-      saveData();
-      toast('Movimiento eliminado');
-      renderHistorialMes();
-      renderDashboard();
-    });
-    row.appendChild(btn);
-  }
+    <div class="mov-monto" style="color:${color}">${sign}${fmt(tx.monto)}</div>
+    ${showDelete ? `<button class="mov-del" onclick="eliminarMovimiento('${tx.id}')">✕</button>` : ''}`;
   return row;
 }
 
-// ===== SNOWBALL =====
+window.eliminarMovimiento = function(id) {
+  if (confirm(window.appLang === 'pt' ? 'Excluir esta movimentação?' : '¿Eliminar este movimiento?')) {
+    data.transacciones = data.transacciones.filter(t => t.id !== id);
+    saveData();
+    toast(T('reg_eliminar_toast'));
+    if (document.getElementById('v-dashboard').classList.contains('active')) renderDashboard();
+    if (document.getElementById('v-registro').classList.contains('active')) {
+      renderHistorialMes();
+      renderDashboard();
+    }
+  }
+}
+
+// ===== SNOWBALL METHOD =====
 function calcularSnowball() {
   const deudas = data.deudas;
   if (!deudas.length) return { deudas: [], fechaLibertad: null, extraMensual: 0 };
@@ -270,8 +287,8 @@ function calcularSnowball() {
 
 // ===== RENDER DEUDAS =====
 function renderDeudas() {
-  document.getElementById('deudas-titulo').textContent  = '💳 Plan Sal de Deudas';
-  document.getElementById('btn-nueva-deuda').textContent = '➕ Nueva Deuda';
+  document.getElementById('deudas-titulo').textContent  = '💳 ' + T('deudas_titulo');
+  document.getElementById('btn-nueva-deuda').textContent = T('deudas_btn_nueva');
 
   const heroWrap  = document.getElementById('libertad-hero-wrap');
   const listEl    = document.getElementById('deudas-list');
@@ -281,7 +298,7 @@ function renderDeudas() {
   extraWrap.innerHTML = '';
 
   if (!data.deudas.length) {
-    listEl.innerHTML = '<div class="card" style="text-align:center;padding:32px 20px;"><div style="font-size:40px;margin-bottom:10px;">🎉</div><p style="font-weight:800;font-size:17px;">¡Sin deudas registradas!</p><p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Agrega tus deudas para calcular tu Plan Snowball.</p></div>';
+    listEl.innerHTML = `<div class="card" style="text-align:center;padding:32px 20px;"><div style="font-size:40px;margin-bottom:10px;">🎉</div><p style="font-weight:800;font-size:17px;">${T('deudas_sin')}</p><p style="font-size:13px;color:var(--text-muted);margin-top:8px;">${window.appLang === 'pt' ? 'Adicione suas dívidas para calcular seu Plano Sem Dívidas.' : 'Agrega tus deudas para calcular tu Plan Snowball.'}</p></div>`;
     return;
   }
 
@@ -290,12 +307,14 @@ function renderDeudas() {
   // Hero Fecha de Libertad
   if (sb.fechaLibertad) {
     const f = sb.fechaLibertad;
-    const mesLibre = MESES_ES[f.getMonth()];
+    const mesLibre = window.appLang === 'pt' ? MESES_PT[f.getMonth()] : MESES_ES[f.getMonth()];
+    const mesesLabel = window.appLang === 'pt' ? 'meses' : 'meses';
+    const deudaTotalLabel = window.appLang === 'pt' ? 'dívida total' : 'deuda total';
     heroWrap.innerHTML = `
       <div class="libertad-hero">
-        <div class="libertad-sub">🗓️ Tu Fecha de Libertad</div>
+        <div class="libertad-sub">🗓️ ${T('deudas_libertad')}</div>
         <div class="libertad-fecha">${mesLibre.charAt(0).toUpperCase()+mesLibre.slice(1)} ${f.getFullYear()}</div>
-        <div class="libertad-sub">en ${sb.mesesTotales} meses · ${fmt(data.deudas.reduce((s,d)=>s+d.saldoActual,0))} deuda total</div>
+        <div class="libertad-sub">${window.appLang === 'pt' ? 'em' : 'en'} ${sb.mesesTotales} ${mesesLabel} · ${fmt(data.deudas.reduce((s,d)=>s+d.saldoActual,0))} ${deudaTotalLabel}</div>
       </div>`;
   }
 
@@ -310,22 +329,23 @@ function renderDeudas() {
     let libreStr = '';
     if (d.fechaLibre) {
       const f = d.fechaLibre;
-      libreStr = `Libre en ${d.mesLibre} meses · ${MESES_ES[f.getMonth()]} ${f.getFullYear()}`;
+      const mesLibre = window.appLang === 'pt' ? MESES_PT[f.getMonth()] : MESES_ES[f.getMonth()];
+      libreStr = `${window.appLang === 'pt' ? 'Livre em' : 'Libre en'} ${d.mesLibre} ${window.appLang === 'pt' ? 'meses' : 'meses'} · ${mesLibre} ${f.getFullYear()}`;
     }
     card.innerHTML = `
-      ${isFoco ? '<div class="deuda-foco-badge">FOCO 🔥</div>' : ''}
+      ${isFoco ? '<div class="deuda-foco-badge">' + T('deudas_foco') + '</div>' : ''}
       <div class="deuda-nombre">${d.nombre}</div>
       <div class="deuda-saldo">${fmt(d.saldoActual)}</div>
       <div class="deuda-meta-row">
-        <span>Mín/mes: ${fmt(d.pagoMinimo)}</span>
-        ${d.tasaInteres ? '<span>'+d.tasaInteres+'% mensual</span>' : ''}
+        <span>${window.appLang === 'pt' ? 'Mín/mês' : 'Mín/mes'}: ${fmt(d.pagoMinimo)}</span>
+        ${d.tasaInteres ? '<span>'+d.tasaInteres+ (window.appLang === 'pt' ? '% mensal' : '% mensual') + '</span>' : ''}
       </div>
       <div class="deuda-progress-wrap">
         <div class="deuda-progress-bar${pct>=100?' pagada':''}" style="width:${pct}%"></div>
       </div>
       ${libreStr ? '<div class="deuda-libre-en">📅 '+libreStr+'</div>' : ''}
       <div style="display:flex;gap:8px;margin-top:2px;">
-        <button class="btn btn-primary" style="font-size:13px;min-height:40px;" data-abono="${d.id}">💰 Registrar Abono</button>
+        <button class="btn btn-primary" style="font-size:13px;min-height:40px;" data-abono="${d.id}">${T('deudas_btn_abono')}</button>
         <button class="btn btn-secondary" style="font-size:13px;min-height:40px;width:42px;padding:0;" data-edit-deuda="${d.id}">✏️</button>
       </div>`;
     listEl.appendChild(card);
@@ -342,12 +362,12 @@ function renderDeudas() {
     extraWrap.innerHTML = `<div class="card" style="display:flex;align-items:center;gap:12px;">
       <span style="font-size:24px;">💡</span>
       <div>
-        <div style="font-weight:800;font-size:14px;">Extra disponible para deudas</div>
-        <div style="font-size:18px;font-weight:800;color:var(--primary);">${fmt(sb.extraMensual)}/mes</div>
+        <div style="font-weight:800;font-size:14px;">${window.appLang === 'pt' ? 'Extra disponível para dívidas' : 'Extra disponible para deudas'}</div>
+        <div style="font-size:18px;font-weight:800;color:var(--primary);">${fmt(sb.extraMensual)}/${window.appLang === 'pt' ? 'mês' : 'mes'}</div>
       </div>
     </div>`;
   } else if (data.config.ingresoMensual > 0) {
-    extraWrap.innerHTML = '<div class="card"><p style="font-size:13px;font-weight:700;color:var(--danger);">⚠️ Sin margen extra. Revisa tus gastos en Perfil.</p></div>';
+    extraWrap.innerHTML = `<div class="card"><p style="font-size:13px;font-weight:700;color:var(--danger);">${T('deudas_sin_extra')}</p></div>`;
   }
 }
 
@@ -360,17 +380,18 @@ function renderCategoryChips() {
   cats.forEach(cat => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (cat === selectedCat ? ' active' : '');
-    chip.textContent = cat;
+    const cleanCat = cat.replace(/^[^\wÀ-ž]*/, '').trim();
+    chip.textContent = cat.split(' ')[0] + ' ' + T('cat_' + cleanCat);
     chip.addEventListener('click', () => { selectedCat = cat; renderCategoryChips(); });
     container.appendChild(chip);
   });
 }
 function renderRegistro() {
-  document.getElementById('reg-titulo').textContent    = '⚡ Registro Rápido';
-  document.getElementById('reg-monto-lbl').textContent  = 'Monto';
-  document.getElementById('reg-desc-lbl').textContent   = 'Descripción (opcional)';
-  document.getElementById('reg-cat-lbl').textContent    = 'Categoría';
-  document.getElementById('btn-registrar').textContent  = 'Registrar';
+  document.getElementById('reg-titulo').textContent    = '⚡ ' + T('reg_titulo');
+  document.getElementById('reg-monto-lbl').textContent  = T('reg_monto');
+  document.getElementById('reg-desc-lbl').textContent   = T('reg_desc');
+  document.getElementById('reg-cat-lbl').textContent    = T('reg_cat');
+  document.getElementById('btn-registrar').textContent  = T('reg_btn');
   renderCategoryChips();
   renderHistorialMes();
 }
@@ -379,7 +400,7 @@ function renderHistorialMes() {
   container.innerHTML = '';
   const txs = getTxsMes().sort((a,b) => new Date(b.fecha)-new Date(a.fecha));
   if (!txs.length) {
-    container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);font-weight:600;">Sin movimientos este mes.</p>';
+    container.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;">${T('dash_sin_mov')}</p>`;
     return;
   }
   txs.forEach(tx => container.appendChild(buildMovRow(tx, true)));
@@ -387,14 +408,14 @@ function renderHistorialMes() {
 
 // ===== RENDER METAS =====
 function renderMetas() {
-  document.getElementById('metas-titulo').textContent = '🎯 Metas de Ahorro';
-  document.getElementById('reto52-titulo').textContent = 'Reto 52 Semanas 💪';
-  document.getElementById('reto52-sub').textContent    = 'Ahorra una cantidad cada semana y completa el año.';
+  document.getElementById('metas-titulo').textContent = '🎯 ' + T('metas_titulo');
+  document.getElementById('reto52-titulo').textContent = T('reto52_titulo');
+  document.getElementById('reto52-sub').textContent    = T('reto52_sub');
 
   const listEl = document.getElementById('metas-list');
   listEl.innerHTML = '';
   if (!data.metas.length) {
-    listEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">Agrega tu primera meta de ahorro.</p>';
+    listEl.innerHTML = `<p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">${T('metas_sin')}</p>`;
   } else {
     data.metas.forEach(meta => {
       const pct    = meta.montoObjetivo > 0 ? Math.min((meta.ahorrado / meta.montoObjetivo) * 100, 100) : 0;
@@ -406,15 +427,15 @@ function renderMetas() {
           <div class="meta-nombre">${meta.emoji || '🎯'} ${meta.nombre}</div>
           <button style="background:none;border:none;cursor:pointer;font-size:16px;min-width:36px;min-height:36px;" data-edit-meta="${meta.id}">✏️</button>
         </div>
-        ${lograda ? '<div style="font-size:12px;font-weight:800;color:var(--primary);margin-bottom:4px;">¡Meta lograda! 🎉</div>' : ''}
+        ${lograda ? `<div style="font-size:12px;font-weight:800;color:var(--primary);margin-bottom:4px;">${T('metas_lograda')}</div>` : ''}
         <div class="meta-valores">
-          <span>Ahorrado: ${fmt(meta.ahorrado)}</span>
-          <span>Falta: ${fmt(Math.max(0, meta.montoObjetivo - meta.ahorrado))}</span>
+          <span>${T('metas_ahorrado')}: ${fmt(meta.ahorrado)}</span>
+          <span>${T('metas_falta')}: ${fmt(Math.max(0, meta.montoObjetivo - meta.ahorrado))}</span>
         </div>
         <div class="meta-progress-wrap">
           <div class="meta-progress-bar${lograda?' lograda':''}" style="width:${pct}%"></div>
         </div>
-        <button class="btn btn-secondary" style="margin-top:12px;min-height:38px;font-size:13px;" data-abono-meta="${meta.id}">💰 Abonar</button>`;
+        <button class="btn btn-secondary" style="margin-top:12px;min-height:38px;font-size:13px;" data-abono-meta="${meta.id}">💰 ${window.appLang === 'pt' ? 'Abonar' : 'Abonar'}</button>`;
       listEl.appendChild(card);
     });
     listEl.querySelectorAll('[data-edit-meta]').forEach(btn =>
@@ -434,10 +455,10 @@ function renderReto52() {
   if (!r.activo) {
     container.innerHTML = `
       <div class="input-group">
-        <label>¿Cuánto ahorrar por semana? ($)</label>
+        <label>${T('reto52_monto_lbl')} (${data.config.moneda || '$'})</label>
         <input type="number" id="reto-monto-inicial" inputmode="decimal" placeholder="50" value="${r.montoSemanal || 50}">
       </div>
-      <button class="btn btn-primary" id="btn-iniciar-reto">🚀 Iniciar Reto</button>`;
+      <button class="btn btn-primary" id="btn-iniciar-reto">🚀 ${T('reto52_iniciar')}</button>`;
     document.getElementById('btn-iniciar-reto').addEventListener('click', () => {
       const m = parseFloat(document.getElementById('reto-monto-inicial').value) || 50;
       data.reto52 = { activo: true, montoSemanal: m, semanas: Array(52).fill(false) };
@@ -450,12 +471,12 @@ function renderReto52() {
     const allDone     = completadas === 52;
     container.innerHTML = `
       <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:13px;font-weight:700;color:var(--text-muted);">${completadas}/52 semanas</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text-muted);">${completadas}/52 ${window.appLang === 'pt' ? 'semanas concluídas' : 'semanas completadas'}</span>
         <span style="font-size:13px;font-weight:800;color:var(--primary);">Total: ${fmt(total)}</span>
       </div>
-      ${allDone ? '<div style="text-align:center;font-size:18px;font-weight:800;color:var(--primary);margin-bottom:12px;">🏆 ¡Reto completado!</div>' : ''}
+      ${allDone ? `<div style="text-align:center;font-size:18px;font-weight:800;color:var(--primary);margin-bottom:12px;">🏆 ${T('reto52_feliz')}</div>` : ''}
       <div class="reto-grid" id="reto-grid"></div>
-      <button class="btn btn-secondary" id="btn-reiniciar-reto" style="margin-top:12px;min-height:40px;font-size:13px;">🔄 Reiniciar reto</button>`;
+      <button class="btn btn-secondary" id="btn-reiniciar-reto" style="margin-top:12px;min-height:40px;font-size:13px;">🔄 ${T('reto52_reiniciar')}</button>`;
     const grid = document.getElementById('reto-grid');
     r.semanas.forEach((done, i) => {
       const cell = document.createElement('div');
@@ -469,7 +490,7 @@ function renderReto52() {
       grid.appendChild(cell);
     });
     document.getElementById('btn-reiniciar-reto').addEventListener('click', () => {
-      if (confirm('¿Reiniciar el reto? Se perderá el progreso.')) {
+      if (confirm(window.appLang === 'pt' ? 'Reiniciar o desafio? O progresso será perdido.' : '¿Reiniciar el reto? Se perderá el progreso.')) {
         data.reto52 = { activo: false, montoSemanal: r.montoSemanal, semanas: [] };
         saveData();
         renderReto52();
@@ -480,13 +501,13 @@ function renderReto52() {
 
 // ===== RENDER PERFIL =====
 function renderPerfil() {
-  document.getElementById('perfil-titulo').textContent          = 'Perfil';
-  document.getElementById('perfil-config-titulo').textContent   = '⚙️ Configuración';
-  document.getElementById('perfil-ingreso-lbl').textContent     = 'Ingreso mensual ($)';
-  document.getElementById('perfil-gastosfijos-lbl').textContent = 'Gastos fijos mensuales ($)';
-  document.getElementById('perfil-moneda-lbl').textContent      = 'Moneda';
-  document.getElementById('perfil-sobres-titulo').textContent   = '💰 Mis Sobres Mensuales';
-  document.getElementById('perfil-backup-titulo').textContent   = '💾 Respaldo de Datos';
+  document.getElementById('perfil-titulo').textContent          = T('perfil_titulo');
+  document.getElementById('perfil-config-titulo').textContent   = '⚙️ ' + T('perfil_config_titulo');
+  document.getElementById('perfil-ingreso-lbl').textContent     = T('perfil_ingreso_lbl');
+  document.getElementById('perfil-gastosfijos-lbl').textContent = T('perfil_gastos_fijos_lbl');
+  document.getElementById('perfil-moneda-lbl').textContent      = T('perfil_moneda_lbl');
+  document.getElementById('perfil-sobres-titulo').textContent   = '💰 ' + T('perfil_sobres_titulo');
+  document.getElementById('perfil-backup-titulo').textContent   = '💾 ' + T('perfil_backup_titulo');
 
   document.getElementById('cfg-ingreso').value     = data.config.ingresoMensual || '';
   document.getElementById('cfg-gastos-fijos').value = data.config.gastosFijos || '';
@@ -499,7 +520,10 @@ function renderPerfil() {
   Object.entries(data.config.sobres).forEach(([nombre, valor]) => {
     const item = document.createElement('div');
     item.className = 'sobre-config-item';
-    item.innerHTML = `<label>${nombre}</label><input type="number" inputmode="decimal" data-sobre="${nombre}" value="${valor || ''}" placeholder="0">`;
+    const cleanNombre = nombre.replace(/^[^\wÀ-ž]*/, '').trim();
+    const nombreTrad = T('cat_' + cleanNombre);
+    const emoji = nombre.split(' ')[0];
+    item.innerHTML = `<label>${emoji} ${nombreTrad}</label><input type="number" inputmode="decimal" data-sobre="${nombre}" value="${valor || ''}" placeholder="0">`;
     sobresContainer.appendChild(item);
   });
 }
@@ -508,7 +532,7 @@ function renderPerfil() {
 function openDeudaModal(id) {
   modalDeudaEditId = id || null;
   const ed = id ? data.deudas.find(d => d.id === id) : null;
-  document.getElementById('md-titulo').textContent     = ed ? '✏️ Editar Deuda' : '➕ Nueva Deuda';
+  document.getElementById('md-titulo').textContent     = ed ? T('modal_deuda_editar') : T('modal_nueva_deuda');
   document.getElementById('md-nombre').value           = ed ? ed.nombre : '';
   document.getElementById('md-saldo').value            = ed ? ed.saldoActual : '';
   document.getElementById('md-saldo-inicial').value    = ed ? (ed.saldoInicial || ed.saldoActual) : '';
@@ -523,20 +547,20 @@ function saveDeuda() {
   const saldoIni = parseFloat(document.getElementById('md-saldo-inicial').value) || saldo;
   const tasa    = parseFloat(document.getElementById('md-tasa').value) || 0;
   const minimo  = parseFloat(document.getElementById('md-minimo').value) || 0;
-  if (!nombre || isNaN(saldo)) { toast('Completa nombre y saldo 🙂'); return; }
+  if (!nombre || isNaN(saldo)) { toast(window.appLang === 'pt' ? 'Preencha o nome e o saldo 🙂' : 'Completa nombre y saldo 🙂'); return; }
   if (modalDeudaEditId) {
     const d = data.deudas.find(d => d.id === modalDeudaEditId);
     if (d) { d.nombre = nombre; d.saldoActual = saldo; d.saldoInicial = saldoIni; d.tasaInteres = tasa; d.pagoMinimo = minimo; }
   } else {
     data.deudas.push({ id: uid(), nombre, saldoActual: saldo, saldoInicial: saldoIni, tasaInteres: tasa, pagoMinimo: minimo, fechaCreacion: new Date().toISOString() });
   }
-  saveData(); closeModal('modal-deuda'); toast('Deuda guardada ✓'); renderDeudas();
+  saveData(); closeModal('modal-deuda'); toast(T('modal_deuda_toast')); renderDeudas();
 }
 function eliminarDeuda() {
   if (!modalDeudaEditId) return;
-  if (confirm('¿Eliminar esta deuda?')) {
+  if (confirm(T('modal_deuda_eliminar_confirm'))) {
     data.deudas = data.deudas.filter(d => d.id !== modalDeudaEditId);
-    saveData(); closeModal('modal-deuda'); toast('Deuda eliminada 🗑️'); renderDeudas();
+    saveData(); closeModal('modal-deuda'); toast(T('modal_deuda_eliminar_toast')); renderDeudas();
   }
 }
 
@@ -550,12 +574,18 @@ function openAbonoModal(deudaId) {
 }
 function saveAbono() {
   const monto = parseFloat(document.getElementById('ma-monto').value);
-  if (!monto || monto <= 0) { toast('Escribe el monto del abono 🙂'); return; }
+  if (!monto || monto <= 0) { toast(T('modal_abono_err')); return; }
   const d = data.deudas.find(d => d.id === abonoDeudaId);
   if (!d) return;
   d.saldoActual = Math.max(0, d.saldoActual - monto);
   data.pagosDeuda.push({ id: uid(), deudaId: abonoDeudaId, fecha: new Date().toISOString(), monto });
-  saveData(); closeModal('modal-abono'); toast('¡Abono registrado! 💚'); renderDeudas();
+  data.transacciones.push({
+    id: uid(), tipo: 'g', monto,
+    descripcion: (window.appLang === 'pt' ? 'Abono: ' : 'Abono: ') + d.nombre,
+    categoria: '💳 Deudas',
+    fecha: new Date().toISOString()
+  });
+  saveData(); closeModal('modal-abono'); toast(T('modal_abono_toast')); renderDeudas(); renderDashboard();
 }
 
 // ===== MODALS: META =====
@@ -573,20 +603,20 @@ function saveMeta() {
   const nombre = document.getElementById('mm-nombre').value.trim();
   const monto  = parseFloat(document.getElementById('mm-monto').value);
   const emoji  = document.getElementById('mm-emoji').value.trim() || '🎯';
-  if (!nombre || isNaN(monto)) { toast('Completa nombre y monto 🙂'); return; }
+  if (!nombre || isNaN(monto)) { toast(T('metas_err')); return; }
   if (modalMetaEditId) {
     const m = data.metas.find(m => m.id === modalMetaEditId);
     if (m) { m.nombre = nombre; m.montoObjetivo = monto; m.emoji = emoji; }
   } else {
     data.metas.push({ id: uid(), nombre, montoObjetivo: monto, ahorrado: 0, emoji, fechaCreacion: new Date().toISOString() });
   }
-  saveData(); closeModal('modal-meta'); toast('Meta guardada 🎯'); renderMetas();
+  saveData(); closeModal('modal-meta'); toast(T('metas_toast')); renderMetas();
 }
 function eliminarMeta() {
   if (!modalMetaEditId) return;
-  if (confirm('¿Eliminar esta meta?')) {
+  if (confirm(T('metas_eliminar_confirm'))) {
     data.metas = data.metas.filter(m => m.id !== modalMetaEditId);
-    saveData(); closeModal('modal-meta'); toast('Meta eliminada 🗑️'); renderMetas();
+    saveData(); closeModal('modal-meta'); toast(T('metas_eliminar_toast')); renderMetas();
   }
 }
 
@@ -600,11 +630,17 @@ function openAbonoMetaModal(metaId) {
 }
 function saveAbonoMeta() {
   const monto = parseFloat(document.getElementById('mam-monto').value);
-  if (!monto || monto <= 0) { toast('Escribe el monto 🙂'); return; }
+  if (!monto || monto <= 0) { toast(T('reg_err')); return; }
   const m = data.metas.find(m => m.id === abonoMetaId);
   if (!m) return;
   m.ahorrado = (m.ahorrado || 0) + monto;
-  saveData(); closeModal('modal-abono-meta'); toast('¡Abono registrado! 💚'); renderMetas();
+  data.transacciones.push({
+    id: uid(), tipo: 'g', monto,
+    descripcion: (window.appLang === 'pt' ? 'Abono meta: ' : 'Abono meta: ') + m.nombre,
+    categoria: 'Otros',
+    fecha: new Date().toISOString()
+  });
+  saveData(); closeModal('modal-abono-meta'); toast(T('metas_abonar_toast')); renderMetas(); renderDashboard();
 }
 
 // ===== BACKUP / RESTORE =====
@@ -624,9 +660,9 @@ function importarDatos(file) {
       const parsed = JSON.parse(e.target.result);
       if (!parsed.version) throw new Error('invalid');
       localStorage.setItem('sd_data', JSON.stringify(parsed));
-      toast('✅ Datos restaurados. Recargando...');
+      toast(T('import_ok'));
       setTimeout(() => location.reload(), 1200);
-    } catch { toast('❌ Archivo inválido'); }
+    } catch { toast(T('import_err')); }
   };
   reader.readAsText(file);
 }
@@ -634,23 +670,25 @@ function importarDatos(file) {
 // ===== HEADER =====
 function updateHeader() {
   const h = new Date().getHours();
-  const greeting = h < 12 ? 'Buenos días ☀️' : h < 19 ? 'Buenas tardes 👋' : 'Buenas noches 🌙';
+  const greeting = h < 12 ? T('greeting_morning') : h < 19 ? T('greeting_afternoon') : T('greeting_evening');
   document.getElementById('header-saludo').textContent = greeting;
   const now = new Date();
-  const dateStr = DIAS_ES[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_ES[now.getMonth()];
+  const dateStr = window.appLang === 'pt'
+    ? DIAS_PT[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_PT[now.getMonth()]
+    : DIAS_ES[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_ES[now.getMonth()];
   document.getElementById('header-fecha').textContent = dateStr;
 }
 
 // ===== ONBOARDING =====
 function showOnboarding() {
   document.getElementById('screen-onboarding').classList.remove('hidden');
-  document.getElementById('onb-step1-titulo').textContent    = '¿Cuánto ganas al mes?';
-  document.getElementById('onb-step1-sub').textContent      = 'Incluye todos tus ingresos regulares: sueldo, freelance, rentas...';
-  document.getElementById('onb-step2-label-inline').textContent = '¿Cuánto suman tus gastos fijos? ($)';
-  document.getElementById('onb-step3-titulo').textContent   = '¿Tienes deudas?';
-  document.getElementById('onb-step3-sub').textContent      = 'Agrégalas ahora para calcular tu Plan Snowball y tu Fecha de Libertad.';
-  document.getElementById('btn-onb-finalizar').textContent  = '¡Empezar mi Plan!';
-  document.getElementById('btn-onb-saltar').textContent     = 'Saltar por ahora';
+  document.getElementById('onb-step1-titulo').textContent    = T('onb_step1_titulo');
+  document.getElementById('onb-step1-sub').textContent      = T('onb_step1_sub');
+  document.getElementById('onb-step2-label-inline').textContent = T('onb_step2_titulo') + ' (' + (data.config.moneda || '$') + ')';
+  document.getElementById('onb-step3-titulo').textContent   = T('onb_step3_titulo');
+  document.getElementById('onb-step3-sub').textContent      = T('onb_step3_sub');
+  document.getElementById('btn-onb-finalizar').textContent  = T('onb_btn_finalizar');
+  document.getElementById('btn-onb-saltar').textContent     = T('onb_btn_saltar');
 }
 
 let onbTempDeudas = [];
@@ -687,6 +725,22 @@ function initPWA() {
 document.addEventListener('DOMContentLoaded', () => {
 
   loadData();
+  applyLang();
+
+  // Flag emoji update on button
+  const btnLang = document.getElementById('btn-lang');
+  if (btnLang) {
+    btnLang.textContent = window.appLang === 'es' ? '🇪🇸' : '🇧🇷';
+    btnLang.addEventListener('click', () => {
+      const nextLang = window.appLang === 'es' ? 'pt' : 'es';
+      localStorage.setItem('sd_lang', nextLang);
+      window.location.reload();
+    });
+  }
+
+  // Set initial labels for types toggle
+  document.getElementById('tipo-ingreso').textContent = '💚 ' + T('reg_ingreso');
+  document.getElementById('tipo-gasto').textContent = '🔴 ' + T('reg_gasto');
 
   // Ir directo al app (sin auth)
   if (!data.config.onboardingDone) {
@@ -715,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Registrar transacción
   document.getElementById('btn-registrar').addEventListener('click', () => {
     const monto = parseFloat(document.getElementById('reg-monto').value);
-    if (!monto || monto <= 0) { toast('Escribe el monto 🙂'); return; }
+    if (!monto || monto <= 0) { toast(T('reg_err')); return; }
     const desc = document.getElementById('reg-desc').value.trim();
     data.transacciones.push({
       id: uid(), tipo: selectedTipo, monto,
@@ -723,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fecha: new Date().toISOString()
     });
     saveData();
-    toast(selectedTipo === 'i' ? '¡Ingreso registrado 💚' : 'Gasto registrado 📊');
+    toast(selectedTipo === 'i' ? T('reg_toast_ingreso') : T('reg_toast_gasto'));
     document.getElementById('reg-monto').value = '';
     document.getElementById('reg-desc').value  = '';
     renderHistorialMes();
@@ -765,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Reset test
   document.getElementById('btn-reset-app').addEventListener('click', () => {
-    if (confirm('¿Borrar todos los datos de prueba?')) {
+    if (confirm(window.appLang === 'pt' ? 'Excluir todos os dados de teste?' : '¿Borrar todos los datos de prueba?')) {
       localStorage.removeItem('sd_data');
       location.reload();
     }
@@ -795,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saldo  = parseFloat(document.getElementById('onb-d-saldo').value);
     const tasa   = parseFloat(document.getElementById('onb-d-tasa').value) || 0;
     const minimo = parseFloat(document.getElementById('onb-d-minimo').value) || 0;
-    if (!nombre || isNaN(saldo)) { toast('Completa nombre y saldo 🙂'); return; }
+    if (!nombre || isNaN(saldo)) { toast(window.appLang === 'pt' ? 'Preencha o nome e o saldo 🙂' : 'Completa nombre y saldo 🙂'); return; }
     onbTempDeudas.push({ id: uid(), nombre, saldoActual: saldo, saldoInicial: saldo, tasaInteres: tasa, pagoMinimo: minimo, fechaCreacion: new Date().toISOString() });
     document.getElementById('onb-d-nombre').value = '';
     document.getElementById('onb-d-saldo').value  = '';

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#10b981">
-  <title>SinDeudas — Sal de Deudas Paso a Paso</title>
+  <title data-i18n="app_title">SinDeudas — Sal de Deudas Paso a Paso</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <script src="i18n.js"></script>
@@ -22,17 +22,17 @@
       <div class="onb-dot"></div>
     </div>
     <div style="font-size:48px;margin-bottom:12px;">💰</div>
-    <h2 class="onb-titulo" id="onb-step1-titulo"></h2>
-    <p class="onb-sub" id="onb-step1-sub"></p>
+    <h2 class="onb-titulo" id="onb-step1-titulo" data-i18n="onb_step1_titulo"></h2>
+    <p class="onb-sub" id="onb-step1-sub" data-i18n="onb_step1_sub"></p>
     <div class="input-group">
-      <label>Ingreso mensual ($)</label>
+      <label data-i18n="perfil_ingreso_lbl">Ingreso mensual ($)</label>
       <input type="number" id="onb-ingreso" inputmode="decimal" placeholder="Ej: 15000">
     </div>
     <div class="input-group">
-      <label id="onb-step2-label-inline"></label>
+      <label id="onb-step2-label-inline" data-i18n="perfil_gastos_fijos_lbl"></label>
       <input type="number" id="onb-gastos-fijos" inputmode="decimal" placeholder="Ej: 8000">
     </div>
-    <button class="btn btn-primary" id="btn-onb-1">Siguiente →</button>
+    <button class="btn btn-primary" id="btn-onb-1" data-i18n="onb_btn_siguiente">Siguiente →</button>
   </div>
 
   <div class="onb-step hidden" id="onb-step-2">
@@ -41,32 +41,32 @@
       <div class="onb-dot active"></div>
     </div>
     <div style="font-size:48px;margin-bottom:12px;">💳</div>
-    <h2 class="onb-titulo" id="onb-step3-titulo"></h2>
-    <p class="onb-sub" id="onb-step3-sub"></p>
+    <h2 class="onb-titulo" id="onb-step3-titulo" data-i18n="onb_step3_titulo"></h2>
+    <p class="onb-sub" id="onb-step3-sub" data-i18n="onb_step3_sub"></p>
     <div id="onb-deudas-list" style="margin-bottom:14px;"></div>
     <div class="card" style="padding:14px;margin-bottom:14px;">
       <div class="input-group" style="margin-bottom:10px;">
-        <label>Nombre de la deuda</label>
+        <label data-i18n="modal_deuda_nombre">Nombre de la deuda</label>
         <input type="text" id="onb-d-nombre" placeholder="Ej: Tarjeta Visa">
       </div>
       <div class="grid-2">
         <div class="input-group" style="margin-bottom:0;">
-          <label>Saldo actual ($)</label>
+          <label data-i18n="modal_deuda_saldo">Saldo actual ($)</label>
           <input type="number" id="onb-d-saldo" inputmode="decimal" placeholder="5000">
         </div>
         <div class="input-group" style="margin-bottom:0;">
-          <label>Interés mensual (%)</label>
+          <label data-i18n="modal_deuda_tasa">Interés mensual (%)</label>
           <input type="number" id="onb-d-tasa" inputmode="decimal" placeholder="3.5">
         </div>
       </div>
       <div class="input-group" style="margin-top:10px;margin-bottom:10px;">
-        <label>Pago mínimo mensual ($)</label>
+        <label data-i18n="modal_deuda_minimo">Pago mínimo mensual ($)</label>
         <input type="number" id="onb-d-minimo" inputmode="decimal" placeholder="200">
       </div>
-      <button class="btn btn-secondary" id="btn-onb-add-deuda" style="min-height:42px;font-size:14px;">➕ Agregar deuda</button>
+      <button class="btn btn-secondary" id="btn-onb-add-deuda" style="min-height:42px;font-size:14px;" data-i18n="deudas_btn_nueva">➕ Agregar deuda</button>
     </div>
-    <button class="btn btn-primary" id="btn-onb-finalizar"></button>
-    <button class="btn btn-secondary" id="btn-onb-saltar" style="margin-top:10px;min-height:42px;font-size:14px;"></button>
+    <button class="btn btn-primary" id="btn-onb-finalizar" data-i18n="onb_btn_finalizar"></button>
+    <button class="btn btn-secondary" id="btn-onb-saltar" style="margin-top:10px;min-height:42px;font-size:14px;" data-i18n="onb_btn_saltar"></button>
   </div>
 </div>
 
@@ -80,7 +80,11 @@
     <div class="header-logo">
       <span style="font-size:28px;">💸</span>
     </div>
-    <div class="header-actions">
+
+    <div class="header-actions" style="display:flex; gap:8px;">
+      <button class="btn-icon" id="btn-lang" title="Cambiar idioma" style="font-size:15px; font-weight:bold; cursor:pointer;">
+        🇪🇸
+      </button>
       <button class="btn-icon" id="btn-tema" title="Cambiar tema">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
@@ -91,15 +95,15 @@
     <!-- DASHBOARD -->
     <section id="v-dashboard" class="vista active">
       <div class="dash-hero" id="dash-hero">
-        <div class="dash-label" id="dash-saldo-label"></div>
+        <div class="dash-label" id="dash-saldo-label" data-i18n="dash_saldo"></div>
         <div class="dash-value font-number" id="dash-saldo-valor">$0</div>
         <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
           <div style="text-align:center;">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">Ingresos</div>
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;" data-i18n="dash_ingresos">Ingresos</div>
             <div style="font-size:17px;font-weight:800;color:#fff;" id="dash-ingresos">$0</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">Gastos</div>
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;" data-i18n="dash_gastos">Gastos</div>
             <div style="font-size:17px;font-weight:800;color:#fca5a5;" id="dash-gastos">$0</div>
           </div>
         </div>
@@ -107,48 +111,48 @@
 
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <h3 style="font-size:16px;" id="dash-sobres-titulo"></h3>
+          <h3 style="font-size:16px;" id="dash-sobres-titulo" data-i18n="dash_sobres_titulo"></h3>
         </div>
         <div id="dash-sobres-container"></div>
       </div>
 
       <div class="card">
-        <h3 style="font-size:16px;margin-bottom:12px;" id="dash-mov-titulo"></h3>
+        <h3 style="font-size:16px;margin-bottom:12px;" id="dash-mov-titulo" data-i18n="dash_movimientos"></h3>
         <div id="dash-movimientos"></div>
       </div>
     </section>
 
     <!-- PLAN SAL DE DEUDAS -->
     <section id="v-deudas" class="vista">
-      <h2 style="font-size:20px;font-weight:800;margin-bottom:14px;" id="deudas-titulo"></h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:14px;" id="deudas-titulo" data-i18n="deudas_titulo"></h2>
       <div id="libertad-hero-wrap"></div>
       <div id="deudas-list"></div>
       <div id="deudas-extra-wrap" style="margin-bottom:14px;"></div>
-      <button class="btn btn-secondary" id="btn-nueva-deuda"></button>
+      <button class="btn btn-secondary" id="btn-nueva-deuda" data-i18n="deudas_btn_nueva"></button>
     </section>
 
     <!-- REGISTRO RÁPIDO -->
     <section id="v-registro" class="vista">
-      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="reg-titulo"></h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="reg-titulo" data-i18n="reg_titulo"></h2>
       <div class="tipo-toggle">
-        <button class="tipo-btn active-i" id="tipo-ingreso">💚 Ingreso</button>
-        <button class="tipo-btn" id="tipo-gasto">🔴 Gasto</button>
+        <button class="tipo-btn active-i" id="tipo-ingreso" data-i18n="reg_ingreso">💚 Ingreso</button>
+        <button class="tipo-btn" id="tipo-gasto" data-i18n="reg_gasto">🔴 Gasto</button>
       </div>
       <div class="input-group">
-        <label id="reg-monto-lbl"></label>
+        <label id="reg-monto-lbl" data-i18n="reg_monto"></label>
         <input type="number" id="reg-monto" inputmode="decimal" placeholder="0.00" style="font-size:28px;font-weight:800;text-align:center;">
       </div>
       <div class="input-group">
-        <label id="reg-desc-lbl"></label>
+        <label id="reg-desc-lbl" data-i18n="reg_desc"></label>
         <input type="text" id="reg-desc" placeholder="Ej: Sueldo quincenal">
       </div>
       <div class="input-group">
-        <label id="reg-cat-lbl"></label>
+        <label id="reg-cat-lbl" data-i18n="reg_cat"></label>
         <div class="chips-container" id="reg-categorias"></div>
       </div>
-      <button class="btn btn-primary" id="btn-registrar"></button>
+      <button class="btn btn-primary" id="btn-registrar" data-i18n="reg_btn"></button>
       <div style="margin-top:24px;">
-        <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Historial de este mes</h3>
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;" data-i18n="dash_movimientos">Historial de este mes</h3>
         <div id="historial-mes"></div>
       </div>
     </section>
@@ -156,41 +160,41 @@
     <!-- METAS + RETOS -->
     <section id="v-metas" class="vista">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="font-size:20px;font-weight:800;" id="metas-titulo"></h2>
-        <button class="btn-icon" id="btn-nueva-meta" style="width:auto;padding:0 14px;border-radius:99px;font-size:13px;font-weight:800;">➕ Meta</button>
+        <h2 style="font-size:20px;font-weight:800;" id="metas-titulo" data-i18n="metas_titulo"></h2>
+        <button class="btn-icon" id="btn-nueva-meta" style="width:auto;padding:0 14px;border-radius:99px;font-size:13px;font-weight:800;" data-i18n="metas_btn_nueva">➕ Meta</button>
       </div>
       <div id="metas-list"></div>
       <div class="card" style="margin-top:8px;">
-        <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" id="reto52-titulo"></h3>
-        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" id="reto52-sub"></p>
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" id="reto52-titulo" data-i18n="reto52_titulo"></h3>
+        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" id="reto52-sub" data-i18n="reto52_sub"></p>
         <div id="reto52-container"></div>
       </div>
     </section>
 
     <!-- PERFIL -->
     <section id="v-perfil" class="vista">
-      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="perfil-titulo"></h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="perfil-titulo" data-i18n="perfil_titulo"></h2>
       <div class="card">
         <div style="display:flex;align-items:center;gap:14px;">
           <div style="width:52px;height:52px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:24px;">💸</div>
           <div>
-            <div style="font-weight:800;font-size:16px;">Modo de prueba</div>
-            <div style="font-size:12px;font-weight:700;color:var(--primary);">Sin autenticación</div>
+            <div style="font-weight:800;font-size:16px;" data-i18n="perfil_licencia">Modo de prueba</div>
+            <div style="font-size:12px;font-weight:700;color:var(--primary);" data-i18n="login_verifying">Sin autenticación</div>
           </div>
         </div>
       </div>
       <div class="card">
-        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-config-titulo"></h3>
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-config-titulo" data-i18n="perfil_config_titulo"></h3>
         <div class="input-group">
-          <label id="perfil-ingreso-lbl"></label>
+          <label id="perfil-ingreso-lbl" data-i18n="perfil_ingreso_lbl"></label>
           <input type="number" id="cfg-ingreso" inputmode="decimal">
         </div>
         <div class="input-group">
-          <label id="perfil-gastosfijos-lbl"></label>
+          <label id="perfil-gastosfijos-lbl" data-i18n="perfil_gastos_fijos_lbl"></label>
           <input type="number" id="cfg-gastos-fijos" inputmode="decimal">
         </div>
         <div class="input-group" style="margin-bottom:0;">
-          <label id="perfil-moneda-lbl"></label>
+          <label id="perfil-moneda-lbl" data-i18n="perfil_moneda_lbl"></label>
           <select id="cfg-moneda">
             <option value="$">$ (Peso / Dólar)</option>
             <option value="S/">S/ (Sol peruano)</option>
@@ -199,17 +203,17 @@
             <option value="Bs.">Bs. (Bolívar/Boliviano)</option>
           </select>
         </div>
-        <button class="btn btn-secondary" id="btn-save-config" style="margin-top:14px;min-height:44px;font-size:14px;">💾 Guardar configuración</button>
+        <button class="btn btn-secondary" id="btn-save-config" style="margin-top:14px;min-height:44px;font-size:14px;" data-i18n="modal_guardar">💾 Guardar configuración</button>
       </div>
       <div class="card">
-        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-sobres-titulo"></h3>
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-sobres-titulo" data-i18n="perfil_sobres_titulo"></h3>
         <div id="sobres-config-container"></div>
       </div>
       <div class="card">
-        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-backup-titulo"></h3>
-        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">Exporta una copia de tus datos para no perderlos.</p>
-        <button class="btn btn-secondary" id="btn-backup" style="margin-bottom:10px;min-height:44px;">📥 Descargar Respaldo</button>
-        <button class="btn btn-secondary" id="btn-restore" style="min-height:44px;">📤 Restaurar Datos</button>
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-backup-titulo" data-i18n="perfil_backup_titulo"></h3>
+        <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" data-i18n="perfil_backup_titulo">Exporta una copia de tus datos para no perderlos.</p>
+        <button class="btn btn-secondary" id="btn-backup" style="margin-bottom:10px;min-height:44px;" data-i18n="perfil_backup_descargar">📥 Descargar Respaldo</button>
+        <button class="btn btn-secondary" id="btn-restore" style="min-height:44px;" data-i18n="perfil_backup_restaurar">📤 Restaurar Datos</button>
         <input type="file" id="input-restore" accept=".json" style="display:none;">
       </div>
       <button class="btn btn-secondary" id="btn-reset-app" style="margin-top:8px;color:var(--danger);border-color:var(--danger);">🗑️ Reiniciar datos (test)</button>
@@ -219,23 +223,23 @@
   <nav class="bottom-nav">
     <button class="nav-item active" data-view="v-dashboard">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
-      <span>Inicio</span>
+      <span data-i18n="greeting_morning">Inicio</span>
     </button>
     <button class="nav-item" data-view="v-deudas">
       <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      <span>Deudas</span>
+      <span data-i18n="deudas_titulo">Deudas</span>
     </button>
     <button class="nav-item" data-view="v-registro">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      <span>Registrar</span>
+      <span data-i18n="reg_btn">Registrar</span>
     </button>
     <button class="nav-item" data-view="v-metas">
       <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <span>Metas</span>
+      <span data-i18n="metas_titulo">Metas</span>
     </button>
     <button class="nav-item" data-view="v-perfil">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span>Perfil</span>
+      <span data-i18n="perfil_titulo">Perfil</span>
     </button>
   </nav>
 </div>
@@ -243,82 +247,82 @@
 <!-- MODAL: DEUDA -->
 <div id="modal-deuda" class="modal-overlay">
   <div class="modal-sheet">
-    <h3 id="md-titulo"></h3>
+    <h3 id="md-titulo" data-i18n="modal_nueva_deuda"></h3>
     <div class="input-group">
-      <label>Nombre de la deuda</label>
+      <label data-i18n="modal_deuda_nombre">Nombre de la deuda</label>
       <input type="text" id="md-nombre" placeholder="Ej: Tarjeta Visa">
     </div>
     <div class="grid-2">
       <div class="input-group">
-        <label>Saldo actual ($)</label>
+        <label data-i18n="modal_deuda_saldo">Saldo actual ($)</label>
         <input type="number" id="md-saldo" inputmode="decimal" placeholder="5000">
       </div>
       <div class="input-group">
-        <label>Interés mensual (%)</label>
+        <label data-i18n="modal_deuda_tasa">Interés mensual (%)</label>
         <input type="number" id="md-tasa" inputmode="decimal" placeholder="3.5">
       </div>
     </div>
     <div class="input-group">
-      <label>Saldo inicial ($)</label>
+      <label data-i18n="modal_deuda_saldo">Saldo inicial ($)</label>
       <input type="number" id="md-saldo-inicial" inputmode="decimal" placeholder="5000">
     </div>
     <div class="input-group">
-      <label>Pago mínimo mensual ($)</label>
+      <label data-i18n="modal_deuda_minimo">Pago mínimo mensual ($)</label>
       <input type="number" id="md-minimo" inputmode="decimal" placeholder="200">
     </div>
-    <button class="btn btn-primary" id="md-btn-guardar">Guardar</button>
+    <button class="btn btn-primary" id="md-btn-guardar" data-i18n="modal_guardar">Guardar</button>
     <button class="btn btn-secondary" id="md-btn-eliminar" style="margin-top:10px;color:var(--danger);display:none;">🗑️ Eliminar deuda</button>
-    <button class="btn btn-secondary" id="md-btn-cancelar" style="margin-top:10px;">Cancelar</button>
+    <button class="btn btn-secondary" id="md-btn-cancelar" style="margin-top:10px;" data-i18n="modal_cancelar">Cancelar</button>
   </div>
 </div>
 
 <!-- MODAL: ABONO -->
 <div id="modal-abono" class="modal-overlay">
   <div class="modal-sheet">
-    <h3>💰 Registrar Abono</h3>
+    <h3 data-i18n="modal_abono_titulo">💰 Registrar Abono</h3>
     <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;" id="ma-deuda-nombre"></p>
     <div class="input-group">
-      <label>Monto del abono ($)</label>
+      <label data-i18n="modal_abono_lbl">Monto del abono ($)</label>
       <input type="number" id="ma-monto" inputmode="decimal" placeholder="0.00">
     </div>
-    <button class="btn btn-primary" id="ma-btn-guardar">Registrar Abono</button>
-    <button class="btn btn-secondary" style="margin-top:10px;" id="ma-btn-cancelar">Cancelar</button>
+    <button class="btn btn-primary" id="ma-btn-guardar" data-i18n="modal_abono_btn">Registrar Abono</button>
+    <button class="btn btn-secondary" style="margin-top:10px;" id="ma-btn-cancelar" data-i18n="modal_cancelar">Cancelar</button>
   </div>
 </div>
 
 <!-- MODAL: META -->
 <div id="modal-meta" class="modal-overlay">
   <div class="modal-sheet">
-    <h3 id="mm-titulo"></h3>
+    <h3 id="mm-titulo" data-i18n="metas_nuevo_titulo"></h3>
     <div class="input-group">
-      <label>Nombre de la meta</label>
+      <label data-i18n="metas_nombre_lbl">Nombre de la meta</label>
       <input type="text" id="mm-nombre" placeholder="Ej: Fondo de emergencia">
     </div>
     <div class="input-group">
-      <label>Monto objetivo ($)</label>
+      <label data-i18n="metas_monto_lbl">Monto objetivo ($)</label>
       <input type="number" id="mm-monto" inputmode="decimal" placeholder="5000">
     </div>
     <div class="input-group" style="margin-bottom:0;">
-      <label>Emoji</label>
+      <label data-i18n="metas_emoji_lbl">Emoji</label>
       <input type="text" id="mm-emoji" placeholder="🎯" maxlength="2" style="width:80px;">
     </div>
-    <button class="btn btn-primary" id="mm-btn-guardar" style="margin-top:14px;">Guardar</button>
+    <button class="btn btn-primary" id="mm-btn-guardar" style="margin-top:14px;" data-i18n="modal_guardar">Guardar</button>
     <button class="btn btn-secondary" id="mm-btn-eliminar" style="margin-top:10px;color:var(--danger);display:none;">🗑️ Eliminar meta</button>
-    <button class="btn btn-secondary" id="mm-btn-cancelar" style="margin-top:10px;">Cancelar</button>
+    <button class="btn btn-secondary" id="mm-btn-cancelar" style="margin-top:10px;" data-i18n="modal_cancelar">Cancelar</button>
   </div>
 </div>
 
 <!-- MODAL: ABONO META -->
 <div id="modal-abono-meta" class="modal-overlay">
   <div class="modal-sheet">
-    <h3>💰 Abonar a Meta</h3>
+    <h3 data-i18n="metas_abonar_titulo">💰 Abonar a Meta</h3>
     <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;" id="mam-nombre"></p>
     <div class="input-group">
-      <label>Monto a abonar ($)</label>
+      <label data-i18n="metas_abonar_lbl">Monto a abonar ($)</label>
       <input type="number" id="mam-monto" inputmode="decimal" placeholder="0.00">
     </div>
-    <button class="btn btn-primary" id="mam-btn-guardar">Abonar</button>
-    <button class="btn btn-secondary" style="margin-top:10px;" id="mam-btn-cancelar">Cancelar</button>
+    <button class="btn btn-primary" id="mam-btn-guardar" data-i18n="metas_abonar_btn">Abonar</button>
+    <button class="btn btn-secondary" style="margin-top:10px;" id="mam-btn-cancelar" data-i18n="modal_cancelar">Cancelar</button>
   </div>
 </div>
 
