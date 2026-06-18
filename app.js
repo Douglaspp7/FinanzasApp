@@ -1740,7 +1740,7 @@ function exportarExcelPremium() {
  xmlns:html="http://www.w3.org/TR/REC-html40">
   <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
     <Author>SinDeudas</Author>
-    <Created>\${new Date().toISOString()}</Created>
+    <Created>${new Date().toISOString()}</Created>
   </DocumentProperties>
   <Styles>
     <Style ss:ID="Default" ss:Name="Normal">
@@ -1788,43 +1788,43 @@ function exportarExcelPremium() {
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Salud Financiera (Score 0-100)</Data></Cell>
-        <Cell><Data ss:Type="Number">\${hs.score}</Data></Cell>
+        <Cell><Data ss:Type="Number">${hs.score}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Nivel de Salud</Data></Cell>
-        <Cell><Data ss:Type="String">\${hs.level}</Data></Cell>
+        <Cell><Data ss:Type="String">${hs.level}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Ingreso Mensual Declarado</Data></Cell>
-        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(data.config.ingresoMensual) || 0}</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(data.config.ingresoMensual) || 0}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Gastos Fijos Declarados</Data></Cell>
-        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(data.config.gastosFijos) || 0}</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(data.config.gastosFijos) || 0}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Deuda Consolidada Actual</Data></Cell>
-        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${totalDeuda}</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">${totalDeuda}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Deudas Pagadas (Monto)</Data></Cell>
-        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${deudasPagadas}</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">${deudasPagadas}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Libertad de Deudas (%)</Data></Cell>
-        <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pctLibertad}</Data></Cell>
+        <Cell ss:StyleID="Percent"><Data ss:Type="Number">${pctLibertad}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Metas de Ahorro Total</Data></Cell>
-        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${totalMetaObjetivo}</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">${totalMetaObjetivo}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Ahorrado Consolidado</Data></Cell>
-        <Cell ss:StyleID="Number"><Data ss:Type="Number">\${totalMetaAhorrado}</Data></Cell>
+        <Cell ss:StyleID="Number"><Data ss:Type="Number">${totalMetaAhorrado}</Data></Cell>
       </Row>
       <Row>
         <Cell><Data ss:Type="String">Progreso de Ahorros (%)</Data></Cell>
-        <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pctAhorros}</Data></Cell>
+        <Cell ss:StyleID="Percent"><Data ss:Type="Number">${pctAhorros}</Data></Cell>
       </Row>
     </Table>
   </Worksheet>
@@ -1855,10 +1855,10 @@ function exportarExcelPremium() {
     ingresosTxs.forEach(t => {
       xml += `
         <Row>
-          <Cell><Data ss:Type="String">\${(t.fecha || '').split('T')[0]}</Data></Cell>
-          <Cell><Data ss:Type="String">\${escapeXml(t.descripcion || '')}</Data></Cell>
-          <Cell><Data ss:Type="String">\${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(t.monto) || 0}</Data></Cell>
+          <Cell><Data ss:Type="String">${(t.fecha || '').split('T')[0]}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml(t.descripcion || '')}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(t.monto) || 0}</Data></Cell>
         </Row>
       `;
     });
@@ -1893,10 +1893,10 @@ function exportarExcelPremium() {
     gastosTxs.forEach(t => {
       xml += `
         <Row>
-          <Cell><Data ss:Type="String">\${(t.fecha || '').split('T')[0]}</Data></Cell>
-          <Cell><Data ss:Type="String">\${escapeXml(t.descripcion || '')}</Data></Cell>
-          <Cell><Data ss:Type="String">\${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(t.monto) || 0}</Data></Cell>
+          <Cell><Data ss:Type="String">${(t.fecha || '').split('T')[0]}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml(t.descripcion || '')}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(t.monto) || 0}</Data></Cell>
         </Row>
       `;
     });
@@ -1937,16 +1937,16 @@ function exportarExcelPremium() {
       if (!isPagada && d.fechaLibre) {
         const f = d.fechaLibre;
         const mesLibre = MESES_ES[f.getMonth()];
-        libreStr = \`Mes \${d.mesLibre} (\${mesLibre} \${f.getFullYear()})\`;
+        libreStr = `Mes ${d.mesLibre} (${mesLibre} ${f.getFullYear()})`;
       }
       xml += `
         <Row>
-          <Cell><Data ss:Type="String">\${escapeXml(d.nombre)}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(d.saldoInicial) || parseFloat(d.saldoActual) || 0}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(d.saldoActual) || 0}</Data></Cell>
-          <Cell><Data ss:Type="Number">\${parseFloat(d.tasaInteres) || 0}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(d.pagoMinimo) || 0}</Data></Cell>
-          <Cell><Data ss:Type="String">\${libreStr}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml(d.nombre)}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(d.saldoInicial) || parseFloat(d.saldoActual) || 0}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(d.saldoActual) || 0}</Data></Cell>
+          <Cell><Data ss:Type="Number">${parseFloat(d.tasaInteres) || 0}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(d.pagoMinimo) || 0}</Data></Cell>
+          <Cell><Data ss:Type="String">${libreStr}</Data></Cell>
         </Row>
       `;
     });
@@ -1989,17 +1989,17 @@ function exportarExcelPremium() {
         const hoy = new Date();
         hoy.setMonth(hoy.getMonth() + Math.ceil(meses));
         const mesNom = MESES_ES[hoy.getMonth()];
-        forecastStr = \`\${mesNom} \${hoy.getFullYear()} (en \${Math.ceil(meses)} meses)\`;
+        forecastStr = `${mesNom} ${hoy.getFullYear()} (en ${Math.ceil(meses)} meses)`;
       } else if (!lograda) {
         forecastStr = 'Sin plan activo';
       }
       xml += `
         <Row>
-          <Cell><Data ss:Type="String">\${m.emoji || '🎯'} \${escapeXml(m.nombre)}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(m.montoObjetivo) || 0}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${parseFloat(m.ahorrado) || 0}</Data></Cell>
-          <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pct}</Data></Cell>
-          <Cell><Data ss:Type="String">\${forecastStr}</Data></Cell>
+          <Cell><Data ss:Type="String">${m.emoji || '🎯'} ${escapeXml(m.nombre)}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(m.montoObjetivo) || 0}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(m.ahorrado) || 0}</Data></Cell>
+          <Cell ss:StyleID="Percent"><Data ss:Type="Number">${pct}</Data></Cell>
+          <Cell><Data ss:Type="String">${forecastStr}</Data></Cell>
         </Row>
       `;
     });
@@ -2043,11 +2043,11 @@ function exportarExcelPremium() {
       const restante = Math.max(0, presupuesto - gastadoSobre);
       xml += `
         <Row>
-          <Cell><Data ss:Type="String">\${escapeXml(nombre)}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${presupuesto}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${gastadoSobre}</Data></Cell>
-          <Cell ss:StyleID="Number"><Data ss:Type="Number">\${restante}</Data></Cell>
-          <Cell ss:StyleID="Percent"><Data ss:Type="Number">\${pct}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml(nombre)}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${presupuesto}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${gastadoSobre}</Data></Cell>
+          <Cell ss:StyleID="Number"><Data ss:Type="Number">${restante}</Data></Cell>
+          <Cell ss:StyleID="Percent"><Data ss:Type="Number">${pct}</Data></Cell>
         </Row>
       `;
     });
@@ -2102,24 +2102,24 @@ function generarReportePDF() {
         </div>
         <div style="text-align:right;">
           <div style="font-size:24px; font-weight:800; margin:0;">💸 <span style="font-size:20px; color:#0f766e;">SinDeudas</span></div>
-          <div style="font-size:11px; color:#64748B; font-weight:700; margin-top:4px;">Fecha: \${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          <div style="font-size:11px; color:#64748B; font-weight:700; margin-top:4px;">Fecha: ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
         <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
           <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Salud Financiera</div>
-          <div style="font-size:20px; font-weight:800; color:\${hs.color}; margin-top:4px;">\${hs.score} / 100</div>
-          <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">\${hs.level}</div>
+          <div style="font-size:20px; font-weight:800; color:${hs.color}; margin-top:4px;">${hs.score} / 100</div>
+          <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">${hs.level}</div>
         </div>
         <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
           <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Deuda Consolidada</div>
-          <div style="font-size:20px; font-weight:800; color:#ef4444; margin-top:4px;">\${fmt(totalDeuda)}</div>
+          <div style="font-size:20px; font-weight:800; color:#ef4444; margin-top:4px;">${fmt(totalDeuda)}</div>
           <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">Plan: Snowball (Bola de Nieve)</div>
         </div>
         <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:12px; border-radius:8px;">
           <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Surplus Mensual (Ahorro)</div>
-          <div style="font-size:20px; font-weight:800; color:#10b981; margin-top:4px;">\${fmt(surplus)}</div>
+          <div style="font-size:20px; font-weight:800; color:#10b981; margin-top:4px;">${fmt(surplus)}</div>
           <div style="font-size:11px; font-weight:700; color:#475569; margin-top:2px;">Capacidad de pago extra</div>
         </div>
       </div>
@@ -2129,11 +2129,11 @@ function generarReportePDF() {
         <table style="width:100%; border-collapse:collapse; font-size:12px;">
           <tr>
             <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#475569; width:50%;">Ingresos Mensuales Declarados</td>
-            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right;">\${fmt(data.config.ingresoMensual)}</td>
+            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right;">${fmt(data.config.ingresoMensual)}</td>
           </tr>
           <tr>
             <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#475569;">Gastos Fijos Mensuales</td>
-            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right; color:#ef4444;">\${fmt(data.config.gastosFijos)}</td>
+            <td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right; color:#ef4444;">${fmt(data.config.gastosFijos)}</td>
           </tr>
         </table>
       </div>
@@ -2166,16 +2166,16 @@ function generarReportePDF() {
       if (!isPagada && d.fechaLibre) {
         const f = d.fechaLibre;
         const mesLibre = MESES_ES[f.getMonth()];
-        libreStr = `\${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} \${f.getFullYear()} (en \${d.mesLibre} mes\${d.mesLibre > 1 ? 'es' : ''})`;
+        libreStr = `${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} ${f.getFullYear()} (en ${d.mesLibre} mes${d.mesLibre > 1 ? 'es' : ''})`;
       }
       html += `
-        <tr style="border-bottom:1px solid #e2e8f0; background:\${isPagada ? '#f0fdf4' : 'none'};">
-          <td style="padding:8px; font-weight:700; color:#334155;">#\${idx+1} \${d.nombre} \${isPagada ? '✅' : ''}</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(saldoInicial)}</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:\${isPagada ? '#10b981' : '#ef4444'}">\${fmt(d.saldoActual)}</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\${d.tasaInteres || 0}% mes</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(d.pagoMinimo)}</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">\${libreStr}</td>
+        <tr style="border-bottom:1px solid #e2e8f0; background:${isPagada ? '#f0fdf4' : 'none'};">
+          <td style="padding:8px; font-weight:700; color:#334155;">#${idx+1} ${d.nombre} ${isPagada ? '✅' : ''}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">${fmt(saldoInicial)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:${isPagada ? '#10b981' : '#ef4444'}">${fmt(d.saldoActual)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">${d.tasaInteres || 0}% mes</td>
+          <td style="padding:8px; text-align:right; color:#475569;">${fmt(d.pagoMinimo)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">${libreStr}</td>
         </tr>
       `;
     });
@@ -2193,11 +2193,11 @@ function generarReportePDF() {
       <div style="background:#ecfdf5; border:1.5px solid #10b981; padding:14px; border-radius:8px; margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div style="font-size:10px; font-weight:800; color:#047857; text-transform:uppercase; letter-spacing:0.5px;">Predicción Libre de Deudas</div>
-          <div style="font-size:16px; font-weight:800; color:#065f46; margin-top:2px;">\${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} \${f.getFullYear()} (en \${sb.mesesTotales} meses)</div>
+          <div style="font-size:16px; font-weight:800; color:#065f46; margin-top:2px;">${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} ${f.getFullYear()} (en ${sb.mesesTotales} meses)</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:11px; font-weight:700; color:#047857;">Ahorro de Intereses: <span style="font-weight:800;">\${fmt(sb.interesAhorrado)}</span></div>
-          <div style="font-size:11px; font-weight:700; color:#047857; margin-top:2px;">Meses Ahorrados con Snowball: <span style="font-weight:800;">\${sb.mesesAhorrados} meses</span></div>
+          <div style="font-size:11px; font-weight:700; color:#047857;">Ahorro de Intereses: <span style="font-weight:800;">${fmt(sb.interesAhorrado)}</span></div>
+          <div style="font-size:11px; font-weight:700; color:#047857; margin-top:2px;">Meses Ahorrados con Snowball: <span style="font-weight:800;">${sb.mesesAhorrados} meses</span></div>
         </div>
       </div>
     `;
@@ -2234,17 +2234,17 @@ function generarReportePDF() {
         const hoy = new Date();
         hoy.setMonth(hoy.getMonth() + Math.ceil(meses));
         const mesNom = MESES_ES[hoy.getMonth()];
-        forecastStr = \`\${mesNom} \${hoy.getFullYear()} (en \${Math.ceil(meses)} m)\`;
+        forecastStr = `${mesNom} ${hoy.getFullYear()} (en ${Math.ceil(meses)} m)`;
       } else if (!lograda) {
         forecastStr = 'Sin plan activo';
       }
       html += `
         <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:8px; font-weight:700; color:#334155;">\${m.emoji || '🎯'} \${escapeXml(m.nombre)}</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(m.montoObjetivo)}</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">\${fmt(m.ahorrado)}</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\${Math.round(pct)}%</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:#475569;">\${forecastStr}</td>
+          <td style="padding:8px; font-weight:700; color:#334155;">${m.emoji || '🎯'} ${escapeXml(m.nombre)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">${fmt(m.montoObjetivo)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">${fmt(m.ahorrado)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">${Math.round(pct)}%</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#475569;">${forecastStr}</td>
         </tr>
       `;
     });
@@ -2289,12 +2289,12 @@ function generarReportePDF() {
       const over = gastadoSobre > presupuesto;
 
       html += `
-        <tr style="border-bottom:1px solid #e2e8f0; background:\${over ? '#fef2f2' : 'none'};">
-          <td style="padding:8px; font-weight:700; color:#334155;">\${nombreTrad}</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(presupuesto)}</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:\${over ? '#ef4444' : '#334155'}">\${fmt(gastadoSobre)}</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:\${over ? '#ef4444' : '#10b981'}">\${fmt(restante)}</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:\${over ? '#ef4444' : '#0f766e'}">\${pct}%</td>
+        <tr style="border-bottom:1px solid #e2e8f0; background:${over ? '#fef2f2' : 'none'};">
+          <td style="padding:8px; font-weight:700; color:#334155;">${nombreTrad}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">${fmt(presupuesto)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:${over ? '#ef4444' : '#334155'}">${fmt(gastadoSobre)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:${over ? '#ef4444' : '#10b981'}">${fmt(restante)}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:${over ? '#ef4444' : '#0f766e'}">${pct}%</td>
         </tr>
       `;
     });
