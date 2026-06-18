@@ -553,7 +553,7 @@ function renderMetas() {
         <div class="meta-progress-wrap">
           <div class="meta-progress-bar${lograda?' lograda':''}" style="width:${pct}%"></div>
         </div>
-        <button class="btn btn-secondary" style="margin-top:12px;min-height:38px;font-size:13px;" data-abono-meta="${meta.id}">💰 ${window.appLang === 'pt' ? 'Abonar' : 'Abonar'}</button>`;
+        <button class="btn btn-secondary" style="margin-top:12px;min-height:38px;font-size:13px;" data-abono-meta="${meta.id}">💰 Abonar</button>`;
       listEl.appendChild(card);
     });
     listEl.querySelectorAll('[data-edit-meta]').forEach(btn =>
@@ -590,7 +590,7 @@ function renderReto52() {
     const allDone     = completadas === 52;
     container.innerHTML = `
       <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:13px;font-weight:700;color:var(--text-muted);">${completadas}/52 ${window.appLang === 'pt' ? 'semanas concluídas' : 'semanas completadas'}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text-muted);">${completadas}/52 semanas completadas</span>
         <span style="font-size:13px;font-weight:800;color:var(--primary);">Total: ${fmt(total)}</span>
       </div>
       ${allDone ? `<div style="text-align:center;font-size:18px;font-weight:800;color:var(--primary);margin-bottom:12px;">🏆 ${T('reto52_feliz')}</div>` : ''}
@@ -609,7 +609,7 @@ function renderReto52() {
       grid.appendChild(cell);
     });
     document.getElementById('btn-reiniciar-reto').addEventListener('click', () => {
-      if (confirm(window.appLang === 'pt' ? 'Reiniciar o desafio? O progresso será perdido.' : '¿Reiniciar el reto? Se perderá el progreso.')) {
+      if (confirm('¿Reiniciar el reto? Se perderá el progreso.')) {
         data.reto52 = { activo: false, montoSemanal: r.montoSemanal, semanas: [] };
         saveData();
         renderReto52();
@@ -670,7 +670,7 @@ function saveDeuda() {
   const saldoIni = parseFloat(document.getElementById('md-saldo-inicial').value) || saldo;
   const tasa    = parseFloat(document.getElementById('md-tasa').value) || 0;
   const minimo  = parseFloat(document.getElementById('md-minimo').value) || 0;
-  if (!nombre || isNaN(saldo)) { toast(window.appLang === 'pt' ? 'Preencha o nome e o saldo 🙂' : 'Completa nombre y saldo 🙂'); return; }
+  if (!nombre || isNaN(saldo)) { toast('Completa nombre y saldo 🙂'); return; }
   if (modalDeudaEditId) {
     const d = data.deudas.find(d => d.id === modalDeudaEditId);
     if (d) { d.nombre = nombre; d.saldoActual = saldo; d.saldoInicial = saldoIni; d.tasaInteres = tasa; d.pagoMinimo = minimo; }
@@ -704,7 +704,7 @@ function saveAbono() {
   data.pagosDeuda.push({ id: uid(), deudaId: abonoDeudaId, fecha: new Date().toISOString(), monto });
   data.transacciones.push({
     id: uid(), tipo: 'g', monto,
-    descripcion: (window.appLang === 'pt' ? 'Abono: ' : 'Abono: ') + d.nombre,
+    descripcion: 'Abono: ' + d.nombre,
     categoria: '💳 Deudas',
     fecha: new Date().toISOString()
   });
@@ -759,7 +759,7 @@ function saveAbonoMeta() {
   m.ahorrado = (m.ahorrado || 0) + monto;
   data.transacciones.push({
     id: uid(), tipo: 'g', monto,
-    descripcion: (window.appLang === 'pt' ? 'Abono meta: ' : 'Abono meta: ') + m.nombre,
+    descripcion: 'Abono meta: ' + m.nombre,
     categoria: 'Otros',
     fecha: new Date().toISOString()
   });
@@ -809,16 +809,16 @@ function calcularHealthScore() {
   let level = '';
   let color = '';
   if (score >= 80) {
-    level = window.appLang === 'pt' ? 'Excelente 💚' : 'Excelente 💚';
+    level = 'Excelente 💚';
     color = 'var(--ok)';
   } else if (score >= 60) {
-    level = window.appLang === 'pt' ? 'Bom 👍' : 'Estable 👍';
+    level = 'Estable 👍';
     color = '#10B981';
   } else if (score >= 40) {
-    level = window.appLang === 'pt' ? 'Atenção ⚠️' : 'Atención ⚠️';
+    level = 'Atención ⚠️';
     color = 'var(--accent-gold)';
   } else {
-    level = window.appLang === 'pt' ? 'Crítico 🚨' : 'Crítico 🚨';
+    level = 'Crítico 🚨';
     color = 'var(--danger)';
   }
   
@@ -827,45 +827,24 @@ function calcularHealthScore() {
 
 function getMotivationalMessage(score) {
   const messages = {
-    es: {
-      high: [
-        "¡Excelente control! Sigue así, tu libertad financiera está cada vez más cerca. 🚀",
-        "Estás en el camino correcto. Tu disciplina financiera es admirable. 💪",
-        "¡Qué paz da tener el control! Tu futuro yo te lo agradecerá. 🎯"
-      ],
-      medium: [
-        "Buen progreso. Revisa tus sobres para recortar gastos y acelerar tu Bola de Nieve. ❄️",
-        "Vas estable. ¿Y si aumentas un poco el abono a tu deuda foco este mes? 🔥",
-        "Cada pequeño ajuste cuenta. Sigue consistente en tus registros. 📊"
-      ],
-      low: [
-        "Paso a paso. Tu prioridad es reducir gastos variables para crear tu primer fondo de emergencia. 🛡️",
-        "No te desanimes. Enfócate hoy en pagar el mínimo de tus deudas y atacar la más pequeña. 🎯",
-        "Es momento de ajustar los sobres. Todo esfuerzo de hoy será libertad mañana. 🌱"
-      ]
-    },
-    pt: {
-      high: [
-        "Excelente controle! Continue assim, sua liberdade financeira está cada vez mais perto. 🚀",
-        "Você está no caminho certo. Sua disciplina financeira é admirável. 💪",
-        "Que paz dá ter o controle! Seu eu do futuro agradecerá. 🎯"
-      ],
-      medium: [
-        "Bom progresso. Revise seus envelopes para cortar gastos e acelerar sua Bola de Neve. ❄️",
-        "Você está estável. Que tal aumentar um pouco o pagamento da sua dívida foco este mês? 🔥",
-        "Cada pequeno ajuste conta. Continue consistente nos seus lançamentos. 📊"
-      ],
-      low: [
-        "Passo a passo. Sua prioridade é reduzir despesas variáveis para criar seu primeiro fundo de emergência. 🛡️",
-        "Não desanime. Foque hoje em pagar o mínimo das suas dívidas e atacar a menor. 🎯",
-        "É hora de ajustar os envelopes. Todo esforço de hoje será liberdade amanhã. 🌱"
-      ]
-    }
+    high: [
+      "¡Excelente control! Sigue así, tu libertad financiera está cada vez más cerca. 🚀",
+      "Estás en el camino correcto. Tu disciplina financiera es admirable. 💪",
+      "¡Qué paz da tener el control! Tu futuro yo te lo agradecerá. 🎯"
+    ],
+    medium: [
+      "Buen progreso. Revisa tus sobres para recortar gastos y acelerar tu Bola de Nieve. ❄️",
+      "Vas estable. ¿Y si aumentas un poco el abono a tu deuda foco este mes? 🔥",
+      "Cada pequeño ajuste cuenta. Sigue consistente en tus registros. 📊"
+    ],
+    low: [
+      "Paso a paso. Tu prioridad es reducir gastos variables para crear tu primer fondo de emergencia. 🛡️",
+      "No te desanimes. Enfócate hoy en pagar el mínimo de tus deudas y atacar la más pequeña. 🎯",
+      "Es momento de ajustar los sobres. Todo esfuerzo de hoy será libertad mañana. 🌱"
+    ]
   };
   
-  const lang = window.appLang === 'pt' ? 'pt' : 'es';
-  const pool = score >= 80 ? messages[lang].high : score >= 40 ? messages[lang].medium : messages[lang].low;
-  
+  const pool = score >= 80 ? messages.high : score >= 40 ? messages.medium : messages.low;
   const dayIndex = new Date().getDate() % pool.length;
   return pool[dayIndex];
 }
@@ -878,45 +857,29 @@ function calcularInsights() {
   const ingresoMensual = data.config.ingresoMensual || 0;
   const gastosFijos = data.config.gastosFijos || 0;
   
-  const insights = {
-    es: [
-      "Registrar tus gastos todos los días reduce el gasto impulsivo en un 15%. ¡Sigue consistente! 📊",
-      "Tu meta de ahorro está bien encaminada. Automatiza un abono hoy para acelerar. 🎯"
-    ],
-    pt: [
-      "Registrar seus gastos todos os dias reduz as compras por impulso em 15%. Continue consistente! 📊",
-      "Sua meta de poupança está no caminho certo. Deposite hoje para acelerar. 🎯"
-    ]
-  };
+  const insights = [
+    "Registrar tus gastos todos los días reduce el gasto impulsivo en un 15%. ¡Sigue consistente! 📊",
+    "Tu meta de ahorro está bien encaminada. Automatiza un abono hoy para acelerar. 🎯"
+  ];
   
   // Custom Dynamic Insights based on actual data
   if (ingresoMensual > 0) {
     const disponible = ingresoMensual - (gastos + gastosFijos);
     if (disponible > 0) {
       const p = Math.round((disponible / ingresoMensual) * 100);
-      if (window.appLang === 'pt') {
-        insights.pt.unshift(`Você ainda tem ${p}% da sua renda mensal disponível. Que tal direcionar parte disso para suas metas de poupança? 💰`);
-      } else {
-        insights.es.unshift(`Tienes el ${p}% de tu ingreso mensual libre. ¿Qué tal si abonas un extra a tu deudor foco hoy? 💰`);
-      }
+      insights.unshift(`Tienes el ${p}% de tu ingreso mensual libre. ¿Qué tal si abonas un extra a tu deudor foco hoy? 💰`);
     }
   }
   
   if (data.deudas && data.deudas.length > 0) {
     const sb = calcularSnowball();
     if (sb.mesesTotales) {
-      if (window.appLang === 'pt') {
-        insights.pt.unshift(`Seu plano Bola de Neve prevê que você estará 100% livre de dívidas em ${sb.mesesTotales} meses! 🚀`);
-      } else {
-        insights.es.unshift(`¡Tu plan Bola de Nieve calcula que estarás libre de deudas en ${sb.mesesTotales} meses! 🚀`);
-      }
+      insights.unshift(`¡Tu plan Bola de Nieve calcula que estarás libre de deudas en ${sb.mesesTotales} meses! 🚀`);
     }
   }
   
-  const lang = window.appLang === 'pt' ? 'pt' : 'es';
-  const pool = insights[lang];
-  const dayIndex = new Date().getDate() % pool.length;
-  return pool[dayIndex];
+  const dayIndex = new Date().getDate() % insights.length;
+  return insights[dayIndex];
 }
 
 // ===== BACKUP / RESTORE =====
@@ -982,14 +945,12 @@ function updateHeader() {
   const greeting = h < 12 ? T('greeting_morning') : h < 19 ? T('greeting_afternoon') : T('greeting_evening');
   
   const streakCount = (data.streaks && data.streaks.count) ? data.streaks.count : 0;
-  const streakText = streakCount > 0 ? ` 🔥 ${streakCount} ${window.appLang === 'pt' ? 'dias' : 'días'}` : '';
+  const streakText = streakCount > 0 ? ` 🔥 ${streakCount} días` : '';
   
   document.getElementById('header-saludo').textContent = greeting + streakText;
   
   const now = new Date();
-  const dateStr = window.appLang === 'pt'
-    ? DIAS_PT[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_PT[now.getMonth()]
-    : DIAS_ES[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_ES[now.getMonth()];
+  const dateStr = DIAS_ES[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_ES[now.getMonth()];
   document.getElementById('header-fecha').textContent = dateStr;
 }
 
@@ -1125,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Reset test
   document.getElementById('btn-reset-app').addEventListener('click', () => {
-    if (confirm(window.appLang === 'pt' ? 'Excluir todos os dados de teste?' : '¿Borrar todos los datos de prueba?')) {
+    if (confirm('¿Borrar todos los datos de prueba?')) {
       localStorage.removeItem('sd_data');
       location.reload();
     }
@@ -1155,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saldo  = parseFloat(document.getElementById('onb-d-saldo').value);
     const tasa   = parseFloat(document.getElementById('onb-d-tasa').value) || 0;
     const minimo = parseFloat(document.getElementById('onb-d-minimo').value) || 0;
-    if (!nombre || isNaN(saldo)) { toast(window.appLang === 'pt' ? 'Preencha o nome e o saldo 🙂' : 'Completa nombre y saldo 🙂'); return; }
+    if (!nombre || isNaN(saldo)) { toast('Completa nombre y saldo 🙂'); return; }
     onbTempDeudas.push({ id: uid(), nombre, saldoActual: saldo, saldoInicial: saldo, tasaInteres: tasa, pagoMinimo: minimo, fechaCreacion: new Date().toISOString() });
     document.getElementById('onb-d-nombre').value = '';
     document.getElementById('onb-d-saldo').value  = '';
@@ -1229,7 +1190,7 @@ function saveDreamKeysInline() {
   const gemini = document.getElementById('dream-key-gemini').value.trim();
   localStorage.setItem('key-openai', openai);
   localStorage.setItem('key-gemini', gemini);
-  toast(window.appLang === 'pt' ? 'Chaves salvas! ✓' : '¡Llaves guardadas! ✓');
+  toast('¡Llaves guardadas! ✓');
   checkDreamKeysStatus();
 }
 
@@ -1238,7 +1199,7 @@ function saveProfileKeys() {
   const gemini = document.getElementById('cfg-key-gemini').value.trim();
   localStorage.setItem('key-openai', openai);
   localStorage.setItem('key-gemini', gemini);
-  toast(window.appLang === 'pt' ? 'Chaves de IA salvas! ✓' : '¡Llaves de IA guardadas! ✓');
+  toast('¡Llaves de IA guardadas! ✓');
 }
 
 function setDreamPreset(preset) {
@@ -1297,7 +1258,7 @@ async function generateDreamImage() {
   previewContainer.style.display = 'none';
   
   if (!prompt) {
-    toast(window.appLang === 'pt' ? 'Descreva o seu sonho!' : '¡Describe tu sueño!');
+    toast('¡Describe tu sueño!');
     return;
   }
 
@@ -1307,10 +1268,10 @@ async function generateDreamImage() {
   try {
     if (provider.startsWith('openai')) {
       const model = provider === 'openai-dalle2' ? 'dalle2' : 'dalle3';
-      loaderText.textContent = window.appLang === 'pt' ? 'Conectando ao DALL-E (OpenAI)...' : 'Conectando a DALL-E (OpenAI)...';
+      loaderText.textContent = 'Conectando a DALL-E (OpenAI)...';
       await callDreamOpenAI(prompt, model);
     } else if (provider === 'gemini') {
-      loaderText.textContent = window.appLang === 'pt' ? 'Gerando com Gemini 2.5 Flash...' : 'Generando con Gemini 2.5 Flash...';
+      loaderText.textContent = 'Generando con Gemini 2.5 Flash...';
       await callDreamGemini(prompt);
     }
   } catch (err) {
@@ -1324,7 +1285,7 @@ async function generateDreamImage() {
 
 async function callDreamOpenAI(prompt, model) {
   const key = localStorage.getItem('key-openai');
-  if (!key) throw new Error(window.appLang === 'pt' ? 'Chave OpenAI não configurada.' : 'Llave de OpenAI no configurada.');
+  if (!key) throw new Error('Llave de OpenAI no configurada.');
 
   const openAiModel = model === 'dalle2' ? 'dall-e-2' : 'dall-e-3';
   const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -1353,7 +1314,7 @@ async function callDreamOpenAI(prompt, model) {
 
 async function callDreamGemini(prompt) {
   const key = localStorage.getItem('key-gemini');
-  if (!key) throw new Error(window.appLang === 'pt' ? 'Chave Gemini não configurada.' : 'Llave de Gemini no configurada.');
+  if (!key) throw new Error('Llave de Gemini no configurada.');
 
   const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=' + key, {
     method: 'POST',
@@ -1422,7 +1383,7 @@ function saveDreamImageToBoard() {
   });
   
   saveData();
-  toast(window.appLang === 'pt' ? 'Sonho salvo no seu Mural! 🔮' : '¡Sueño guardado en tu Mural! 🔮');
+  toast('¡Sueño guardado en tu Mural! 🔮');
   
   document.getElementById('dream-preview-container').style.display = 'none';
   document.getElementById('dream-prompt').value = '';
@@ -1440,7 +1401,7 @@ function renderDreamsBoard() {
   if (!data.suenos) data.suenos = [];
   
   if (data.suenos.length === 0) {
-    grid.innerHTML = `<p style="grid-column: span 2; font-size:13px; color:var(--text-muted); font-weight:600; text-align:center; margin: 20px 0;">${window.appLang === 'pt' ? 'Seu Mural de Sonhos está vazio. Escreva e gere um acima!' : 'Tu Mural de Sueños está vacío. ¡Genera uno arriba!'}</p>`;
+    grid.innerHTML = `<p style="grid-column: span 2; font-size:13px; color:var(--text-muted); font-weight:600; text-align:center; margin: 20px 0;">Tu Mural de Sueños está vacío. ¡Genera uno arriba!</p>`;
     return;
   }
   
@@ -1451,7 +1412,7 @@ function renderDreamsBoard() {
       <img src="${dream.image}" alt="Dream Visualized">
       <div class="dream-card-title">${dream.prompt}</div>
       <div class="dream-card-actions">
-        <button class="dream-card-btn-delete" data-delete-dream="${dream.id}">${window.appLang === 'pt' ? 'Excluir' : 'Eliminar'}</button>
+        <button class="dream-card-btn-delete" data-delete-dream="${dream.id}">Eliminar</button>
       </div>
     `;
     grid.appendChild(card);
@@ -1466,10 +1427,10 @@ function renderDreamsBoard() {
 }
 
 function deleteDream(id) {
-  if (confirm(window.appLang === 'pt' ? 'Excluir este sonho do seu Mural?' : '¿Eliminar este sueño de tu Mural?')) {
+  if (confirm('¿Eliminar este sueño de tu Mural?')) {
     data.suenos = data.suenos.filter(d => d.id !== id);
     saveData();
     renderDreamsBoard();
-    toast(window.appLang === 'pt' ? 'Sonho excluído' : 'Sueño eliminado');
+    toast('Sueño eliminado');
   }
 }
