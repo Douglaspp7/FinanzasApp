@@ -10,35 +10,16 @@
   <title>SinDeudas — Sal de Deudas Paso a Paso</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
   <script src="i18n.js"></script>
 </head>
 <body>
-
-<!-- LOGIN SCREEN -->
-<div id="screen-login" class="auth-screen">
-  <div class="auth-overlay"></div>
-  <div class="auth-content">
-    <div style="font-size:56px;margin-bottom:12px;">💸</div>
-    <h1 class="title-serif" style="font-size:28px;margin-bottom:6px;">SinDeudas</h1>
-    <p class="auth-subtitle" id="login-subtitle"></p>
-    <div class="input-group">
-      <label id="login-label"></label>
-      <input type="email" id="input-email" autocomplete="email" inputmode="email">
-    </div>
-    <button class="btn btn-primary" id="btn-login"></button>
-    <p id="login-msg" style="margin-top:14px;font-size:13px;font-weight:600;color:var(--text-muted);min-height:18px;"></p>
-  </div>
-</div>
 
 <!-- ONBOARDING -->
 <div id="screen-onboarding" class="onboarding-screen hidden">
   <div class="onb-step" id="onb-step-1">
     <div class="onb-progress">
-      <div class="onb-dot active" id="odot-1"></div>
-      <div class="onb-dot" id="odot-2"></div>
-      <div class="onb-dot" id="odot-3"></div>
+      <div class="onb-dot active"></div>
+      <div class="onb-dot"></div>
     </div>
     <div style="font-size:48px;margin-bottom:12px;">💰</div>
     <h2 class="onb-titulo" id="onb-step1-titulo"></h2>
@@ -56,15 +37,14 @@
 
   <div class="onb-step hidden" id="onb-step-2">
     <div class="onb-progress">
-      <div class="onb-dot" id="odot2-1"></div>
-      <div class="onb-dot active" id="odot2-2"></div>
-      <div class="onb-dot" id="odot2-3"></div>
+      <div class="onb-dot"></div>
+      <div class="onb-dot active"></div>
     </div>
     <div style="font-size:48px;margin-bottom:12px;">💳</div>
     <h2 class="onb-titulo" id="onb-step3-titulo"></h2>
     <p class="onb-sub" id="onb-step3-sub"></p>
     <div id="onb-deudas-list" style="margin-bottom:14px;"></div>
-    <div class="card" style="padding:14px;margin-bottom:14px;" id="onb-add-deuda-form">
+    <div class="card" style="padding:14px;margin-bottom:14px;">
       <div class="input-group" style="margin-bottom:10px;">
         <label>Nombre de la deuda</label>
         <input type="text" id="onb-d-nombre" placeholder="Ej: Tarjeta Visa">
@@ -194,8 +174,8 @@
         <div style="display:flex;align-items:center;gap:14px;">
           <div style="width:52px;height:52px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:24px;">💸</div>
           <div>
-            <div style="font-weight:800;font-size:16px;" id="perfil-email-display">—</div>
-            <div style="font-size:12px;font-weight:700;color:var(--primary);" id="perfil-licencia"></div>
+            <div style="font-weight:800;font-size:16px;">Modo de prueba</div>
+            <div style="font-size:12px;font-weight:700;color:var(--primary);">Sin autenticación</div>
           </div>
         </div>
       </div>
@@ -232,7 +212,7 @@
         <button class="btn btn-secondary" id="btn-restore" style="min-height:44px;">📤 Restaurar Datos</button>
         <input type="file" id="input-restore" accept=".json" style="display:none;">
       </div>
-      <button class="btn btn-secondary" id="btn-logout" style="margin-top:8px;color:var(--danger);border-color:var(--danger);"></button>
+      <button class="btn btn-secondary" id="btn-reset-app" style="margin-top:8px;color:var(--danger);border-color:var(--danger);">🗑️ Reiniciar datos (test)</button>
     </section>
   </main>
 
@@ -295,7 +275,7 @@
 <!-- MODAL: ABONO -->
 <div id="modal-abono" class="modal-overlay">
   <div class="modal-sheet">
-    <h3 id="ma-titulo">💰 Registrar Abono</h3>
+    <h3>💰 Registrar Abono</h3>
     <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;" id="ma-deuda-nombre"></p>
     <div class="input-group">
       <label>Monto del abono ($)</label>
@@ -344,33 +324,6 @@
 
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
-
-<!-- PWA INSTALL BANNER (Android) -->
-<div id="pwa-banner" style="display:none;position:fixed;bottom:90px;left:16px;right:16px;max-width:528px;margin:0 auto;z-index:300;background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:16px 18px;box-shadow:var(--shadow-lg);align-items:center;gap:14px;">
-  <div style="font-size:36px;">💸</div>
-  <div style="flex:1;">
-    <div style="font-weight:800;font-size:15px;" id="pwa-titulo"></div>
-    <div style="font-size:12px;color:var(--text-muted);font-weight:600;" id="pwa-sub"></div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:6px;">
-    <button class="btn btn-primary" id="pwa-btn-instalar" style="min-height:36px;font-size:13px;padding:8px 14px;width:auto;"></button>
-    <button id="pwa-btn-despues" style="background:none;border:none;font-size:11px;font-weight:700;color:var(--text-muted);cursor:pointer;"></button>
-  </div>
-</div>
-
-<!-- PWA iOS modal -->
-<div id="modal-ios" class="modal-overlay">
-  <div class="modal-sheet" style="text-align:center;">
-    <h3 id="pwa-ios-titulo"></h3>
-    <p style="color:var(--text-muted);font-size:14px;margin-bottom:18px;" id="pwa-ios-sub"></p>
-    <div style="text-align:left;">
-      <div class="check-item"><div class="box">1</div><span id="pwa-ios-paso1"></span></div>
-      <div class="check-item"><div class="box">2</div><span id="pwa-ios-paso2"></span></div>
-      <div class="check-item"><div class="box">3</div><span id="pwa-ios-paso3"></span></div>
-    </div>
-    <button class="btn btn-primary" id="pwa-ios-btn" style="margin-top:16px;"></button>
-  </div>
-</div>
 
 <script src="app.js"></script>
 </body>
