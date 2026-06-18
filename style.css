@@ -388,3 +388,64 @@ main::-webkit-scrollbar { display: none; }
 .sobre-config-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
 .sobre-config-item label { flex: 1; font-size: 14px; font-weight: 700; }
 .sobre-config-item input { width: 100px; padding: 8px 10px; font-size: 14px; font-weight: 700; background: var(--bg-color); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text-main); text-align: right; }
+
+/* ===== DEBT TIMELINE GRAPHICS (SNOWBALL VISUAL PATH) ===== */
+.deuda-timeline {
+  position: relative;
+  padding-left: 20px;
+  margin-top: 14px;
+}
+.deuda-timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--border);
+}
+.deuda-timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+.deuda-timeline-node {
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 3px solid var(--border);
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+.deuda-timeline-item.foco .deuda-timeline-node {
+  background: var(--primary);
+  border-color: var(--primary-glow);
+  box-shadow: 0 0 10px var(--primary);
+  animation: pulse-glow 1.8s infinite;
+}
+.deuda-timeline-item.pagada .deuda-timeline-node {
+  background: #10b981;
+  border-color: #10b981;
+}
+@keyframes pulse-glow {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ===== TRANSITIONS & ACTIVE SCALES ===== */
+.nav-item {
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.nav-item:active {
+  transform: scale(0.92);
+}
+.btn {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.btn:active {
+  transform: scale(0.97);
+}

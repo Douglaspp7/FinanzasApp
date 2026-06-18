@@ -21,7 +21,8 @@ const DEFAULT_DATA = {
   deudas: [],
   pagosDeuda: [],
   metas: [],
-  reto52: { activo: false, montoSemanal: 50, semanas: [] }
+  reto52: { activo: false, montoSemanal: 50, semanas: [] },
+  streaks: { count: 0, lastActiveDate: null }
 };
 
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -52,6 +53,7 @@ function loadData() {
       data.config = Object.assign({}, DEFAULT_DATA.config, parsed.config || {});
       data.config.sobres = Object.assign({}, DEFAULT_DATA.config.sobres, (parsed.config || {}).sobres || {});
       data.reto52 = Object.assign({}, DEFAULT_DATA.reto52, parsed.reto52 || {});
+      data.streaks = Object.assign({}, DEFAULT_DATA.streaks, parsed.streaks || {});
     }
   } catch(e) {
     data = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -335,37 +337,51 @@ function renderDeudas() {
   }
 
   // Tarjetas de deuda
+  // Tarjetas de deuda (Snowball timeline)
+  const timelineDiv = document.createElement('div');
+  timelineDiv.className = 'deuda-timeline';
+  
   sb.deudas.forEach((d, idx) => {
-    const isFoco       = idx === 0 && d.saldo > 0.01;
+    const isFoco       = idx === 0 && d.saldoActual > 0.01;
+    const isPagada     = d.saldoActual <= 0.01;
     const saldoInicial = d.saldoInicial || d.saldoActual;
     const pagado       = Math.max(0, saldoInicial - d.saldoActual);
     const pct          = saldoInicial > 0 ? Math.min((pagado / saldoInicial) * 100, 100) : 0;
-    const card         = document.createElement('div');
-    card.className     = 'deuda-card' + (isFoco ? ' foco' : '');
+    
+    const item = document.createElement('div');
+    item.className = 'deuda-timeline-item' + (isFoco ? ' foco' : '') + (isPagada ? ' pagada' : '');
+    
     let libreStr = '';
     if (d.fechaLibre) {
       const f = d.fechaLibre;
       const mesLibre = window.appLang === 'pt' ? MESES_PT[f.getMonth()] : MESES_ES[f.getMonth()];
       libreStr = `${window.appLang === 'pt' ? 'Livre em' : 'Libre en'} ${d.mesLibre} ${window.appLang === 'pt' ? 'meses' : 'meses'} · ${mesLibre} ${f.getFullYear()}`;
     }
-    card.innerHTML = `
-      ${isFoco ? '<div class="deuda-foco-badge">' + T('deudas_foco') + '</div>' : ''}
-      <div class="deuda-nombre">${d.nombre}</div>
-      <div class="deuda-saldo">${fmt(d.saldoActual)}</div>
-      <div class="deuda-meta-row">
-        <span>${window.appLang === 'pt' ? 'Mín/mês' : 'Mín/mes'}: ${fmt(d.pagoMinimo)}</span>
-        ${d.tasaInteres ? '<span>'+d.tasaInteres+ (window.appLang === 'pt' ? '% mensal' : '% mensual') + '</span>' : ''}
-      </div>
-      <div class="deuda-progress-wrap">
-        <div class="deuda-progress-bar${pct>=100?' pagada':''}" style="width:${pct}%"></div>
-      </div>
-      ${libreStr ? '<div class="deuda-libre-en">📅 '+libreStr+'</div>' : ''}
-      <div style="display:flex;gap:8px;margin-top:2px;">
-        <button class="btn btn-primary" style="font-size:13px;min-height:40px;" data-abono="${d.id}">${T('deudas_btn_abono')}</button>
-        <button class="btn btn-secondary" style="font-size:13px;min-height:40px;width:42px;padding:0;" data-edit-deuda="${d.id}">✏️</button>
+    
+    item.innerHTML = `
+      <div class="deuda-timeline-node"></div>
+      <div class="deuda-card${isFoco ? ' foco' : ''}">
+        ${isFoco ? '<div class="deuda-foco-badge">' + T('deudas_foco') + '</div>' : ''}
+        ${isPagada ? '<div class="deuda-foco-badge" style="background:#10b981;">' + T('deudas_pagada') + '</div>' : ''}
+        <div class="deuda-nombre">${d.nombre}</div>
+        <div class="deuda-saldo">${fmt(d.saldoActual)}</div>
+        <div class="deuda-meta-row">
+          <span>${window.appLang === 'pt' ? 'Mín/mês' : 'Mín/mes'}: ${fmt(d.pagoMinimo)}</span>
+          ${d.tasaInteres ? '<span>'+d.tasaInteres+ (window.appLang === 'pt' ? '% mensal' : '% mensual') + '</span>' : ''}
+        </div>
+        <div class="deuda-progress-wrap">
+          <div class="deuda-progress-bar${isPagada?' pagada':''}" style="width:${pct}%"></div>
+        </div>
+        ${libreStr && !isPagada ? '<div class="deuda-libre-en">📅 '+libreStr+'</div>' : ''}
+        <div style="display:flex;gap:8px;margin-top:2px;">
+          ${!isPagada ? `<button class="btn btn-primary" style="font-size:13px;min-height:40px;" data-abono="${d.id}">${T('deudas_btn_abono')}</button>` : ''}
+          <button class="btn btn-secondary" style="font-size:13px;min-height:40px;width:42px;padding:0;" data-edit-deuda="${d.id}">✏️</button>
+        </div>
       </div>`;
-    listEl.appendChild(card);
+      
+    timelineDiv.appendChild(item);
   });
+  listEl.appendChild(timelineDiv);
 
   listEl.querySelectorAll('[data-abono]').forEach(btn =>
     btn.addEventListener('click', () => openAbonoModal(btn.getAttribute('data-abono')))
@@ -787,11 +803,49 @@ function importarDatos(file) {
   reader.readAsText(file);
 }
 
+// ===== DAILY STREAKS =====
+function updateStreaks() {
+  if (!data.streaks) {
+    data.streaks = { count: 0, lastActiveDate: null };
+  }
+  
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastDate = data.streaks.lastActiveDate;
+  
+  if (!lastDate) {
+    data.streaks.count = 1;
+    data.streaks.lastActiveDate = todayStr;
+  } else if (lastDate === todayStr) {
+    // Already checked in today, do nothing
+  } else {
+    const lastActive = new Date(lastDate);
+    const today = new Date(todayStr);
+    const diffTime = Math.abs(today - lastActive);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      // Consecutive day!
+      data.streaks.count += 1;
+      data.streaks.lastActiveDate = todayStr;
+    } else if (diffDays > 1) {
+      // Streak broken!
+      data.streaks.count = 1;
+      data.streaks.lastActiveDate = todayStr;
+    }
+  }
+  saveData();
+}
+
 // ===== HEADER =====
 function updateHeader() {
   const h = new Date().getHours();
   const greeting = h < 12 ? T('greeting_morning') : h < 19 ? T('greeting_afternoon') : T('greeting_evening');
-  document.getElementById('header-saludo').textContent = greeting;
+  
+  const streakCount = (data.streaks && data.streaks.count) ? data.streaks.count : 0;
+  const streakText = streakCount > 0 ? ` 🔥 ${streakCount} ${window.appLang === 'pt' ? 'dias' : 'días'}` : '';
+  
+  document.getElementById('header-saludo').textContent = greeting + streakText;
+  
   const now = new Date();
   const dateStr = window.appLang === 'pt'
     ? DIAS_PT[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_PT[now.getMonth()]
@@ -845,6 +899,7 @@ function initPWA() {
 document.addEventListener('DOMContentLoaded', () => {
 
   loadData();
+  updateStreaks();
   applyLang();
 
   // Flag emoji update on button
