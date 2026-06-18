@@ -2166,15 +2166,15 @@ function generarReportePDF() {
       if (!isPagada && d.fechaLibre) {
         const f = d.fechaLibre;
         const mesLibre = MESES_ES[f.getMonth()];
-        libreStr = \`\dots \${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} \${f.getFullYear()} (en \${d.mesLibre} mes\${d.mesLibre > 1 ? 'es' : ''})\`;
+        libreStr = `\${mesLibre.charAt(0).toUpperCase() + mesLibre.slice(1)} \${f.getFullYear()} (en \${d.mesLibre} mes\${d.mesLibre > 1 ? 'es' : ''})`;
       }
       html += `
         <tr style="border-bottom:1px solid #e2e8f0; background:\${isPagada ? '#f0fdf4' : 'none'};">
-          <td style="padding:8px; font-weight:700; color:#334155;">#\${idx+1} \dots \${d.nombre} \${isPagada ? '✅' : ''}</td>
+          <td style="padding:8px; font-weight:700; color:#334155;">#\${idx+1} \${d.nombre} \${isPagada ? '✅' : ''}</td>
           <td style="padding:8px; text-align:right; color:#475569;">\${fmt(saldoInicial)}</td>
           <td style="padding:8px; text-align:right; font-weight:700; color:\${isPagada ? '#10b981' : '#ef4444'}">\${fmt(d.saldoActual)}</td>
           <td style="padding:8px; text-align:right; color:#475569;">\${d.tasaInteres || 0}% mes</td>
-          <td style="padding:8px; text-align:right; color:#475569;">\dots \${fmt(d.pagoMinimo)}</td>
+          <td style="padding:8px; text-align:right; color:#475569;">\${fmt(d.pagoMinimo)}</td>
           <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">\${libreStr}</td>
         </tr>
       `;
@@ -2244,7 +2244,7 @@ function generarReportePDF() {
           <td style="padding:8px; text-align:right; color:#475569;">\${fmt(m.montoObjetivo)}</td>
           <td style="padding:8px; text-align:right; font-weight:700; color:#0f766e;">\${fmt(m.ahorrado)}</td>
           <td style="padding:8px; text-align:right; color:#475569;">\${Math.round(pct)}%</td>
-          <td style="padding:8px; text-align:right; font-weight:700; color:#475569;">\dots \${forecastStr}</td>
+          <td style="padding:8px; text-align:right; font-weight:700; color:#475569;">\${forecastStr}</td>
         </tr>
       `;
     });
