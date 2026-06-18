@@ -403,6 +403,38 @@
         </div>
         <button class="btn btn-secondary" id="btn-save-keys" style="min-height:44px;font-size:14px;" onclick="saveProfileKeys()">💾 Guardar Llaves</button>
       </div>
+
+      <!-- CLOUD SYNC OPTIONAL CARD -->
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;">☁️ Sincronización en la Nube</h3>
+        <p style="font-size:12.5px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">
+          Sincroniza tus datos de forma anónima y segura entre múltiples dispositivos usando un código único de sincronización.
+        </p>
+        <div class="input-group">
+          <label>Código de Sincronización Único</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="cfg-sync-key" placeholder="Generando código..." readonly style="font-size:13.5px; padding:12px; background:rgba(0,0,0,0.15); border-color:var(--border);">
+            <button class="btn btn-secondary" id="btn-copy-sync-key" style="min-height:44px; width:44px; padding:0; font-size:16px; border-radius:var(--radius-sm);" title="Copiar código">📋</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Vincular otro Dispositivo (Ingresa código)</label>
+          <input type="text" id="cfg-sync-join-key" placeholder="Pega el código de tu otro dispositivo" style="font-size:13.5px; padding:12px;">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn btn-primary" id="btn-sync-now" style="min-height:44px; font-size:13px; font-weight:800; flex:1;">
+            🔄 Sincronizar
+          </button>
+          <button class="btn btn-secondary" id="btn-sync-join" style="min-height:44px; font-size:13px; font-weight:800; flex:1;">
+            🔗 Vincular
+          </button>
+        </div>
+        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:12px; color:var(--text-muted); font-weight:700;" id="lbl-sync-status">Estado: No sincronizado</span>
+          <button class="btn btn-secondary" id="btn-sync-auto-toggle" style="min-height:28px; width:auto; padding:4px 10px; font-size:11px; font-weight:800; border-radius:6px; color:var(--text-muted);">Sync Auto: OFF</button>
+        </div>
+      </div>
+
       <div class="card">
         <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-sobres-titulo" data-i18n="perfil_sobres_titulo"></h3>
         <div id="sobres-config-container"></div>

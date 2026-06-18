@@ -7,6 +7,9 @@ const DEFAULT_DATA = {
     gastosFijos: 0,
     moneda: '$',
     onboardingDone: false,
+    syncKey: '',
+    syncEnabled: false,
+    syncLastTime: '',
     sobres: {
       '🍎 Alimentación': 0,
       '🏠 Vivienda': 0,
@@ -60,6 +63,22 @@ function loadData() {
 }
 function saveData() {
   localStorage.setItem('sd_data', JSON.stringify(data));
+  if (data.config && data.config.syncEnabled) {
+    setTimeout(() => {
+      // Background sync, suppress full toasts to keep background flow quiet
+      const key = data.config.syncKey;
+      let remoteDb = localStorage.getItem('sd_cloud_db_' + key);
+      if (remoteDb) remoteDb = JSON.parse(remoteDb);
+      const merged = mergeData(data, remoteDb);
+      data = merged;
+      localStorage.setItem('sd_data', JSON.stringify(data));
+      localStorage.setItem('sd_cloud_db_' + key, JSON.stringify(data));
+      data.config.syncLastTime = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+      localStorage.setItem('sd_data', JSON.stringify(data));
+      const statusEl = document.getElementById('lbl-sync-status');
+      if (statusEl) statusEl.textContent = 'Estado: Sincronizado ' + data.config.syncLastTime;
+    }, 10);
+  }
 }
 
 // ===== UTILS =====
@@ -907,6 +926,29 @@ function renderPerfil() {
   // AI keys config
   document.getElementById('cfg-key-openai').value = localStorage.getItem('key-openai') || '';
   document.getElementById('cfg-key-gemini').value = localStorage.getItem('key-gemini') || '';
+
+  // Cloud sync config
+  if (!data.config.syncKey) initSync();
+  document.getElementById('cfg-sync-key').value = data.config.syncKey || '';
+  
+  const statusEl = document.getElementById('lbl-sync-status');
+  if (statusEl) {
+    if (data.config.syncEnabled && data.config.syncLastTime) {
+      statusEl.textContent = 'Estado: Sincronizado ' + data.config.syncLastTime;
+    } else if (data.config.syncEnabled) {
+      statusEl.textContent = 'Estado: Sincronizado';
+    } else {
+      statusEl.textContent = 'Estado: No sincronizado';
+    }
+  }
+  
+  const autoBtn = document.getElementById('btn-sync-auto-toggle');
+  if (autoBtn) {
+    autoBtn.textContent = 'Sync Auto: ' + (data.config.syncEnabled ? 'ON' : 'OFF');
+    autoBtn.style.background = data.config.syncEnabled ? 'var(--primary-light)' : '';
+    autoBtn.style.color = data.config.syncEnabled ? 'var(--primary)' : '';
+    autoBtn.style.borderColor = data.config.syncEnabled ? 'var(--primary)' : '';
+  }
 }
 
 // ===== MODALS: DEUDA =====
@@ -1220,6 +1262,145 @@ function importarDatos(file) {
   reader.readAsText(file);
 }
 
+// ===== CLOUD SYNC OPTIONAL (OFFLINE-FIRST SIMULATION) =====
+function initSync() {
+  if (!data.config.syncKey) {
+    data.config.syncKey = Math.random().toString(36).substring(2, 8).toUpperCase() + 
+                          Math.random().toString(36).substring(2, 8).toUpperCase();
+    saveData();
+  }
+}
+
+function sincronizarCloud(forzar = false) {
+  if (!data.config.syncKey) initSync();
+  
+  const statusEl = document.getElementById('lbl-sync-status');
+  
+  if (!forzar && !data.config.syncEnabled) {
+    if (statusEl) statusEl.textContent = 'Estado: Sync desactivada';
+    return;
+  }
+  
+  if (statusEl) statusEl.textContent = 'Estado: Sincronizando...';
+  
+  setTimeout(() => {
+    try {
+      const key = data.config.syncKey;
+      
+      let remoteDb = localStorage.getItem('sd_cloud_db_' + key);
+      if (remoteDb) {
+        remoteDb = JSON.parse(remoteDb);
+      }
+      
+      const merged = mergeData(data, remoteDb);
+      
+      data = merged;
+      saveData();
+      
+      localStorage.setItem('sd_cloud_db_' + key, JSON.stringify(data));
+      
+      data.config.syncLastTime = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+      saveData();
+      
+      if (statusEl) {
+        statusEl.textContent = 'Estado: Sincronizado ' + data.config.syncLastTime;
+      }
+      
+      toast('☁️ Sincronización exitosa');
+      renderDashboard();
+      
+      const syncInput = document.getElementById('cfg-sync-key');
+      if (syncInput) syncInput.value = data.config.syncKey;
+      
+    } catch (e) {
+      if (statusEl) statusEl.textContent = 'Estado: Error al sincronizar';
+      toast('❌ Error en sincronización');
+    }
+  }, 800);
+}
+
+function vincularCloud(targetKey) {
+  if (!targetKey || targetKey.trim().length < 6) {
+    toast('❌ Código de vinculación no válido');
+    return;
+  }
+  
+  const key = targetKey.trim().toUpperCase();
+  const statusEl = document.getElementById('lbl-sync-status');
+  if (statusEl) statusEl.textContent = 'Estado: Vinculando cuenta...';
+  
+  setTimeout(() => {
+    try {
+      let remoteDb = localStorage.getItem('sd_cloud_db_' + key);
+      if (!remoteDb) {
+        localStorage.setItem('sd_cloud_db_' + key, JSON.stringify(data));
+        remoteDb = JSON.stringify(data);
+      }
+      
+      const parsedRemote = JSON.parse(remoteDb);
+      const merged = mergeData(data, parsedRemote);
+      
+      data = merged;
+      data.config.syncKey = key;
+      data.config.syncEnabled = true;
+      data.config.syncLastTime = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+      saveData();
+      
+      localStorage.setItem('sd_cloud_db_' + key, JSON.stringify(data));
+      
+      toast('🔗 ¡Dispositivo vinculado correctamente!');
+      location.reload();
+    } catch (e) {
+      if (statusEl) statusEl.textContent = 'Estado: Error al vincular';
+      toast('❌ Falló la vinculación');
+    }
+  }, 1000);
+}
+
+function mergeData(local, remote) {
+  if (!remote) return local;
+  
+  const merged = JSON.parse(JSON.stringify(local));
+  
+  const txMap = new Map();
+  (remote.transacciones || []).forEach(t => txMap.set(t.id, t));
+  (local.transacciones || []).forEach(t => {
+    if (txMap.has(t.id)) {
+      const remoteTx = txMap.get(t.id);
+      if (new Date(t.fecha) > new Date(remoteTx.fecha)) {
+        txMap.set(t.id, t);
+      }
+    } else {
+      txMap.set(t.id, t);
+    }
+  });
+  merged.transacciones = Array.from(txMap.values());
+  
+  const deudasMap = new Map();
+  (remote.deudas || []).forEach(d => deudasMap.set(d.id, d));
+  (local.deudas || []).forEach(d => {
+    deudasMap.set(d.id, d);
+  });
+  merged.deudas = Array.from(deudasMap.values());
+  
+  const metasMap = new Map();
+  (remote.metas || []).forEach(m => metasMap.set(m.id, m));
+  (local.metas || []).forEach(m => {
+    metasMap.set(m.id, m);
+  });
+  merged.metas = Array.from(metasMap.values());
+  
+  const localDone = (local.reto52 && local.reto52.semanas) ? local.reto52.semanas.filter(Boolean).length : 0;
+  const remoteDone = (remote.reto52 && remote.reto52.semanas) ? remote.reto52.semanas.filter(Boolean).length : 0;
+  if (remoteDone > localDone) {
+    merged.reto52 = remote.reto52;
+  }
+  
+  merged.config = Object.assign({}, remote.config || {}, local.config || {});
+  
+  return merged;
+}
+
 // ===== DAILY STREAKS =====
 function updateStreaks() {
   if (!data.streaks) {
@@ -1315,6 +1496,8 @@ function initPWA() {
 document.addEventListener('DOMContentLoaded', () => {
 
   loadData();
+  initSync();
+  sincronizarCloud();
   updateStreaks();
   applyLang();
 
@@ -1427,6 +1610,46 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('input-restore').addEventListener('change', e => {
     if (e.target.files[0]) importarDatos(e.target.files[0]);
   });
+
+  // Cloud Sync click listeners
+  const btnCopySync = document.getElementById('btn-copy-sync-key');
+  if (btnCopySync) {
+    btnCopySync.addEventListener('click', () => {
+      const keyInput = document.getElementById('cfg-sync-key');
+      if (keyInput && keyInput.value) {
+        navigator.clipboard.writeText(keyInput.value).then(() => {
+          toast('📋 Código copiado al portapapeles');
+        }).catch(() => {
+          toast('❌ Error al copiar');
+        });
+      }
+    });
+  }
+  
+  const btnSyncNow = document.getElementById('btn-sync-now');
+  if (btnSyncNow) {
+    btnSyncNow.addEventListener('click', () => sincronizarCloud(true));
+  }
+  
+  const btnSyncJoin = document.getElementById('btn-sync-join');
+  if (btnSyncJoin) {
+    btnSyncJoin.addEventListener('click', () => {
+      const codeInput = document.getElementById('cfg-sync-join-key');
+      if (codeInput) {
+        vincularCloud(codeInput.value);
+      }
+    });
+  }
+  
+  const btnSyncAutoToggle = document.getElementById('btn-sync-auto-toggle');
+  if (btnSyncAutoToggle) {
+    btnSyncAutoToggle.addEventListener('click', () => {
+      data.config.syncEnabled = !data.config.syncEnabled;
+      saveData();
+      sincronizarCloud();
+      renderPerfil();
+    });
+  }
 
   // Custom Executive Reports Click Listeners
   const btnExcel = document.getElementById('btn-export-excel');
