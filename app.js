@@ -152,6 +152,22 @@ function renderDashboard() {
   document.getElementById('dash-sobres-titulo').textContent = '📊 ' + T('dash_sobres_titulo');
   document.getElementById('dash-mov-titulo').textContent    = '🕐 ' + T('dash_movimientos');
 
+  // Score de Salud Financiera
+  const hs = calcularHealthScore();
+  const scoreNumberEl = document.getElementById('score-number');
+  const scoreLabelEl = document.getElementById('score-label');
+  const scoreRingEl = document.getElementById('score-ring-progress');
+  const scoreMotivationalEl = document.getElementById('dash-motivational-msg');
+  
+  if (scoreNumberEl && scoreLabelEl && scoreRingEl && scoreMotivationalEl) {
+    scoreNumberEl.textContent = hs.score;
+    scoreLabelEl.textContent = hs.level;
+    scoreLabelEl.style.color = hs.color;
+    scoreRingEl.setAttribute('stroke', hs.color);
+    scoreRingEl.setAttribute('stroke-dasharray', `${hs.score}, 100`);
+    scoreMotivationalEl.textContent = getMotivationalMessage(hs.score);
+  }
+
   // Sobres
   const sobresContainer = document.getElementById('dash-sobres-container');
   sobresContainer.innerHTML = '';
@@ -641,6 +657,110 @@ function saveAbonoMeta() {
     fecha: new Date().toISOString()
   });
   saveData(); closeModal('modal-abono-meta'); toast(T('metas_abonar_toast')); renderMetas(); renderDashboard();
+}
+
+// ===== FINANCIAL HEALTH SCORE & MOTIVATION =====
+function calcularHealthScore() {
+  if (!data.config.onboardingDone) return { score: 0, level: 'Calculando...', color: 'var(--text-muted)' };
+  
+  let score = 0;
+  const ingreso = data.config.ingresoMensual || 0;
+  const gastosFijos = data.config.gastosFijos || 0;
+  const deudas = data.deudas || [];
+  const totalMinimos = deudas.reduce((s,d) => s + (d.pagoMinimo || 0), 0);
+  const deudaTotal = deudas.reduce((s,d) => s + d.saldoActual, 0);
+  
+  if (ingreso <= 0) return { score: 0, level: 'Revisa tu Perfil', color: 'var(--danger)' };
+
+  // 1. Margen de Ahorro (Max 40)
+  const gastosTotales = gastosFijos + totalMinimos;
+  const ratioGastos = gastosTotales / ingreso;
+  if (ratioGastos <= 0.4) score += 40;
+  else if (ratioGastos <= 0.6) score += 30;
+  else if (ratioGastos <= 0.8) score += 20;
+  else if (ratioGastos <= 1.0) score += 10;
+  
+  // 2. Carga de Deuda (Max 40)
+  if (deudaTotal === 0) {
+    score += 40;
+  } else {
+    const ratioDeuda = deudaTotal / ingreso;
+    if (ratioDeuda <= 1.0) score += 30;
+    else if (ratioDeuda <= 3.0) score += 20;
+    else if (ratioDeuda <= 6.0) score += 10;
+    else score += 5;
+  }
+  
+  // 3. Control de Envelopes (Max 10)
+  const tieneSobres = Object.values(data.config.sobres || {}).some(v => v > 0);
+  if (tieneSobres) score += 10;
+  
+  // 4. Plan de Ahorro (Max 10)
+  if (data.metas && data.metas.length > 0) score += 10;
+  
+  // Nivel y color
+  let level = '';
+  let color = '';
+  if (score >= 80) {
+    level = window.appLang === 'pt' ? 'Excelente 💚' : 'Excelente 💚';
+    color = 'var(--ok)';
+  } else if (score >= 60) {
+    level = window.appLang === 'pt' ? 'Bom 👍' : 'Estable 👍';
+    color = '#10B981';
+  } else if (score >= 40) {
+    level = window.appLang === 'pt' ? 'Atenção ⚠️' : 'Atención ⚠️';
+    color = 'var(--accent-gold)';
+  } else {
+    level = window.appLang === 'pt' ? 'Crítico 🚨' : 'Crítico 🚨';
+    color = 'var(--danger)';
+  }
+  
+  return { score, level, color };
+}
+
+function getMotivationalMessage(score) {
+  const messages = {
+    es: {
+      high: [
+        "¡Excelente control! Sigue así, tu libertad financiera está cada vez más cerca. 🚀",
+        "Estás en el camino correcto. Tu disciplina financiera es admirable. 💪",
+        "¡Qué paz da tener el control! Tu futuro yo te lo agradecerá. 🎯"
+      ],
+      medium: [
+        "Buen progreso. Revisa tus sobres para recortar gastos y acelerar tu Bola de Nieve. ❄️",
+        "Vas estable. ¿Y si aumentas un poco el abono a tu deuda foco este mes? 🔥",
+        "Cada pequeño ajuste cuenta. Sigue consistente en tus registros. 📊"
+      ],
+      low: [
+        "Paso a paso. Tu prioridad es reducir gastos variables para crear tu primer fondo de emergencia. 🛡️",
+        "No te desanimes. Enfócate hoy en pagar el mínimo de tus deudas y atacar la más pequeña. 🎯",
+        "Es momento de ajustar los sobres. Todo esfuerzo de hoy será libertad mañana. 🌱"
+      ]
+    },
+    pt: {
+      high: [
+        "Excelente controle! Continue assim, sua liberdade financeira está cada vez mais perto. 🚀",
+        "Você está no caminho certo. Sua disciplina financeira é admirável. 💪",
+        "Que paz dá ter o controle! Seu eu do futuro agradecerá. 🎯"
+      ],
+      medium: [
+        "Bom progresso. Revise seus envelopes para cortar gastos e acelerar sua Bola de Neve. ❄️",
+        "Você está estável. Que tal aumentar um pouco o pagamento da sua dívida foco este mês? 🔥",
+        "Cada pequeno ajuste conta. Continue consistente nos seus lançamentos. 📊"
+      ],
+      low: [
+        "Passo a passo. Sua prioridade é reduzir despesas variáveis para criar seu primeiro fundo de emergência. 🛡️",
+        "Não desanime. Foque hoje em pagar o mínimo das suas dívidas e atacar a menor. 🎯",
+        "É hora de ajustar os envelopes. Todo esforço de hoje será liberdade amanhã. 🌱"
+      ]
+    }
+  };
+  
+  const lang = window.appLang === 'pt' ? 'pt' : 'es';
+  const pool = score >= 80 ? messages[lang].high : score >= 40 ? messages[lang].medium : messages[lang].low;
+  
+  const dayIndex = new Date().getDate() % pool.length;
+  return pool[dayIndex];
 }
 
 // ===== BACKUP / RESTORE =====
