@@ -1572,15 +1572,7 @@ function finishOnboarding() {
   setTimeout(() => {
     if (msgEl) msgEl.textContent = '¡Plan Generado!';
     
-    // Confetti!
-    if (typeof confetti === 'function') {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#10b981', '#f59e0b', '#fbbf24']
-      });
-    }
+    triggerConfetti();
 
     setTimeout(() => {
       showOnboardingResult();
