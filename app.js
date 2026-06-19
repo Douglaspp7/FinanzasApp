@@ -2749,30 +2749,138 @@ function generarReportePDF() {
   window.print();
 }
 
-// ===== PWA & NOTIFICATIONS =====
-let deferredPrompt;
+// ===== PWA INSTALL PROMPT (Android nativo + iOS instrucciones) =====
+let deferredPrompt = null;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btnInstall = document.getElementById('btn-install-pwa');
-  if (btnInstall) {
-    btnInstall.style.display = 'block';
-    btnInstall.addEventListener('click', async () => {
-      btnInstall.style.display = 'none';
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to the install prompt: ${outcome}`);
-      deferredPrompt = null;
-    });
+(function initInstallPrompt(){
+  const KEY = 'pwa_prompt_dismissed_at';
+  const REMIND_DAYS = 7;
+
+  const isStandalone = () =>
+    window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isIOS = () =>
+    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
+  const appVisible = () => {
+    const app = document.getElementById('app');
+    return app && !app.classList.contains('hidden');
+  };
+  const dismissedRecently = () => {
+    const t = parseInt(localStorage.getItem(KEY) || '0', 10);
+    return t && (Date.now() - t) < REMIND_DAYS * 86400000;
+  };
+  function dismiss(){
+    try { localStorage.setItem(KEY, String(Date.now())); } catch(e){}
+    const el = document.getElementById('pwa-banner');
+    if (el) el.remove();
   }
-});
+  const tr = (k, fb) => (typeof T === 'function' && T(k) !== k) ? T(k) : fb;
 
-window.addEventListener('appinstalled', () => {
-  console.log('PWA was installed');
-  const btnInstall = document.getElementById('btn-install-pwa');
-  if (btnInstall) btnInstall.style.display = 'none';
-});
+  function ensureStyles(){
+    if (document.getElementById('pwa-banner-style')) return;
+    const s = document.createElement('style');
+    s.id = 'pwa-banner-style';
+    s.textContent =
+      '#pwa-banner{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);z-index:9999;background:var(--card-bg,#10231a);border:1px solid var(--border,rgba(255,255,255,.12));border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.55);padding:14px;display:flex;gap:12px;align-items:flex-start;animation:pwaUp .3s ease;max-width:520px;margin:0 auto}' +
+      '@keyframes pwaUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}' +
+      '#pwa-banner .pwa-ico{font-size:26px;line-height:1;flex-shrink:0}' +
+      '#pwa-banner .pwa-body{flex:1;min-width:0}' +
+      '#pwa-banner .pwa-t{font-weight:800;font-size:14.5px;color:var(--text-main,#eafaf2)}' +
+      '#pwa-banner .pwa-s{font-size:12.5px;color:var(--text-muted,#93b3a4);font-weight:600;margin-top:2px}' +
+      '#pwa-banner ol{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--text-muted,#93b3a4);font-weight:600;line-height:1.65}' +
+      '#pwa-banner .pwa-actions{display:flex;gap:8px;margin-top:10px}' +
+      '#pwa-banner button{border:none;border-radius:10px;font-weight:800;font-size:13px;padding:9px 14px;cursor:pointer;font-family:inherit}' +
+      '#pwa-banner .pwa-go{background:var(--primary,#10b981);color:#fff}' +
+      '#pwa-banner .pwa-no{background:transparent;color:var(--text-muted,#93b3a4)}';
+    document.head.appendChild(s);
+  }
+
+  function showAndroid(){
+    if (document.getElementById('pwa-banner') || !deferredPrompt) return;
+    ensureStyles();
+    const b = document.createElement('div');
+    b.id = 'pwa-banner';
+    b.innerHTML =
+      '<div class="pwa-ico">📱</div><div class="pwa-body">' +
+      '<div class="pwa-t">' + tr('pwa_android_titulo','Instalar SinDeudas') + '</div>' +
+      '<div class="pwa-s">' + tr('pwa_android_sub','Accede rápido desde tu pantalla de inicio.') + '</div>' +
+      '<div class="pwa-actions"><button class="pwa-go" id="pwa-go">' + tr('pwa_android_btn','Instalar') + '</button>' +
+      '<button class="pwa-no" id="pwa-no">' + tr('pwa_android_despues','Ahora no') + '</button></div></div>';
+    document.body.appendChild(b);
+    document.getElementById('pwa-no').onclick = dismiss;
+    document.getElementById('pwa-go').onclick = async () => {
+      if (!deferredPrompt) { dismiss(); return; }
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch(e){}
+      deferredPrompt = null;
+      dismiss();
+    };
+  }
+
+  function showIOS(){
+    if (document.getElementById('pwa-banner')) return;
+    ensureStyles();
+    const b = document.createElement('div');
+    b.id = 'pwa-banner';
+    b.innerHTML =
+      '<div class="pwa-ico">📲</div><div class="pwa-body">' +
+      '<div class="pwa-t">' + tr('pwa_ios_titulo','Instalar SinDeudas') + '</div>' +
+      '<div class="pwa-s">' + tr('pwa_ios_sub','Agrega SinDeudas a tu pantalla de inicio para acceder sin internet.') + '</div>' +
+      '<ol><li>' + tr('pwa_ios_paso1','Toca el botón Compartir (⬆️) en Safari') + '</li>' +
+      '<li>' + tr('pwa_ios_paso2','Selecciona "Agregar a pantalla de inicio"') + '</li>' +
+      '<li>' + tr('pwa_ios_paso3','Toca "Agregar" para confirmar') + '</li></ol>' +
+      '<div class="pwa-actions"><button class="pwa-no" id="pwa-no">' + tr('pwa_ios_btn','¡Entendido!') + '</button></div></div>';
+    document.body.appendChild(b);
+    document.getElementById('pwa-no').onclick = dismiss;
+  }
+
+  function decideAndShow(){
+    if (isStandalone() || dismissedRecently()) return;
+    if (isIOS()) showIOS();
+    else if (deferredPrompt) showAndroid();
+  }
+
+  // Muestra el banner cuando el usuario ya está dentro de la app (tras login)
+  function maybeShow(){
+    if (isStandalone() || dismissedRecently()) return;
+    if (appVisible()) setTimeout(decideAndShow, 1500);
+    else window.addEventListener('auth-success', () => setTimeout(decideAndShow, 1500), { once: true });
+  }
+
+  // Android: captura el prompt nativo
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Botón en Perfil (sigue funcionando)
+    const btnInstall = document.getElementById('btn-install-pwa');
+    if (btnInstall) {
+      btnInstall.style.display = 'block';
+      btnInstall.onclick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        try { await deferredPrompt.userChoice; } catch(e){}
+        deferredPrompt = null;
+        btnInstall.style.display = 'none';
+        const el = document.getElementById('pwa-banner'); if (el) el.remove();
+      };
+    }
+    maybeShow();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    const btnInstall = document.getElementById('btn-install-pwa');
+    if (btnInstall) btnInstall.style.display = 'none';
+    dismiss();
+  });
+
+  // iOS no dispara beforeinstallprompt -> mostramos instrucciones nosotros
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { if (isIOS()) maybeShow(); });
+  } else if (isIOS()) {
+    maybeShow();
+  }
+})();
 
 // Notifications
 if ('Notification' in window) {
