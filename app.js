@@ -3184,4 +3184,3 @@ function evaluarCoach(ingresos, gastos) {
     };
   }
 }
->>>>>>> ef70256 (feat: fake AI no onboarding, coach financiero banner e confetti gamification)
