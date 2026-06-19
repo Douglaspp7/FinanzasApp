@@ -338,6 +338,7 @@ function renderDashboard() {
   }
 
   // Draw Cash Flow Chart
+  renderCalendario();
   drawCashFlowChart();
 
   document.getElementById('dash-saldo-label').textContent = 'ðŸ’° ' + T('dash_saldo');
@@ -1049,6 +1050,7 @@ function openDeudaModal(id) {
   document.getElementById('md-saldo-inicial').value    = ed ? (ed.saldoInicial || ed.saldoActual) : '';
   document.getElementById('md-tasa').value             = ed ? ed.tasaInteres : '';
   document.getElementById('md-minimo').value           = ed ? ed.pagoMinimo : '';
+  document.getElementById('md-diapago').value          = ed ? (ed.diaPago || '') : '';
   document.getElementById('md-btn-eliminar').style.display = ed ? 'block' : 'none';
   openModal('modal-deuda');
 }
@@ -1058,12 +1060,13 @@ function saveDeuda() {
   const saldoIni = parseFloat(document.getElementById('md-saldo-inicial').value) || saldo;
   const tasa    = parseFloat(document.getElementById('md-tasa').value) || 0;
   const minimo  = parseFloat(document.getElementById('md-minimo').value) || 0;
+  const diaPago = parseInt(document.getElementById('md-diapago').value) || 0;
   if (!nombre || isNaN(saldo)) { toast('Completa nombre y saldo ðŸ™‚'); return; }
   if (modalDeudaEditId) {
     const d = data.deudas.find(d => d.id === modalDeudaEditId);
-    if (d) { d.nombre = nombre; d.saldoActual = saldo; d.saldoInicial = saldoIni; d.tasaInteres = tasa; d.pagoMinimo = minimo; }
+    if (d) { d.nombre = nombre; d.saldoActual = saldo; d.saldoInicial = saldoIni; d.tasaInteres = tasa; d.pagoMinimo = minimo; d.diaPago = diaPago; }
   } else {
-    data.deudas.push({ id: uid(), nombre, saldoActual: saldo, saldoInicial: saldoIni, tasaInteres: tasa, pagoMinimo: minimo, fechaCreacion: new Date().toISOString() });
+    data.deudas.push({ id: uid(), nombre, saldoActual: saldo, saldoInicial: saldoIni, tasaInteres: tasa, pagoMinimo: minimo, diaPago, fechaCreacion: new Date().toISOString() });
   }
   saveData(); closeModal('modal-deuda'); toast(T('modal_deuda_toast')); renderDeudas();
 }
@@ -3377,3 +3380,143 @@ function evaluarLogros() {
     renderLogros();
   }
 }
+
+// ===== CALENDARIO FINANCIERO =====
+function renderCalendario() {
+  const grid = document.getElementById('calendario-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dayNames = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+  dayNames.forEach(d => {
+    const el = document.createElement('div');
+    el.textContent = d;
+    el.style.fontWeight = 'bold';
+    el.style.color = 'var(--text-muted)';
+    el.style.paddingBottom = '4px';
+    grid.appendChild(el);
+  });
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    grid.appendChild(el);
+  }
+  const deudas = data.deudas || [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const el = document.createElement('div');
+    el.style.padding = '6px 0';
+    el.style.borderRadius = 'var(--radius-sm)';
+    el.style.position = 'relative';
+    el.style.color = 'var(--text-main)';
+    if (day === now.getDate()) {
+      el.style.background = 'rgba(255,255,255,0.1)';
+      el.style.fontWeight = 'bold';
+    }
+    el.textContent = day;
+    const tienePago = deudas.some(d => parseInt(d.diaPago) === day && (d.saldoActual > 0));
+    if (tienePago) {
+      const dot = document.createElement('div');
+      dot.style.position = 'absolute';
+      dot.style.bottom = '2px';
+      dot.style.left = '50%';
+      dot.style.transform = 'translateX(-50%)';
+      dot.style.width = '4px';
+      dot.style.height = '4px';
+      dot.style.backgroundColor = 'var(--danger)';
+      dot.style.borderRadius = '50%';
+      dot.style.boxShadow = '0 0 4px var(--danger)';
+      el.appendChild(dot);
+    }
+    grid.appendChild(el);
+  }
+}
+
+// ===== MODO FAMILIAR (P2P SYNC) =====
+let syncDataPendiente = null;
+function openModoFamiliar() {
+  const rawData = JSON.stringify(data);
+  const compressed = LZString.compressToEncodedURIComponent(rawData);
+  const syncUrl = window.location.origin + window.location.pathname + '?syncData=' + compressed;
+  document.getElementById('qr-container').innerHTML = '';
+  new QRCode(document.getElementById('qr-container'), {
+    text: syncUrl,
+    width: 200,
+    height: 200,
+    colorDark: '#0B1120',
+    colorLight: '#ffffff'
+  });
+  window.currentSyncUrl = syncUrl;
+  openModal('modal-familiar');
+}
+function copiarLinkFamiliar() {
+  if(window.currentSyncUrl) {
+    navigator.clipboard.writeText(window.currentSyncUrl).then(() => {
+      toast('¡Enlace copiado! Envíalo a tu pareja.');
+    });
+  }
+}
+function checkSyncOnLoad() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const syncParam = urlParams.get('syncData');
+  if(syncParam) {
+    try {
+      const decompressed = LZString.decompressFromEncodedURIComponent(syncParam);
+      if(decompressed) {
+        syncDataPendiente = JSON.parse(decompressed);
+        openModal('modal-sync-confirm');
+      }
+    } catch(e) {
+      console.error('Error al decodificar sync data', e);
+      toast('Error al importar datos familiares.');
+    }
+  }
+}
+function importarDatosFamiliar() {
+  if(!syncDataPendiente) return;
+  // Merge simple: combinar transacciones y deudas únicas
+  const mergedTxs = [...data.transacciones];
+  syncDataPendiente.transacciones.forEach(tx => {
+    if(!mergedTxs.find(t => t.id === tx.id)) mergedTxs.push(tx);
+  });
+  data.transacciones = mergedTxs.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+  const mergedDeudas = [...data.deudas];
+  syncDataPendiente.deudas.forEach(d => {
+    const existente = mergedDeudas.find(ed => ed.id === d.id);
+    if(!existente) {
+      mergedDeudas.push(d);
+    } else {
+      // Conservar el saldo más reciente (suponiendo que haya actualización, o simplemente mantener actual)
+      // Para una PWA simple, el que importa sobreescribe.
+      Object.assign(existente, d);
+    }
+  });
+  data.deudas = mergedDeudas;
+  
+  // Merge de configuración básica si es nuevo
+  if(!data.config.ingresoMensual && syncDataPendiente.config.ingresoMensual) {
+    data.config = syncDataPendiente.config;
+  }
+  
+  saveData();
+  closeModal('modal-sync-confirm');
+  toast('? Datos familiares fusionados con éxito');
+  
+  // Limpiar URL
+  window.history.replaceState({}, document.title, window.location.pathname);
+  
+  setTimeout(() => {
+    location.reload();
+  }, 1500);
+}
+function cancelarSyncFamiliar() {
+  syncDataPendiente = null;
+  closeModal('modal-sync-confirm');
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// Check on load
+document.addEventListener('DOMContentLoaded', checkSyncOnLoad);
