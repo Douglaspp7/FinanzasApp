@@ -361,14 +361,39 @@
         <div class="input-group" style="margin-bottom:0;">
           <label id="perfil-moneda-lbl" data-i18n="perfil_moneda_lbl"></label>
           <select id="cfg-moneda">
-            <option value="$">$ (Peso / Dólar)</option>
-            <option value="S/">S/ (Sol peruano)</option>
-            <option value="Q">Q (Quetzal)</option>
-            <option value="₡">₡ (Colón)</option>
-            <option value="Bs.">Bs. (Bolívar/Boliviano)</option>
+            <option value="MXN">🇲🇽 Peso mexicano ($)</option>
+            <option value="COP">🇨🇴 Peso colombiano ($)</option>
+            <option value="CLP">🇨🇱 Peso chileno ($)</option>
+            <option value="ARS">🇦🇷 Peso argentino ($)</option>
+            <option value="PEN">🇵🇪 Sol peruano (S/)</option>
+            <option value="USD">🇺🇸 Dólar (US$)</option>
+            <option value="UYU">🇺🇾 Peso uruguayo ($U)</option>
+            <option value="PYG">🇵🇾 Guaraní (₲)</option>
+            <option value="BOB">🇧🇴 Boliviano (Bs)</option>
+            <option value="VES">🇻🇪 Bolívar (Bs.)</option>
+            <option value="GTQ">🇬🇹 Quetzal (Q)</option>
+            <option value="CRC">🇨🇷 Colón (₡)</option>
+            <option value="DOP">🇩🇴 Peso dominicano (RD$)</option>
+            <option value="HNL">🇭🇳 Lempira (L)</option>
+            <option value="NIO">🇳🇮 Córdoba (C$)</option>
+            <option value="EUR">🇪🇸 Euro (€)</option>
           </select>
         </div>
         <button class="btn btn-secondary" id="btn-save-config" style="margin-top:14px;min-height:44px;font-size:14px;" data-i18n="modal_guardar">💾 Guardar configuración</button>
+      </div>
+
+      <!-- COMUNIDAD / RECORDATORIOS / SOPORTE -->
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;">🔔 Recordatorios y comunidad</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:800;">Recordatorios diarios</div>
+            <div style="font-size:12px;color:var(--text-muted);font-weight:600;">Un aviso al día para seguir tu plan.</div>
+          </div>
+          <button class="btn btn-secondary" id="btn-recordatorios" onclick="toggleRecordatorios()" style="min-height:40px;width:auto;padding:0 16px;font-size:13px;font-weight:800;border-radius:99px;">OFF</button>
+        </div>
+        <button class="btn btn-primary" onclick="compartirProgreso()" style="min-height:46px;font-size:14px;font-weight:800;margin-bottom:10px;">📣 Compartir mi progreso</button>
+        <button class="btn btn-secondary" onclick="abrirSoporteWhatsApp()" style="min-height:46px;font-size:14px;font-weight:800;color:#25D366;border-color:rgba(37,211,102,0.4);">💬 Soporte por WhatsApp</button>
       </div>
 
       <!-- CLOUD SYNC OPTIONAL CARD -->

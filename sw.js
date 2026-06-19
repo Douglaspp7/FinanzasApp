@@ -1,4 +1,4 @@
-const CACHE = 'sindeudas-v24';
+const CACHE = 'sindeudas-v25';
 const SHELL = [
   './',
   './index.html',

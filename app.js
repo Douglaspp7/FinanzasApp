@@ -6,6 +6,9 @@ const DEFAULT_DATA = {
     ingresoMensual: 0,
     gastosFijos: 0,
     moneda: '$',
+    divisa: 'MXN',
+    recordatorios: false,
+    lastReminder: '',
     onboardingDone: false,
     syncKey: '',
     syncEnabled: false,
@@ -94,10 +97,45 @@ function uid() {
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
+const DIVISAS = {
+  MXN: { sym: '$',   loc: 'es-MX', dec: 2, nombre: 'Peso mexicano' },
+  COP: { sym: '$',   loc: 'es-CO', dec: 0, nombre: 'Peso colombiano' },
+  CLP: { sym: '$',   loc: 'es-CL', dec: 0, nombre: 'Peso chileno' },
+  ARS: { sym: '$',   loc: 'es-AR', dec: 2, nombre: 'Peso argentino' },
+  PEN: { sym: 'S/',  loc: 'es-PE', dec: 2, nombre: 'Sol peruano' },
+  USD: { sym: '$',   loc: 'en-US', dec: 2, nombre: 'Dólar (USD)' },
+  UYU: { sym: '$U',  loc: 'es-UY', dec: 2, nombre: 'Peso uruguayo' },
+  PYG: { sym: '₲',   loc: 'es-PY', dec: 0, nombre: 'Guaraní' },
+  BOB: { sym: 'Bs',  loc: 'es-BO', dec: 2, nombre: 'Boliviano' },
+  VES: { sym: 'Bs.', loc: 'es-VE', dec: 2, nombre: 'Bolívar' },
+  GTQ: { sym: 'Q',   loc: 'es-GT', dec: 2, nombre: 'Quetzal' },
+  CRC: { sym: '₡',   loc: 'es-CR', dec: 0, nombre: 'Colón' },
+  DOP: { sym: 'RD$', loc: 'es-DO', dec: 2, nombre: 'Peso dominicano' },
+  HNL: { sym: 'L',   loc: 'es-HN', dec: 2, nombre: 'Lempira' },
+  NIO: { sym: 'C$',  loc: 'es-NI', dec: 2, nombre: 'Córdoba' },
+  EUR: { sym: '€',   loc: 'es-ES', dec: 2, nombre: 'Euro' }
+};
+function getDivisa() {
+  const cfg = data.config || {};
+  if (cfg.divisa && DIVISAS[cfg.divisa]) return DIVISAS[cfg.divisa];
+  const symMap = { '$':'MXN', 'S/':'PEN', 'Q':'GTQ', '₡':'CRC', 'Bs.':'VES', 'Bs':'BOB', '€':'EUR', '₲':'PYG', 'RD$':'DOP', 'L':'HNL', 'C$':'NIO', '$U':'UYU' };
+  return DIVISAS[symMap[cfg.moneda] || 'MXN'];
+}
 function fmt(n) {
-  const sym = (data.config && data.config.moneda) ? data.config.moneda : '$';
+  const c = getDivisa();
   const num = Number(n) || 0;
-  return sym + num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return c.sym + num.toLocaleString(c.loc, { minimumFractionDigits: c.dec, maximumFractionDigits: c.dec });
+}
+function gastosPorResponsable() {
+  const tot = {};
+  (data.transacciones || []).forEach(t => {
+    if (t.tipo !== 'g') return;
+    const o = t.responsable || 'conjunta';
+    tot[o] = (tot[o] || 0) + (parseFloat(t.monto) || 0);
+  });
+  return Object.keys(tot)
+    .map(o => ({ owner: o, label: OWNERS[o] || o, total: tot[o] }))
+    .sort((a, b) => b.total - a.total);
 }
 function toast(msg, duration) {
   duration = duration || 2800;
@@ -929,7 +967,17 @@ function renderPerfil() {
   document.getElementById('cfg-ingreso').value     = data.config.ingresoMensual || '';
   document.getElementById('cfg-gastos-fijos').value = data.config.gastosFijos || '';
   const sel = document.getElementById('cfg-moneda');
-  sel.value = data.config.moneda || '$';
+  const divisaActual = (data.config.divisa && DIVISAS[data.config.divisa]) ? data.config.divisa
+    : ({ '$':'MXN','S/':'PEN','Q':'GTQ','₡':'CRC','Bs.':'VES','Bs':'BOB','€':'EUR','₲':'PYG','RD$':'DOP','L':'HNL','C$':'NIO','$U':'UYU' }[data.config.moneda] || 'MXN');
+  sel.value = divisaActual;
+
+  const btnRec = document.getElementById('btn-recordatorios');
+  if (btnRec) {
+    const on = !!data.config.recordatorios;
+    btnRec.textContent = on ? 'ON' : 'OFF';
+    btnRec.style.background = on ? 'var(--primary)' : '';
+    btnRec.style.color = on ? '#fff' : '';
+  }
 
   // Sobres config
   const sobresContainer = document.getElementById('sobres-config-container');
@@ -1714,7 +1762,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-save-config').addEventListener('click', () => {
     data.config.ingresoMensual = parseFloat(document.getElementById('cfg-ingreso').value)      || 0;
     data.config.gastosFijos    = parseFloat(document.getElementById('cfg-gastos-fijos').value) || 0;
-    data.config.moneda         = document.getElementById('cfg-moneda').value || '$';
+    const divisaSel            = document.getElementById('cfg-moneda').value || 'MXN';
+    data.config.divisa         = DIVISAS[divisaSel] ? divisaSel : 'MXN';
+    data.config.moneda         = DIVISAS[data.config.divisa].sym;
     document.querySelectorAll('#sobres-config-container [data-sobre]').forEach(inp => {
       data.config.sobres[inp.getAttribute('data-sobre')] = parseFloat(inp.value) || 0;
     });
@@ -2415,11 +2465,13 @@ function exportarExcelPremium() {
       <Column ss:Width="100"/>
       <Column ss:Width="150"/>
       <Column ss:Width="120"/>
+      <Column ss:Width="110"/>
       <Column ss:Width="100"/>
       <Row ss:Height="24">
         <Cell ss:StyleID="Header"><Data ss:Type="String">Fecha</Data></Cell>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Descripción</Data></Cell>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Categoría</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Responsable</Data></Cell>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Monto</Data></Cell>
       </Row>
   `;
@@ -2427,7 +2479,7 @@ function exportarExcelPremium() {
   if (gastosTxs.length === 0) {
     xml += `
       <Row>
-        <Cell colspan="4"><Data ss:Type="String">No hay gastos registrados en el mes actual.</Data></Cell>
+        <Cell colspan="5"><Data ss:Type="String">No hay gastos registrados en el mes actual.</Data></Cell>
       </Row>
     `;
   } else {
@@ -2437,6 +2489,7 @@ function exportarExcelPremium() {
           <Cell><Data ss:Type="String">${(t.fecha || '').split('T')[0]}</Data></Cell>
           <Cell><Data ss:Type="String">${escapeXml(t.descripcion || '')}</Data></Cell>
           <Cell><Data ss:Type="String">${escapeXml(T('cat_' + (t.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim()))}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXml((OWNERS[t.responsable] || 'Conjunta').replace(/^[^\wÀ-ž]*/, '').trim())}</Data></Cell>
           <Cell ss:StyleID="Number"><Data ss:Type="Number">${parseFloat(t.monto) || 0}</Data></Cell>
         </Row>
       `;
@@ -2678,6 +2731,13 @@ function generarReportePDF() {
           </tr>
         </table>
       </div>
+
+      ${(() => {
+        const gr = gastosPorResponsable();
+        if (!gr.length) return '';
+        const filas = gr.map(r => `<tr><td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#475569;">${r.label}</td><td style="padding:6px; border-bottom:1px solid #e2e8f0; font-weight:800; text-align:right; color:#ef4444;">${fmt(r.total)}</td></tr>`).join('');
+        return `<div style="margin-bottom:24px;"><h3 style="font-size:14px; border-left:4px solid #0f766e; padding-left:8px; margin:0 0 12px 0; color:#0f766e;">👥 Gastos por responsable (miembro de la familia)</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:#e2e8f0;"><th style="padding:8px; text-align:left; border-bottom:2px solid #cbd5e1;">Responsable</th><th style="padding:8px; text-align:right; border-bottom:2px solid #cbd5e1;">Total gastado</th></tr></thead><tbody>${filas}</tbody></table></div>`;
+      })()}
 
       <div style="margin-bottom:24px;">
         <h3 style="font-size:14px; border-left:4px solid #0f766e; padding-left:8px; margin:0 0 12px 0; color:#0f766e;">💳 Plan de Libertad de Deudas (Bola de Nieve)</h3>
@@ -2990,12 +3050,71 @@ let deferredPrompt = null;
   }
 })();
 
-// Notifications
-if ('Notification' in window) {
-  Notification.requestPermission().then(permission => {
-    if (permission === 'granted') {
-      console.log('Notification permission granted.');
-      // Optional: schedule daily local notifications if SW is active
+// ===== Recordatorios diarios (opt-in, sin pedir permiso al cargar) =====
+function toggleRecordatorios() {
+  if (!('Notification' in window)) { toast('Tu navegador no soporta notificaciones'); return; }
+  if (data.config.recordatorios) {
+    data.config.recordatorios = false;
+    saveData();
+    renderPerfil();
+    toast('Recordatorios desactivados');
+    return;
+  }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+      data.config.recordatorios = true;
+      saveData();
+      renderPerfil();
+      toast('¡Recordatorios activados! 🔔');
+    } else {
+      toast('Activa los permisos de notificación para usar recordatorios');
     }
   });
 }
+window.toggleRecordatorios = toggleRecordatorios;
+
+function maybeDailyReminder() {
+  try {
+    if (!data.config || !data.config.recordatorios) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const hoy = new Date().toISOString().split('T')[0];
+    if (data.config.lastReminder === hoy) return;
+    data.config.lastReminder = hoy;
+    saveData();
+    const sb = (typeof calcularSnowball === 'function') ? calcularSnowball() : null;
+    const cuerpo = (sb && sb.mesesTotales)
+      ? `Sigue tu plan: te faltan ${sb.mesesTotales} meses para ser libre de deudas 💪`
+      : 'Registra tus gastos de hoy y mantén el control de tu dinero 💸';
+    new Notification('SinDeudas', { body: cuerpo, icon: 'app-icon.png' });
+  } catch (e) {}
+}
+window.addEventListener('auth-success', () => setTimeout(maybeDailyReminder, 4000));
+
+// ===== Compartir mi progreso (viralidad) =====
+function compartirProgreso() {
+  const score = (typeof calcularHealthScore === 'function') ? calcularHealthScore() : { score: 0 };
+  const sb = (typeof calcularSnowball === 'function') ? calcularSnowball() : null;
+  let txt = '💸 Estoy organizando mis finanzas con SinDeudas.\n';
+  txt += `📊 Mi salud financiera: ${score.score}/100\n`;
+  if (sb && sb.fechaLibertad) {
+    const f = sb.fechaLibertad;
+    const mes = MESES_ES[f.getMonth()];
+    txt += `🗓️ Seré libre de deudas en ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${f.getFullYear()} (en ${sb.mesesTotales} meses).\n`;
+  }
+  txt += '\n¿Quieres salir de deudas tú también? 👉 https://sindeudas.pages.dev';
+  if (navigator.share) {
+    navigator.share({ title: 'SinDeudas', text: txt }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(txt).then(() => toast('¡Copiado! Pégalo donde quieras 📋')).catch(() => alert(txt));
+  }
+}
+window.compartirProgreso = compartirProgreso;
+
+// ===== Soporte por WhatsApp =====
+// Cambia el número (formato internacional, sin + ni espacios) por el tuyo de soporte.
+const WHATSAPP_SOPORTE = '5215555555555';
+function abrirSoporteWhatsApp() {
+  const msg = encodeURIComponent('Hola, necesito ayuda con la app SinDeudas.');
+  window.open(`https://wa.me/${WHATSAPP_SOPORTE}?text=${msg}`, '_blank');
+}
+window.abrirSoporteWhatsApp = abrirSoporteWhatsApp;
