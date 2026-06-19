@@ -1,5 +1,21 @@
-const CACHE = 'sindeudas-v7';
-const SHELL = ['./','./index.html','./style.css','./app.js','./i18n.js','./manifest.json','./app-icon.png'];
+const CACHE = 'sindeudas-v18';
+const SHELL = [
+  './',
+  './index.html',
+  './style.css',
+  './app.js',
+  './i18n.js',
+  './manifest.json',
+  './assets/logo_sindeudas.png',
+  './assets/auth_bg.png',
+  './assets/onb_step1.png',
+  './assets/onb_step2.png',
+  './assets/app_logo.png',
+  './assets/btn_registrar.png',
+  './assets/btn_dividas.png',
+  './assets/btn_metas.png',
+  './assets/btn_perfil.png'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -11,8 +11,37 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <script src="i18n.js"></script>
+  
+  <!-- Chart.js para Gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="auth.js"></script>
 </head>
 <body>
+
+<!-- Pantalla de Activación (Auth) -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-overlay"></div>
+  <div class="auth-content">
+    <div style="margin-bottom:16px;">
+      <img src="assets/logo_sindeudas.png" alt="SinDeudas Logo" style="width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+    </div>
+    <h1 style="color:#fff; font-size:24px; font-weight:800; margin-bottom:8px;">Acceso VIP</h1>
+    <p class="auth-subtitle" style="color:rgba(255,255,255,0.8); font-size:14px; margin-bottom:24px;" data-i18n="login_subtitle">Ingresa el correo con el que realizaste tu compra para recibir el enlace mágico de acceso.</p>
+
+    <div style="background:var(--glass-bg); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); padding:24px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+      <div class="input-group" id="login-input-area">
+        <label style="color:#fff;" data-i18n="login_label">Correo de Compra</label>
+        <input type="email" id="login-email" placeholder="correo@ejemplo.com" style="background:rgba(0,0,0,0.2); color:#fff; border-color:rgba(255,255,255,0.2);">
+      </div>
+      <p id="login-message" style="display:none; color: var(--success); font-weight: bold; margin-bottom: 16px; font-size: 14px;" data-i18n="login_success_msg">¡Enlace enviado! Revisa tu bandeja de entrada o spam.</p>
+      <button class="btn btn-primary" id="btn-login" onclick="forceLogin()" style="width:100%; min-height:48px;" data-i18n="login_btn">Recibir Enlace Mágico ✨</button>
+    </div>
+  </div>
+</div>
 
 <!-- ONBOARDING -->
 <div id="screen-onboarding" class="onboarding-screen hidden">
@@ -21,7 +50,9 @@
       <div class="onb-dot active"></div>
       <div class="onb-dot"></div>
     </div>
-    <div style="font-size:48px;margin-bottom:12px;">💰</div>
+    <div style="margin-bottom:12px; animation: float 3s ease-in-out infinite;">
+      <img src="assets/onb_step1.png" alt="Renda" style="width: 140px; height: 140px; object-fit: contain;">
+    </div>
     <h2 class="onb-titulo" id="onb-step1-titulo" data-i18n="onb_step1_titulo"></h2>
     <p class="onb-sub" id="onb-step1-sub" data-i18n="onb_step1_sub"></p>
     <div class="input-group">
@@ -40,7 +71,9 @@
       <div class="onb-dot"></div>
       <div class="onb-dot active"></div>
     </div>
-    <div style="font-size:48px;margin-bottom:12px;">💳</div>
+    <div style="margin-bottom:12px; animation: float 3s ease-in-out infinite; animation-delay: 1.5s;">
+      <img src="assets/onb_step2.png" alt="Dívidas" style="width: 140px; height: 140px; object-fit: contain;">
+    </div>
     <h2 class="onb-titulo" id="onb-step3-titulo" data-i18n="onb_step3_titulo"></h2>
     <p class="onb-sub" id="onb-step3-sub" data-i18n="onb_step3_sub"></p>
     <div id="onb-deudas-list" style="margin-bottom:14px;"></div>
@@ -73,12 +106,19 @@
 <!-- MAIN APP -->
 <div id="app" class="app-container hidden">
   <header>
-    <div class="header-left">
-      <div class="header-saudacao" id="header-saludo"></div>
-      <div class="header-data" id="header-fecha"></div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="btn-icon hidden" id="btn-back" style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <div class="header-left">
+        <div class="header-saudacao" id="header-saludo"></div>
+        <div class="header-data" id="header-fecha"></div>
+      </div>
     </div>
     <div class="header-logo">
-      <span style="font-size:28px;">💸</span>
+      <img src="assets/app_logo.png" alt="FinanzasApp Logo" style="height:36px; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
     </div>
 
     <div class="header-actions" style="display:flex; gap:8px;">
@@ -105,6 +145,22 @@
             <div style="font-size:17px;font-weight:800;color:#fca5a5;" id="dash-gastos">$0</div>
           </div>
         </div>
+      </div>
+
+      <!-- Main Navigation Hub (Large Cards) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <button class="hub-card" onclick="navTo('v-registro')" style="background-image: url('assets/btn_registrar.png');">
+          <span>Registrar</span>
+        </button>
+        <button class="hub-card" onclick="navTo('v-deudas')" style="background-image: url('assets/btn_dividas.png');">
+          <span>Dívidas</span>
+        </button>
+        <button class="hub-card" onclick="navTo('v-metas')" style="background-image: url('assets/btn_metas.png');">
+          <span>Metas</span>
+        </button>
+        <button class="hub-card" onclick="navTo('v-perfil')" style="background-image: url('assets/btn_perfil.png');">
+          <span>Perfil</span>
+        </button>
       </div>
 
       <!-- Financial Health Score & Streaks Info -->
@@ -149,14 +205,14 @@
         </div>
       </div>
 
-      <!-- Card: Monthly Cash Flow SVGs -->
+      <!-- Card: Distribución de Gastos -->
       <div class="card" style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h3 style="font-size:15px; font-weight:800; color:var(--text-main);">📊 Balance de Caja</h3>
-          <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Historial Reciente</span>
+          <h3 style="font-size:15px; font-weight:800; color:var(--text-main);">📊 Distribución de Gastos</h3>
+          <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Mes Actual</span>
         </div>
-        <div id="dashboard-cashflow-chart-container" class="chart-container">
-          <!-- Will render SVG chart dynamically -->
+        <div style="position: relative; height: 200px; width: 100%;">
+          <canvas id="gastosChart"></canvas>
         </div>
       </div>
 
@@ -244,6 +300,15 @@
         <label id="reg-cat-lbl" data-i18n="reg_cat"></label>
         <div class="chips-container" id="reg-categorias"></div>
       </div>
+      <div class="input-group">
+        <label>👥 Responsável (Membro da Família)</label>
+        <div class="chips-container" id="reg-owner">
+          <span class="chip selected" data-owner="conjunta">🤝 Conjunta</span>
+          <span class="chip" data-owner="eu">👤 Eu</span>
+          <span class="chip" data-owner="parceiro">👤 Parceiro(a)</span>
+          <span class="chip" data-owner="filho">👶 Filho(a)</span>
+        </div>
+      </div>
       <button class="btn btn-primary" id="btn-registrar" data-i18n="reg_btn"></button>
       <div style="margin-top:24px;">
         <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;" data-i18n="dash_movimientos">Historial de este mes</h3>
@@ -253,12 +318,6 @@
 
     <!-- METAS + RETOS -->
     <section id="v-metas" class="vista">
-      <!-- Sub-tabs system -->
-      <div class="pill-tab" style="margin-bottom: 16px;">
-        <button class="tab-btn active" id="tab-metas-objetivos" onclick="switchMetasTab('objetivos')" data-i18n="dreams_tab_objetivos">🎯 Metas & Retos</button>
-        <button class="tab-btn" id="tab-metas-mural" onclick="switchMetasTab('mural')" data-i18n="dreams_tab_mural">🔮 Mural de Sueños IA</button>
-      </div>
-
       <!-- Tab Content: Objetivos & Retos -->
       <div id="section-metas-objetivos">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -273,87 +332,6 @@
         </div>
       </div>
 
-      <!-- Tab Content: Mural de Sueños IA -->
-      <div id="section-metas-mural" class="hidden">
-        <!-- Warning / Paste keys box (shown if keys are missing) -->
-        <div id="dream-keys-warning" class="card" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); display: none; flex-direction: column; gap: 12px; margin-bottom: 16px;">
-          <h4 style="font-size:14.5px; font-weight:800; color:var(--primary); display:flex; align-items:center; gap:6px; margin: 0;">
-            🔑 Configurar Llaves de IA
-          </h4>
-          <p style="font-size:12.5px; font-weight:600; color:var(--text-muted); line-height:1.45; margin: 0;">
-            Para visualizar tu futuro libre de deudas con imágenes IA, ingresa tu llave de API (se almacena localmente y de forma segura en tu navegador).
-          </p>
-          <div class="input-group" style="margin-bottom:8px;">
-            <label style="font-size:11px;">OpenAI API Key (DALL-E)</label>
-            <input type="password" id="dream-key-openai" placeholder="sk-proj-..." style="padding:10px; font-size:13.5px;">
-          </div>
-          <div class="input-group" style="margin-bottom:8px;">
-            <label style="font-size:11px;">Gemini API Key</label>
-            <input type="password" id="dream-key-gemini" placeholder="AIzaSy..." style="padding:10px; font-size:13.5px;">
-          </div>
-          <button class="btn btn-primary" onclick="saveDreamKeysInline()" style="min-height:38px; font-size:13px; font-weight:800; padding:8px 16px; border-radius:10px;">
-            💾 Guardar Llaves
-          </button>
-        </div>
-
-        <!-- Main Generator UI -->
-        <div class="card" id="dream-generator-box" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(16, 185, 129, 0.03) 100%);">
-          <h3 style="font-size:16px; font-weight:800; margin-bottom:6px;" data-i18n="dreams_title">Mural de Sueños IA</h3>
-          <p style="font-size:13px; color:var(--text-muted); font-weight:600; margin-bottom:16px;" data-i18n="dreams_sub"></p>
-          
-          <div class="input-group">
-            <label data-i18n="dreams_select_provider">Proveedor de IA</label>
-            <select id="dream-provider" style="background: var(--bg-color); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; color: var(--text-main); font-weight:600;">
-              <option value="openai">OpenAI (DALL-E 3)</option>
-              <option value="openai-dalle2">OpenAI (DALL-E 2)</option>
-              <option value="gemini">Gemini 2.5 Flash Image</option>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label id="dream-prompt-label" data-i18n="dreams_prompt_label"></label>
-            <textarea id="dream-prompt" rows="3" placeholder="Ej: Una hermosa casa de campo al atardecer, estilo realista" style="background: var(--bg-color); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; width: 100%; color: var(--text-main); font-family: var(--font); font-size: 14px; font-weight: 600; resize: none;"></textarea>
-          </div>
-
-          <!-- Quick Presets -->
-          <div style="margin-bottom: 16px;">
-            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Sugerencias Rápidas:</label>
-            <div class="chips-container" style="margin-top: 6px;">
-              <span class="chip" onclick="setDreamPreset('Una hermosa casa propia con un jardín verde y flores, día soleado, hiperrealista')">🏠 Casa Propia</span>
-              <span class="chip" onclick="setDreamPreset('Mi propio negocio de café acogedor y moderno con clientes felices, luz cinematográfica')">☕ Mi Negocio</span>
-              <span class="chip" onclick="setDreamPreset('Viaje de vacaciones familiares en un resort tropical frente al mar, tarde dorada')">✈️ Viaje Familiar</span>
-              <span class="chip" onclick="setDreamPreset('Una persona feliz y en paz sentada en una montaña al amanecer con los brazos abiertos')">🧘 Paz Mental</span>
-            </div>
-          </div>
-
-          <!-- Error Console -->
-          <div id="dream-error" class="error-console" style="margin-bottom: 14px;"></div>
-
-          <!-- Loader -->
-          <div id="dream-loader" style="display:none; flex-direction:column; align-items:center; gap:12px; margin: 20px 0; text-align:center;">
-            <div class="premium-spinner"></div>
-            <p style="font-size:13px; font-weight:700; color:var(--text-main);" id="dream-loader-text">Conectando con la IA...</p>
-          </div>
-
-          <button class="btn btn-primary" id="btn-generate-dream" onclick="generateDreamImage()">
-            <span>🪄 <span data-i18n="dreams_btn_generate">Generar Imagen</span></span>
-          </button>
-
-          <!-- Image Result Preview -->
-          <div id="dream-preview-container" style="display:none; flex-direction:column; align-items:center; margin-top:18px; border:1px dashed var(--border); padding:16px; border-radius:var(--radius-md); background:rgba(0,0,0,0.1);">
-            <img id="dream-preview-img" src="" alt="Dream Preview" style="width:100%; border-radius:var(--radius-sm); margin-bottom:12px; box-shadow:var(--shadow);">
-            <button class="btn btn-primary" id="btn-save-dream" onclick="saveDreamImageToBoard()" style="min-height:44px; font-size:14px;">
-              💾 <span data-i18n="dreams_btn_save">Guardar en mi Mural</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Saved Dreams Board -->
-        <div style="margin-top: 24px;">
-          <h3 style="font-size:16px; font-weight:800; margin-bottom:12px;" data-i18n="dreams_my_board">Mi Mural de Sueños</h3>
-          <div id="dreams-gallery-grid"></div>
-        </div>
-      </div>
     </section>
 
     <!-- PERFIL -->
@@ -390,48 +368,19 @@
         </div>
         <button class="btn btn-secondary" id="btn-save-config" style="margin-top:14px;min-height:44px;font-size:14px;" data-i18n="modal_guardar">💾 Guardar configuración</button>
       </div>
-      <div class="card">
-        <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;">🔮 Inteligencia Artificial</h3>
-        <p style="font-size:12.5px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">Configura tus llaves de API (se guardan localmente) para habilitar el Mural de Sueños.</p>
-        <div class="input-group">
-          <label>Llave OpenAI (DALL-E)</label>
-          <input type="password" id="cfg-key-openai" placeholder="sk-proj-..." style="font-size:14px; padding:12px;">
-        </div>
-        <div class="input-group">
-          <label>Llave Gemini</label>
-          <input type="password" id="cfg-key-gemini" placeholder="AIzaSy..." style="font-size:14px; padding:12px;">
-        </div>
-        <button class="btn btn-secondary" id="btn-save-keys" style="min-height:44px;font-size:14px;" onclick="saveProfileKeys()">💾 Guardar Llaves</button>
-      </div>
 
       <!-- CLOUD SYNC OPTIONAL CARD -->
       <div class="card">
         <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;">☁️ Sincronización en la Nube</h3>
         <p style="font-size:12.5px;color:var(--text-muted);font-weight:600;margin-bottom:14px;">
-          Sincroniza tus datos de forma anónima y segura entre múltiples dispositivos usando un código único de sincronización.
+          Respalda tus datos de forma segura. Puedes guardar tu archivo de respaldo directamente en Google Drive o en tu dispositivo para nunca perder tu progreso.
         </p>
-        <div class="input-group">
-          <label>Código de Sincronización Único</label>
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="cfg-sync-key" placeholder="Generando código..." readonly style="font-size:13.5px; padding:12px; background:rgba(0,0,0,0.15); border-color:var(--border);">
-            <button class="btn btn-secondary" id="btn-copy-sync-key" style="min-height:44px; width:44px; padding:0; font-size:16px; border-radius:var(--radius-sm);" title="Copiar código">📋</button>
-          </div>
-        </div>
-        <div class="input-group">
-          <label>Vincular otro Dispositivo (Ingresa código)</label>
-          <input type="text" id="cfg-sync-join-key" placeholder="Pega el código de tu otro dispositivo" style="font-size:13.5px; padding:12px;">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:14px;">
-          <button class="btn btn-primary" id="btn-sync-now" style="min-height:44px; font-size:13px; font-weight:800; flex:1;">
-            🔄 Sincronizar
-          </button>
-          <button class="btn btn-secondary" id="btn-sync-join" style="min-height:44px; font-size:13px; font-weight:800; flex:1;">
-            🔗 Vincular
-          </button>
-        </div>
-        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between;">
-          <span style="font-size:12px; color:var(--text-muted); font-weight:700;" id="lbl-sync-status">Estado: No sincronizado</span>
-          <button class="btn btn-secondary" id="btn-sync-auto-toggle" style="min-height:28px; width:auto; padding:4px 10px; font-size:11px; font-weight:800; border-radius:6px; color:var(--text-muted);">Sync Auto: OFF</button>
+        <button class="btn btn-primary" id="btn-google-drive" style="width:100%; min-height:48px; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; background-color:#1a73e8; border:none; box-shadow:0 4px 10px rgba(26,115,232,0.3);">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+          Hacer Respaldo (Google Drive)
+        </button>
+        <div id="drive-sync-status" style="margin-top:14px; font-size:12px; color:var(--success); font-weight:800; text-align:center; display:none;">
+          ✓ Preparando respaldo...
         </div>
       </div>
 
@@ -459,31 +408,11 @@
         <input type="file" id="input-restore" accept=".json" style="display:none;">
       </div>
       <button class="btn btn-secondary" id="btn-reset-app" style="margin-top:8px;color:var(--danger);border-color:var(--danger);">🗑️ Reiniciar datos (test)</button>
+      
+      <!-- PWA Install Button -->
+      <button class="btn btn-primary" id="btn-install-pwa" style="margin-top:20px; display:none;">📱 Instalar App</button>
     </section>
   </main>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-view="v-dashboard">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
-      <span data-i18n="greeting_morning">Inicio</span>
-    </button>
-    <button class="nav-item" data-view="v-deudas">
-      <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      <span data-i18n="deudas_titulo">Deudas</span>
-    </button>
-    <button class="nav-item" data-view="v-registro">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      <span data-i18n="reg_btn">Registrar</span>
-    </button>
-    <button class="nav-item" data-view="v-metas">
-      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <span data-i18n="metas_titulo">Metas</span>
-    </button>
-    <button class="nav-item" data-view="v-perfil">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span data-i18n="perfil_titulo">Perfil</span>
-    </button>
-  </nav>
 </div>
 
 <!-- MODAL: DEUDA -->
