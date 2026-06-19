@@ -18,10 +18,26 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// Extrai o e-mail embutido no link mágico (param ?email= ou dentro de continueUrl)
+function getEmailFromUrl() {
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get('email')) return sp.get('email');
+    const cont = sp.get('continueUrl');
+    if (cont) {
+      const inner = new URLSearchParams(new URL(cont).search).get('email');
+      if (inner) return inner;
+    }
+  } catch (e) {}
+  return null;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Verifica se o usuário clicou no Link Mágico no email
   if (auth.isSignInWithEmailLink(window.location.href)) {
-    let email = window.localStorage.getItem('emailForSignIn');
+    // 1) tenta o localStorage (mesmo navegador); 2) tenta o e-mail embutido no
+    // link (funciona mesmo abrindo em outro navegador/webview); 3) só então pergunta
+    let email = window.localStorage.getItem('emailForSignIn') || getEmailFromUrl();
     if (!email) {
       email = window.prompt('Por favor, confirma tu correo electrónico para verificar el enlace.');
     }
@@ -93,8 +109,9 @@ async function forceLogin() {
   btn.disabled = true;
 
   const actionCodeSettings = {
-    // Redireciona para a própria URL atual após clicar no email
-    url: window.location.href.split('?')[0],
+    // Redireciona para a própria URL atual após clicar no email, embutindo o
+    // e-mail para conseguir entrar direto mesmo em outro navegador/webview
+    url: window.location.href.split('?')[0] + '?email=' + encodeURIComponent(email),
     handleCodeInApp: true,
   };
 
@@ -114,7 +131,10 @@ async function forceLogin() {
 
 function activarYEntrar(email) {
   try { localStorage.setItem('user_email', email); } catch(e){}
-  
+
+  // Limpa os parâmetros do link mágico da URL para que um refresh não reprocesse
+  try { history.replaceState(null, '', window.location.pathname); } catch(e){}
+
   document.getElementById('auth-screen').classList.add('hidden');
   
   // Dispara o evento para o app.js inicializar o app ou o onboarding
