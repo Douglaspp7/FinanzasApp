@@ -1009,7 +1009,9 @@ main::-webkit-scrollbar { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-gradient);
+  background-image: url('assets/auth_bg.png');
+  background-size: cover;
+  background-position: center;
   padding: 20px;
 }
 .auth-screen.hidden {
@@ -1018,7 +1020,9 @@ main::-webkit-scrollbar { display: none; }
 .auth-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(circle at 50% -20%, rgba(16,185,129,0.15) 0%, transparent 60%);
+  background: rgba(10, 14, 23, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .auth-content {
   position: relative;
@@ -1026,4 +1030,37 @@ main::-webkit-scrollbar { display: none; }
   width: 100%;
   max-width: 400px;
   text-align: center;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.onboarding-screen .card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.onboarding-screen .input-group input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.onboarding-screen .btn {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--primary);
+  font-weight: 800;
+  transition: all 0.2s;
+}
+
+.onboarding-screen .btn:active {
+  transform: scale(0.98);
+  background: rgba(16, 185, 129, 0.2);
 }

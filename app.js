@@ -183,7 +183,19 @@ function navTo(viewId, el) {
     const btn = document.querySelector('.nav-item[data-view="' + viewId + '"]');
     if (btn) btn.classList.add('active');
   }
-  if (viewId === 'v-dashboard') renderDashboard();
+
+  // Lógica da seta de voltar
+  const btnBack = document.getElementById('btn-back');
+  const headerLeft = document.querySelector('.header-left');
+  if (viewId === 'v-dashboard') {
+    if (btnBack) btnBack.classList.add('hidden');
+    if (headerLeft) headerLeft.style.display = 'block';
+    renderDashboard();
+  } else {
+    if (btnBack) btnBack.classList.remove('hidden');
+    if (headerLeft) headerLeft.style.display = 'none';
+  }
+
   if (viewId === 'v-deudas')    renderDeudas();
   if (viewId === 'v-registro')  renderRegistro();
   if (viewId === 'v-metas')     renderMetas();
@@ -1525,6 +1537,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Navegación
+  const btnBackBtn = document.getElementById('btn-back');
+  if (btnBackBtn) {
+    btnBackBtn.addEventListener('click', () => navTo('v-dashboard'));
+  }
+
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => navTo(btn.getAttribute('data-view'), btn));
   });
@@ -2028,112 +2045,106 @@ function pressKey(key) {
   inputEl.value = window.calcInput === '0' ? '' : window.calcInput;
 }
 
-// ===== SVG CHARTING ENGINE =====
-function drawCashFlowChart() {
-  const container = document.getElementById('dashboard-cashflow-chart-container');
-  if (!container) return;
+// ===== CHART.JS ENGINE =====
+let myChart = null;
 
-  const months = [];
+function drawCashFlowChart() {
+  const ctx = document.getElementById('gastosChart');
+  if (!ctx) return;
+
+  // Filter expenses for current month
   const now = new Date();
-  for (let i = 4; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-    const label = d.toLocaleString('es-MX', { month: 'short' });
-    months.push({ key, label, income: 0, expense: 0 });
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const gastosDelMes = (data.transacciones || []).filter(t => {
+    if (!t.fecha) return false;
+    const d = new Date(t.fecha);
+    return t.tipo === 'g' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  if (gastosDelMes.length === 0) {
+    if (myChart) myChart.destroy();
+    ctx.style.display = 'none';
+    const container = ctx.parentElement;
+    let msg = container.querySelector('.no-data-msg');
+    if (!msg) {
+      msg = document.createElement('div');
+      msg.className = 'no-data-msg';
+      msg.style.cssText = 'position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:13px; font-weight:600; text-align:center; padding:20px;';
+      msg.innerHTML = 'No hay gastos registrados este mes.<br>¡Buen trabajo!';
+      container.appendChild(msg);
+    }
+    msg.style.display = 'flex';
+    return;
   }
 
-  data.transacciones.forEach(tx => {
-    if (!tx.fecha) return;
-    const txDate = new Date(tx.fecha);
-    const key = txDate.getFullYear() + '-' + String(txDate.getMonth() + 1).padStart(2, '0');
-    const monthObj = months.find(m => m.key === key);
-    if (monthObj) {
-      if (tx.tipo === 'i') {
-        monthObj.income += parseFloat(tx.monto) || 0;
-      } else if (tx.tipo === 'g') {
-        monthObj.expense += parseFloat(tx.monto) || 0;
+  // Hide placeholder if exists
+  const container = ctx.parentElement;
+  const msg = container.querySelector('.no-data-msg');
+  if (msg) msg.style.display = 'none';
+  ctx.style.display = 'block';
+
+  const catMap = {};
+  gastosDelMes.forEach(g => {
+    const cat = g.categoria || 'Otros';
+    catMap[cat] = (catMap[cat] || 0) + (parseFloat(g.monto) || 0);
+  });
+
+  const labels = Object.keys(catMap);
+  const chartData = Object.values(catMap);
+
+  const colors = [
+    '#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6', '#ef4444', '#14b8a6', '#f97316'
+  ];
+
+  if (myChart) myChart.destroy();
+
+  myChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: chartData,
+        backgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: '#9ca3af',
+            font: { size: 11, family: 'Inter, sans-serif', weight: '600' },
+            usePointStyle: true,
+            boxWidth: 8
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(10, 19, 14, 0.9)',
+          titleFont: { size: 13, family: 'Inter, sans-serif' },
+          bodyFont: { size: 14, weight: 'bold', family: 'Inter, sans-serif' },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context) {
+              let label = context.label || '';
+              if (label) label += ': ';
+              if (context.parsed !== null) {
+                label += new Intl.NumberFormat('es-MX', { style: 'currency', currency: data.config?.moneda || 'USD' }).format(context.parsed);
+              }
+              return label;
+            }
+          }
+        }
       }
     }
   });
-
-  const totalAct = months.reduce((s, m) => s + m.income + m.expense, 0);
-  let isDemo = false;
-  if (totalAct === 0) {
-    isDemo = true;
-    months[0].income = 1200; months[0].expense = 950;
-    months[1].income = 1400; months[1].expense = 1100;
-    months[2].income = 1100; months[2].expense = 1200;
-    months[3].income = 1600; months[3].expense = 1300;
-    months[4].income = 1800; months[4].expense = 1400;
-  }
-
-  const maxVal = Math.max(...months.map(m => Math.max(m.income, m.expense, 100)));
-
-  const width = 350;
-  const height = 180;
-  const paddingLeft = 45;
-  const paddingRight = 10;
-  const paddingTop = 20;
-  const paddingBottom = 25;
-
-  const chartWidth = width - paddingLeft - paddingRight;
-  const chartHeight = height - paddingTop - paddingBottom;
-
-  const gridLines = [];
-  const gridCount = 4;
-  for (let i = 0; i <= gridCount; i++) {
-    const yVal = maxVal * (i / gridCount);
-    const y = paddingTop + chartHeight - (yVal / maxVal) * chartHeight;
-    gridLines.push(`
-      <line class="chart-grid-line" x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" />
-      <text class="chart-axis-text" x="${paddingLeft - 8}" y="${y + 3}" text-anchor="end">${Math.round(yVal)}</text>
-    `);
-  }
-
-  const barWidth = 12;
-  const colGap = chartWidth / months.length;
-  const barsMarkup = [];
-  const monthLabelsMarkup = [];
-
-  months.forEach((m, idx) => {
-    const colX = paddingLeft + idx * colGap + colGap / 2;
-    const incX = colX - barWidth - 2;
-    const expX = colX + 2;
-
-    const incH = (m.income / maxVal) * chartHeight;
-    const expH = (m.expense / maxVal) * chartHeight;
-
-    const incY = paddingTop + chartHeight - incH;
-    const expY = paddingTop + chartHeight - expH;
-
-    barsMarkup.push(`
-      <rect class="chart-bar-rect income" x="${incX}" y="${incY}" width="${barWidth}" height="${incH}" rx="3" ry="3">
-        <title>Ingresos: ${fmt(m.income)}</title>
-      </rect>
-      <rect class="chart-bar-rect expense" x="${expX}" y="${expY}" width="${barWidth}" height="${expH}" rx="3" ry="3">
-        <title>Gastos: ${fmt(m.expense)}</title>
-      </rect>
-    `);
-
-    monthLabelsMarkup.push(`
-      <text class="chart-axis-text" x="${colX}" y="${height - 8}" text-anchor="middle">${m.label.toUpperCase()}</text>
-    `);
-  });
-
-  const demoBadge = isDemo ? `
-    <rect x="${width - 110}" y="${paddingTop}" width="100" height="18" rx="4" fill="rgba(245, 158, 11, 0.15)" stroke="var(--warning)" stroke-width="0.5" />
-    <text x="${width - 60}" y="${paddingTop + 12}" fill="var(--warning)" font-size="8" font-weight="800" text-anchor="middle" font-family="var(--font)">DATOS DE EJEMPLO</text>
-  ` : '';
-
-  container.innerHTML = `
-    <svg class="chart-svg" viewBox="0 0 ${width} ${height}">
-      <g>${gridLines.join('')}</g>
-      <line class="chart-axis-line" x1="${paddingLeft}" y1="${paddingTop + chartHeight}" x2="${width - paddingRight}" y2="${paddingTop + chartHeight}" />
-      <g>${barsMarkup.join('')}</g>
-      <g>${monthLabelsMarkup.join('')}</g>
-      ${demoBadge}
-    </svg>
-  `;
 }
 
 // ===== EXCEL PREMIUM EXPORT ENGINE =====
@@ -2736,4 +2747,39 @@ function generarReportePDF() {
 
   printEl.innerHTML = html;
   window.print();
+}
+
+// ===== PWA & NOTIFICATIONS =====
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btnInstall = document.getElementById('btn-install-pwa');
+  if (btnInstall) {
+    btnInstall.style.display = 'block';
+    btnInstall.addEventListener('click', async () => {
+      btnInstall.style.display = 'none';
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      deferredPrompt = null;
+    });
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('PWA was installed');
+  const btnInstall = document.getElementById('btn-install-pwa');
+  if (btnInstall) btnInstall.style.display = 'none';
+});
+
+// Notifications
+if ('Notification' in window) {
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      console.log('Notification permission granted.');
+      // Optional: schedule daily local notifications if SW is active
+    }
+  });
 }

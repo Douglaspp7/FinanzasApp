@@ -1,4 +1,4 @@
-const CACHE = 'sindeudas-v17';
+const CACHE = 'sindeudas-v18';
 const SHELL = [
   './',
   './index.html',
@@ -6,7 +6,10 @@ const SHELL = [
   './app.js',
   './i18n.js',
   './manifest.json',
-  './app-icon.png',
+  './assets/logo_sindeudas.png',
+  './assets/auth_bg.png',
+  './assets/onb_step1.png',
+  './assets/onb_step2.png',
   './assets/app_logo.png',
   './assets/btn_registrar.png',
   './assets/btn_dividas.png',

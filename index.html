@@ -12,6 +12,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="i18n.js"></script>
   
+  <!-- Chart.js para Gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
@@ -23,7 +26,9 @@
 <div id="auth-screen" class="auth-screen">
   <div class="auth-overlay"></div>
   <div class="auth-content">
-    <div style="font-size:42px; margin-bottom:16px;">🔐</div>
+    <div style="margin-bottom:16px;">
+      <img src="assets/logo_sindeudas.png" alt="SinDeudas Logo" style="width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+    </div>
     <h1 style="color:#fff; font-size:24px; font-weight:800; margin-bottom:8px;">Acceso VIP</h1>
     <p class="auth-subtitle" style="color:rgba(255,255,255,0.8); font-size:14px; margin-bottom:24px;" data-i18n="login_subtitle">Ingresa el correo con el que realizaste tu compra para recibir el enlace mágico de acceso.</p>
 
@@ -45,7 +50,9 @@
       <div class="onb-dot active"></div>
       <div class="onb-dot"></div>
     </div>
-    <div style="font-size:48px;margin-bottom:12px;">💰</div>
+    <div style="margin-bottom:12px; animation: float 3s ease-in-out infinite;">
+      <img src="assets/onb_step1.png" alt="Renda" style="width: 140px; height: 140px; object-fit: contain;">
+    </div>
     <h2 class="onb-titulo" id="onb-step1-titulo" data-i18n="onb_step1_titulo"></h2>
     <p class="onb-sub" id="onb-step1-sub" data-i18n="onb_step1_sub"></p>
     <div class="input-group">
@@ -64,7 +71,9 @@
       <div class="onb-dot"></div>
       <div class="onb-dot active"></div>
     </div>
-    <div style="font-size:48px;margin-bottom:12px;">💳</div>
+    <div style="margin-bottom:12px; animation: float 3s ease-in-out infinite; animation-delay: 1.5s;">
+      <img src="assets/onb_step2.png" alt="Dívidas" style="width: 140px; height: 140px; object-fit: contain;">
+    </div>
     <h2 class="onb-titulo" id="onb-step3-titulo" data-i18n="onb_step3_titulo"></h2>
     <p class="onb-sub" id="onb-step3-sub" data-i18n="onb_step3_sub"></p>
     <div id="onb-deudas-list" style="margin-bottom:14px;"></div>
@@ -196,14 +205,14 @@
         </div>
       </div>
 
-      <!-- Card: Monthly Cash Flow SVGs -->
+      <!-- Card: Distribución de Gastos -->
       <div class="card" style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h3 style="font-size:15px; font-weight:800; color:var(--text-main);">📊 Balance de Caja</h3>
-          <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Historial Reciente</span>
+          <h3 style="font-size:15px; font-weight:800; color:var(--text-main);">📊 Distribución de Gastos</h3>
+          <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Mes Actual</span>
         </div>
-        <div id="dashboard-cashflow-chart-container" class="chart-container">
-          <!-- Will render SVG chart dynamically -->
+        <div style="position: relative; height: 200px; width: 100%;">
+          <canvas id="gastosChart"></canvas>
         </div>
       </div>
 
@@ -399,6 +408,9 @@
         <input type="file" id="input-restore" accept=".json" style="display:none;">
       </div>
       <button class="btn btn-secondary" id="btn-reset-app" style="margin-top:8px;color:var(--danger);border-color:var(--danger);">🗑️ Reiniciar datos (test)</button>
+      
+      <!-- PWA Install Button -->
+      <button class="btn btn-primary" id="btn-install-pwa" style="margin-top:20px; display:none;">📱 Instalar App</button>
     </section>
   </main>
 </div>
