@@ -744,9 +744,10 @@ function renderCategoryChips() {
   if (!selectedCat || !cats.includes(selectedCat)) selectedCat = cats[0];
   cats.forEach(cat => {
     const chip = document.createElement('div');
-    chip.className = 'chip' + (cat === selectedCat ? ' active' : '');
+    chip.className = 'chip' + (cat === selectedCat ? ' selected' : '');
     const cleanCat = cat.replace(/^[^\wÀ-ž]*/, '').trim();
-    chip.textContent = cat.split(' ')[0] + ' ' + T('cat_' + cleanCat);
+    const label = T('cat_' + cleanCat);
+    chip.textContent = (label === 'cat_' + cleanCat) ? cat : label;
     chip.addEventListener('click', () => { selectedCat = cat; renderCategoryChips(); });
     container.appendChild(chip);
   });

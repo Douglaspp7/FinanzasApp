@@ -413,7 +413,9 @@ main::-webkit-scrollbar { display: none; }
   overflow-y: auto;
 }
 [data-theme="dark"] .onboarding-screen { background: radial-gradient(ellipse at 50% 0%, #0f2318 0%, #0a130e 60%); }
-.onb-step { width: 100%; max-width: 420px; }
+.onb-step { width: 100%; max-width: 420px; text-align: center; }
+.onb-step img { display: block; margin-left: auto; margin-right: auto; }
+.onb-step .input-group { text-align: left; }
 .onb-progress { display: flex; gap: 6px; margin-bottom: 32px; }
 .onb-dot { flex: 1; height: 4px; border-radius: 99px; background: var(--border); transition: background .3s; }
 .onb-dot.active { background: var(--primary); }
