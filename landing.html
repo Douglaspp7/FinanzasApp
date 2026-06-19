@@ -208,7 +208,7 @@
 
     <div class="hero-video">
       <video id="demoVideo" src="sindeudas-demo.mp4" poster="sindeudas-demo-poster.jpg"
-             autoplay muted loop playsinline preload="metadata"></video>
+             autoplay loop playsinline preload="auto"></video>
       <button class="video-sound" id="btnSound" type="button" aria-label="Activar sonido">🔇 Toca para el sonido</button>
     </div>
     <p class="video-cap">▶️ Mira la app en acción</p>
@@ -398,13 +398,42 @@
     });
   });
 
-  // ===== Video demo: activar/silenciar sonido al tocar =====
+  // ===== Video demo: intenta reproducir CON sonido; si el navegador lo
+  // bloquea, reproduce en silencio y activa el sonido al primer toque/scroll =====
   (function(){
     var v = document.getElementById('demoVideo');
     var b = document.getElementById('btnSound');
     if (!v || !b) return;
+
     function sync(){ b.textContent = v.muted ? '🔇 Toca para el sonido' : '🔊 Sonido activado'; }
-    b.addEventListener('click', function(){
+
+    function unmuteOnInteraction(){
+      var evts = ['touchstart','pointerdown','click','scroll','keydown'];
+      function go(){
+        v.muted = false;
+        v.play().catch(function(){});
+        sync();
+        evts.forEach(function(e){ window.removeEventListener(e, go); });
+      }
+      evts.forEach(function(e){ window.addEventListener(e, go, {passive:true}); });
+    }
+
+    // Intento con sonido desde el inicio
+    v.muted = false;
+    var p = v.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function(){
+        // El navegador bloqueó el audio: arranca en silencio y espera interacción
+        v.muted = true;
+        v.play().catch(function(){});
+        sync();
+        unmuteOnInteraction();
+      });
+    }
+
+    // Botón manual de sonido (toggle)
+    b.addEventListener('click', function(e){
+      e.stopPropagation();
       v.muted = !v.muted;
       if (!v.muted) { v.play().catch(function(){}); if (typeof fbq === 'function') fbq('trackCustom','Video_Sound_On'); }
       sync();
