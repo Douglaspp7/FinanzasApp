@@ -80,6 +80,10 @@
   .hero h1 .hl{color:var(--verde-claro)}
   .hero .sub{font-size:17px;color:var(--muted);max-width:520px;margin:0 auto 26px;font-weight:600}
   .hero-foto{width:100%;max-width:360px;border-radius:22px;margin:4px auto 16px;display:block;box-shadow:var(--sombra);border:1px solid var(--borde)}
+  .hero-video{position:relative;width:100%;max-width:320px;margin:6px auto 6px;border-radius:26px;overflow:hidden;box-shadow:var(--sombra);border:1px solid var(--borde);background:#000;line-height:0}
+  .hero-video video{width:100%;height:auto;display:block}
+  .video-sound{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;backdrop-filter:blur(4px);font-family:inherit}
+  .video-cap{text-align:center;font-size:13px;color:var(--muted);font-weight:700;margin:0 0 4px}
   .band-foto{width:100%;max-width:540px;border-radius:18px;margin:0 auto 28px;display:block;box-shadow:var(--sombra);border:1px solid var(--borde)}
   .hero-precio{font-size:16px;font-weight:800;margin:22px 0 16px;color:var(--oro)}
   .hero-precio .antes{font-weight:700;opacity:.6;text-decoration:line-through;color:var(--texto);margin-right:8px}
@@ -202,27 +206,12 @@
     <h1>Sal de deudas <span class="hl">paso a paso</span> y haz que el salario te alcance todo el mes</h1>
     <p class="sub">SinDeudas es la app que te dice <b>cuánto pagar de cada deuda</b>, en qué orden y cómo repartir tu sueldo — sin hojas de Excel y <b>sin conectar tu banco</b>.</p>
 
-    <img class="hero-foto" src="hero-mujer.jpg" alt="Mujer revisando sus finanzas con tranquilidad en SinDeudas" onerror="this.remove()">
-
-    <div class="phone" aria-hidden="true">
-      <div class="phone-notch"></div>
-      <div class="phone-screen">
-        <div class="pm-hero">
-          <div class="lbl">Dinero disponible este mes</div>
-          <div class="val">$4,250</div>
-        </div>
-        <div class="pm-row">
-          <div class="pm-mini"><div class="t">Libertad de deudas</div><div class="n">62%</div><div class="pm-bar"><i style="width:62%"></i></div></div>
-          <div class="pm-mini"><div class="t">Ahorro meta</div><div class="n">38%</div><div class="pm-bar"><i style="width:38%;background:var(--oro)"></i></div></div>
-        </div>
-        <div class="pm-list">
-          <div class="pm-li"><span>💼 Sueldo quincena</span><span class="pos">+$8,000</span></div>
-          <div class="pm-li"><span>💳 Tarjeta Visa</span><span class="neg">−$1,200</span></div>
-          <div class="pm-li"><span>🏠 Renta</span><span class="neg">−$2,500</span></div>
-          <div class="pm-li"><span>🔥 Racha: 14 días</span><span class="pos">Score 78</span></div>
-        </div>
-      </div>
+    <div class="hero-video">
+      <video id="demoVideo" src="sindeudas-demo.mp4" poster="sindeudas-demo-poster.jpg"
+             autoplay muted loop playsinline preload="metadata"></video>
+      <button class="video-sound" id="btnSound" type="button" aria-label="Activar sonido">🔇 Toca para el sonido</button>
     </div>
+    <p class="video-cap">▶️ Mira la app en acción</p>
 
     <p class="hero-precio"><span class="antes">Antes $97 USD</span> Hoy solo <b>$9.90 USD</b> · pago único</p>
     <a class="cta-btn js-checkout" href="#precio">Quiero salir de deudas hoy 🚀</a>
@@ -289,6 +278,7 @@
     <div class="escudo">🔒</div>
     <h2>Tu dinero es tuyo. Tus datos también.</h2>
     <p>A diferencia de otras apps, SinDeudas <b>nunca te pide la clave de tu banco</b>. Tú anotas lo que quieres, todo se guarda en tu celular y funciona <b>sin internet</b>. Cero riesgo, cero rastreo.</p>
+    <img class="band-foto" src="hero-mujer.jpg" alt="Mujer usando SinDeudas con tranquilidad en su casa" style="margin-top:24px" onerror="this.remove()">
   </div>
 </section>
 
@@ -407,6 +397,20 @@
       window.location.href = qs ? CHECKOUT_URL + sep + qs : CHECKOUT_URL;
     });
   });
+
+  // ===== Video demo: activar/silenciar sonido al tocar =====
+  (function(){
+    var v = document.getElementById('demoVideo');
+    var b = document.getElementById('btnSound');
+    if (!v || !b) return;
+    function sync(){ b.textContent = v.muted ? '🔇 Toca para el sonido' : '🔊 Sonido activado'; }
+    b.addEventListener('click', function(){
+      v.muted = !v.muted;
+      if (!v.muted) { v.play().catch(function(){}); if (typeof fbq === 'function') fbq('trackCustom','Video_Sound_On'); }
+      sync();
+    });
+    sync();
+  })();
 
   // ===== Barra fija aparece tras el hero =====
   const barra = document.getElementById('barraFija');
