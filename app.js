@@ -1580,6 +1580,16 @@ function finishOnboarding() {
 
   }, 3000);
 }
+
+// Cierra el resultado y entra al dashboard
+function entrarDesdeResultado() {
+  const ov = document.getElementById('onb-result');
+  if (ov) ov.remove();
+  document.getElementById('screen-onboarding').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  updateHeader();
+  navTo('v-dashboard');
+}
 window.entrarDesdeResultado = entrarDesdeResultado;
 
 // Pantalla "tu plan está listo" tras el quiz: cierra el ciclo con el aha moment
