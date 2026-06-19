@@ -398,8 +398,8 @@
     });
   });
 
-  // ===== Video demo: intenta reproducir CON sonido; si el navegador lo
-  // bloquea, reproduce en silencio y activa el sonido al primer toque/scroll =====
+  // ===== Video demo: autoplay SIEMPRE en silencio (garantiza reproducción);
+  // el sonido se activa en la primera interacción (toque/clic) o con el botón =====
   (function(){
     var v = document.getElementById('demoVideo');
     var b = document.getElementById('btnSound');
@@ -407,38 +407,33 @@
 
     function sync(){ b.textContent = v.muted ? '🔇 Toca para el sonido' : '🔊 Sonido activado'; }
 
-    function unmuteOnInteraction(){
-      var evts = ['touchstart','pointerdown','click','scroll','keydown'];
-      function go(){
-        v.muted = false;
-        v.play().catch(function(){});
-        sync();
-        evts.forEach(function(e){ window.removeEventListener(e, go); });
+    // 1) Arranca SIEMPRE muteado -> el autoplay funciona en todos los navegadores
+    v.muted = true;
+    v.play().catch(function(){});
+    sync();
+
+    // 2) Activa el sonido en la primera interacción real del usuario
+    var evts = ['pointerdown','touchstart','click','keydown'];
+    function activarSonido(){
+      v.muted = false;
+      var p = v.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(function(){ v.muted = true; v.play().catch(function(){}); sync(); });
       }
-      evts.forEach(function(e){ window.addEventListener(e, go, {passive:true}); });
+      sync();
+      if (!v.muted && typeof fbq === 'function') fbq('trackCustom','Video_Sound_On');
+      evts.forEach(function(e){ window.removeEventListener(e, activarSonido); });
     }
+    evts.forEach(function(e){ window.addEventListener(e, activarSonido, {passive:true}); });
 
-    // Intento con sonido desde el inicio
-    v.muted = false;
-    var p = v.play();
-    if (p && typeof p.catch === 'function') {
-      p.catch(function(){
-        // El navegador bloqueó el audio: arranca en silencio y espera interacción
-        v.muted = true;
-        v.play().catch(function(){});
-        sync();
-        unmuteOnInteraction();
-      });
-    }
-
-    // Botón manual de sonido (toggle)
+    // 3) Botón manual: alterna sonido (también cuenta como interacción)
     b.addEventListener('click', function(e){
       e.stopPropagation();
       v.muted = !v.muted;
-      if (!v.muted) { v.play().catch(function(){}); if (typeof fbq === 'function') fbq('trackCustom','Video_Sound_On'); }
+      v.play().catch(function(){});
       sync();
+      evts.forEach(function(ev){ window.removeEventListener(ev, activarSonido); });
     });
-    sync();
   })();
 
   // ===== Barra fija aparece tras el hero =====
