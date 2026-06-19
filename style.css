@@ -414,6 +414,13 @@ main::-webkit-scrollbar { display: none; }
 }
 [data-theme="dark"] .onboarding-screen { background: radial-gradient(ellipse at 50% 0%, #0f2318 0%, #0a130e 60%); }
 .onb-step { width: 100%; max-width: 420px; text-align: center; }
+.onb-emoji {
+  width: 96px; height: 96px; margin: 0 auto 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 46px;
+  background: radial-gradient(circle at 50% 35%, rgba(16,185,129,.22), rgba(16,185,129,.05));
+  border: 1px solid rgba(16,185,129,.35);
+  box-shadow: 0 10px 30px rgba(16,185,129,.18), inset 0 0 0 6px rgba(16,185,129,.04);
+}
 .onb-step img { display: block; margin-left: auto; margin-right: auto; }
 .onb-step .input-group { text-align: left; }
 .onb-progress { display: flex; gap: 6px; margin-bottom: 32px; }
