@@ -3112,7 +3112,7 @@ window.compartirProgreso = compartirProgreso;
 
 // ===== Soporte por WhatsApp =====
 // Cambia el número (formato internacional, sin + ni espacios) por el tuyo de soporte.
-const WHATSAPP_SOPORTE = '5215555555555';
+const WHATSAPP_SOPORTE = '5513988751089';
 function abrirSoporteWhatsApp() {
   const msg = encodeURIComponent('Hola, necesito ayuda con la app SinDeudas.');
   window.open(`https://wa.me/${WHATSAPP_SOPORTE}?text=${msg}`, '_blank');
