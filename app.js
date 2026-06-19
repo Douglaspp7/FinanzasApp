@@ -992,13 +992,16 @@ function renderPerfil() {
     sobresContainer.appendChild(item);
   });
 
-  // AI keys config
-  document.getElementById('cfg-key-openai').value = localStorage.getItem('key-openai') || '';
-  document.getElementById('cfg-key-gemini').value = localStorage.getItem('key-gemini') || '';
+  // AI keys config (optional fields, may not exist in HTML)
+  const elOpenAI = document.getElementById('cfg-key-openai');
+  if (elOpenAI) elOpenAI.value = localStorage.getItem('key-openai') || '';
+  const elGemini = document.getElementById('cfg-key-gemini');
+  if (elGemini) elGemini.value = localStorage.getItem('key-gemini') || '';
 
-  // Cloud sync config
+  // Cloud sync config (optional fields)
   if (!data.config.syncKey) initSync();
-  document.getElementById('cfg-sync-key').value = data.config.syncKey || '';
+  const elSyncKey = document.getElementById('cfg-sync-key');
+  if (elSyncKey) elSyncKey.value = data.config.syncKey || '';
   
   const statusEl = document.getElementById('lbl-sync-status');
   if (statusEl) {
@@ -1669,12 +1672,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Aguarda a autorização do Firebase para mostrar as telas
   window.addEventListener('auth-success', () => {
-    if (!data.config.onboardingDone) {
-      showOnboarding();
-    } else {
+    try {
+      if (!data.config.onboardingDone) {
+        showOnboarding();
+      } else {
+        document.getElementById('app').classList.remove('hidden');
+        updateHeader();
+        navTo('v-dashboard');
+      }
+    } catch(e) {
+      // Fallback: garantir que o app aparece mesmo se houver erro de render
       document.getElementById('app').classList.remove('hidden');
-      updateHeader();
-      navTo('v-dashboard');
+      console.error('Error al iniciar app:', e);
     }
   });
 
@@ -2207,6 +2216,7 @@ function pressKey(key) {
 let myChart = null;
 
 function drawCashFlowChart() {
+  if (typeof Chart === 'undefined') return;
   const ctx = document.getElementById('gastosChart');
   if (!ctx) return;
 
