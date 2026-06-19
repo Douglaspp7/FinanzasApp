@@ -1854,12 +1854,12 @@ function switchMetasTab(tab) {
 }
 
 function checkDreamKeysStatus() {
-  const hasOpenAI = !!localStorage.getItem('key-openai');
-  const hasGemini = !!localStorage.getItem('key-gemini');
-  
   const warningBox = document.getElementById('dream-keys-warning');
   const generatorBox = document.getElementById('dream-generator-box');
-  
+  if (!warningBox || !generatorBox) return; // Mural de Sueños removido de la UI
+  const hasOpenAI = !!localStorage.getItem('key-openai');
+  const hasGemini = !!localStorage.getItem('key-gemini');
+
   if (!hasOpenAI && !hasGemini) {
     warningBox.style.display = 'flex';
     generatorBox.style.display = 'none';
