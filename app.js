@@ -1491,10 +1491,76 @@ function finishOnboarding() {
   data.config.onboardingDone = true;
   onbTempDeudas.forEach(d => data.deudas.push(d));
   saveData();
+  showOnboardingResult();
+}
+
+// Cierra el resultado y entra al dashboard
+function entrarDesdeResultado() {
+  const ov = document.getElementById('onb-result');
+  if (ov) ov.remove();
   document.getElementById('screen-onboarding').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   updateHeader();
   navTo('v-dashboard');
+}
+window.entrarDesdeResultado = entrarDesdeResultado;
+
+// Pantalla "tu plan está listo" tras el quiz: cierra el ciclo con el aha moment
+function showOnboardingResult() {
+  const ingreso = parseFloat(data.config.ingresoMensual) || 0;
+  const gastosFijos = parseFloat(data.config.gastosFijos) || 0;
+  const disponible = Math.max(0, ingreso - gastosFijos);
+  const sb = calcularSnowball();
+  const score = calcularHealthScore();
+
+  let foco = '';
+  if (sb.fechaLibertad) {
+    const f = sb.fechaLibertad;
+    const mes = MESES_ES[f.getMonth()];
+    const mesCap = mes.charAt(0).toUpperCase() + mes.slice(1);
+    foco = `
+      <div style="background:linear-gradient(135deg,var(--primary,#10b981) 0%,#047857 100%);border-radius:18px;padding:18px;margin-bottom:14px;color:#fff;">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;opacity:.85;">🗓️ Tu fecha de libertad</div>
+        <div style="font-size:30px;font-weight:900;margin:4px 0 6px;">${mesCap} ${f.getFullYear()}</div>
+        <div style="font-size:13px;font-weight:700;opacity:.92;">Libre en ${sb.mesesTotales} meses siguiendo tu plan</div>
+        ${sb.interesAhorrado > 0 ? `<div style="font-size:12.5px;font-weight:700;margin-top:8px;color:#d1fae5;">💸 Te ahorras ${fmt(sb.interesAhorrado)} en intereses</div>` : ''}
+      </div>`;
+  } else if (data.deudas.length) {
+    foco = `
+      <div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:16px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:800;color:var(--danger,#f87171);">⚠️ Tu margen no alcanza para bajar las deudas</div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--text-muted,#93b3a4);margin-top:4px;">En el Plan Sal de Deudas te mostramos qué ajustar para liberar dinero.</div>
+      </div>`;
+  } else {
+    foco = `
+      <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:16px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:15px;font-weight:800;color:var(--primary,#10b981);">🎉 ¡Sin deudas!</div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--text-muted,#93b3a4);margin-top:4px;">Ahora vamos a construir tus metas de ahorro.</div>
+      </div>`;
+  }
+
+  const ov = document.createElement('div');
+  ov.id = 'onb-result';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:var(--bg-color,#07120d);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 22px;overflow-y:auto;text-align:center;';
+  ov.innerHTML = `
+    <div style="width:100%;max-width:420px;">
+      <div style="font-size:52px;margin-bottom:6px;">🚀</div>
+      <h2 style="font-size:24px;font-weight:900;color:var(--text-main,#eafaf2);margin-bottom:6px;">¡Tu plan está listo!</h2>
+      <p style="font-size:14px;color:var(--text-muted,#93b3a4);font-weight:600;margin-bottom:22px;">Esto es lo que calculamos con tus datos:</p>
+      ${foco}
+      <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div style="background:var(--card-bg,#10231a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:14px;">
+          <div style="font-size:10.5px;font-weight:800;color:var(--text-muted,#93b3a4);text-transform:uppercase;letter-spacing:.5px;">Disponible al mes</div>
+          <div style="font-size:22px;font-weight:900;color:var(--primary,#10b981);margin-top:4px;">${fmt(disponible)}</div>
+        </div>
+        <div style="background:var(--card-bg,#10231a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:14px;">
+          <div style="font-size:10.5px;font-weight:800;color:var(--text-muted,#93b3a4);text-transform:uppercase;letter-spacing:.5px;">Salud financiera</div>
+          <div style="font-size:22px;font-weight:900;color:${score.color};margin-top:4px;">${score.score}<span style="font-size:13px;opacity:.7;">/100</span></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="entrarDesdeResultado()" style="width:100%;margin-top:8px;">Empezar mi plan 🚀</button>
+    </div>`;
+  document.body.appendChild(ov);
 }
 
 // ===== PWA =====
