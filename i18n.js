@@ -154,7 +154,21 @@ const STRINGS = {
     dreams_my_board: 'Mi Mural de Sueños',
     dreams_select_provider: 'Proveedor de IA',
     dreams_tab_objetivos: '🎯 Metas & Retos',
-    dreams_tab_mural: '🔮 Mural de Sueños IA'
+    dreams_tab_mural: '🔮 Mural de Sueños IA',
+    fondo_emergencia_titulo: '🛡️ Fondo de Paz',
+    fondo_emergencia_desc: 'Tu oxígeno financiero',
+    fondo_emergencia_dias: 'Días de Supervivencia',
+    fondo_emergencia_modal_titulo: 'Fondo de Paz',
+    fondo_emergencia_modal_lbl: 'Ingresar ahorro ($)',
+    reto30_titulo: 'Reto 30 Días',
+    reto30_sub: 'Cero gastos hormiga',
+    logros_titulo: 'Mis Logros',
+    logros_primera_sangre_titulo: 'Primera Sangre',
+    logros_primera_sangre_desc: 'Pagaste tu primera deuda',
+    logros_mente_hierro_titulo: 'Mente de Hierro',
+    logros_mente_hierro_desc: '7 días de registros',
+    logros_fondo_inicial_titulo: 'Seguridad Inicial',
+    logros_fondo_inicial_desc: 'Ahorraste tus primeros $100'
   }
 };
 

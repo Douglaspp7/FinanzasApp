@@ -28,6 +28,13 @@ const DEFAULT_DATA = {
   pagosDeuda: [],
   metas: [],
   reto52: { activo: false, montoSemanal: 50, semanas: [] },
+  reto30: { activo: false, dias: Array(30).fill(false) },
+  fondoEmergencia: { objetivo: 0, saldo: 0 },
+  logros: {
+    primeraSangre: false,
+    menteDeHierro: false,
+    fondoInicial: false
+  },
   streaks: { count: 0, lastActiveDate: null },
   suenos: []
 };
@@ -64,6 +71,9 @@ function loadData() {
       data.config = Object.assign({}, DEFAULT_DATA.config, parsed.config || {});
       data.config.sobres = Object.assign({}, DEFAULT_DATA.config.sobres, (parsed.config || {}).sobres || {});
       data.reto52 = Object.assign({}, DEFAULT_DATA.reto52, parsed.reto52 || {});
+      data.reto30 = Object.assign({}, DEFAULT_DATA.reto30, parsed.reto30 || {});
+      data.fondoEmergencia = Object.assign({}, DEFAULT_DATA.fondoEmergencia, parsed.fondoEmergencia || {});
+      data.logros = Object.assign({}, DEFAULT_DATA.logros, parsed.logros || {});
       data.streaks = Object.assign({}, DEFAULT_DATA.streaks, parsed.streaks || {});
       data.suenos = parsed.suenos || [];
     }
@@ -892,6 +902,8 @@ function renderMetas() {
     );
   }
   renderReto52();
+  renderFondoEmergencia();
+  renderReto30();
   renderDreamsBoard();
 }
 
@@ -1023,6 +1035,8 @@ function renderPerfil() {
     autoBtn.style.color = data.config.syncEnabled ? 'var(--primary)' : '';
     autoBtn.style.borderColor = data.config.syncEnabled ? 'var(--primary)' : '';
   }
+  
+  renderLogros();
 }
 
 // ===== MODALS: DEUDA =====
@@ -3194,5 +3208,172 @@ function evaluarCoach(ingresos, gastos) {
       // Mantenemos oculto por esta sesión
       data.config.coachDismissed = true; 
     };
+  }
+}
+
+// ==========================================
+// FASE 2: GAMIFICACIÓN Y FONDO DE EMERGENCIA
+// ==========================================
+
+// --- Fondo de Emergencia ---
+
+function renderFondoEmergencia() {
+  const fondo = data.fondoEmergencia || { objetivo: 0, saldo: 0 };
+  const txtSaldo = document.getElementById('fondo-saldo-txt');
+  const txtDias = document.getElementById('fondo-dias-txt');
+  if (txtSaldo) txtSaldo.textContent = fmt(fondo.saldo);
+  
+  const gastosFijos = parseFloat(data.config.gastosFijos) || 0;
+  let diasSupervivencia = 0;
+  if (gastosFijos > 0) {
+    const gastoDiario = gastosFijos / 30;
+    diasSupervivencia = Math.floor(fondo.saldo / gastoDiario);
+  } else if (fondo.saldo > 0) {
+    diasSupervivencia = 999; // infinito si no hay gastos
+  }
+  
+  if (txtDias) txtDias.textContent = diasSupervivencia;
+}
+
+function openFondoModal() {
+  document.getElementById('mf-monto').value = '';
+  document.getElementById('modal-fondo').classList.add('visible');
+}
+
+document.getElementById('mf-btn-cancelar')?.addEventListener('click', () => {
+  document.getElementById('modal-fondo').classList.remove('visible');
+});
+
+document.getElementById('mf-btn-guardar')?.addEventListener('click', () => {
+  const monto = parseFloat(document.getElementById('mf-monto').value) || 0;
+  if (monto > 0) {
+    if (!data.fondoEmergencia) data.fondoEmergencia = { objetivo: 0, saldo: 0 };
+    data.fondoEmergencia.saldo += monto;
+    
+    // Registrar transaccion de ahorro
+    data.transacciones.push({
+      id: 'tx_' + Date.now(),
+      fecha: new Date().toISOString(),
+      tipo: 'egreso', // Lo contamos como egreso porque sale de la bolsa disponible, va al ahorro
+      categoria: 'Ahorro / Fondo',
+      monto: monto,
+      nota: 'Abono Fondo de Paz'
+    });
+    
+    saveData();
+    renderFondoEmergencia();
+    evaluarLogros();
+    showToast('¡Ahorro guardado! 🛡️');
+    
+    if (typeof confetti === 'function') confetti({ particleCount: 50, spread: 60 });
+  }
+  document.getElementById('modal-fondo').classList.remove('visible');
+});
+
+// --- Reto 30 Días ---
+
+function renderReto30() {
+  const container = document.getElementById('reto30-container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  const reto = data.reto30 || { activo: false, dias: Array(30).fill(false) };
+  
+  reto.dias.forEach((completado, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-icon';
+    btn.style.width = '32px';
+    btn.style.height = '32px';
+    btn.style.fontSize = '12px';
+    btn.style.borderRadius = '8px';
+    btn.style.background = completado ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
+    btn.style.color = completado ? '#fff' : 'var(--text-muted)';
+    btn.textContent = i + 1;
+    
+    btn.onclick = () => {
+      reto.dias[i] = !reto.dias[i];
+      data.reto30 = reto;
+      saveData();
+      if (reto.dias[i]) {
+        if (typeof confetti === 'function') confetti({ particleCount: 30, spread: 50 });
+      }
+      renderReto30();
+    };
+    
+    container.appendChild(btn);
+  });
+}
+
+// --- Logros ---
+
+const LOGROS_DEF = [
+  { id: 'primeraSangre', icono: '🩸', keyTitulo: 'logros_primera_sangre_titulo', keyDesc: 'logros_primera_sangre_desc' },
+  { id: 'menteDeHierro', icono: '🧠', keyTitulo: 'logros_mente_hierro_titulo', keyDesc: 'logros_mente_hierro_desc' },
+  { id: 'fondoInicial',  icono: '🛡️', keyTitulo: 'logros_fondo_inicial_titulo', keyDesc: 'logros_fondo_inicial_desc' }
+];
+
+function renderLogros() {
+  const container = document.getElementById('logros-container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  const misLogros = data.logros || {};
+  
+  LOGROS_DEF.forEach(def => {
+    const desbloqueado = !!misLogros[def.id];
+    const el = document.createElement('div');
+    el.style.minWidth = '120px';
+    el.style.background = desbloqueado ? 'linear-gradient(135deg, rgba(20,24,36,0.9), rgba(16,184,129,0.1))' : 'rgba(255,255,255,0.02)';
+    el.style.border = desbloqueado ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.05)';
+    el.style.borderRadius = '12px';
+    el.style.padding = '12px';
+    el.style.textAlign = 'center';
+    el.style.opacity = desbloqueado ? '1' : '0.4';
+    el.style.filter = desbloqueado ? 'none' : 'grayscale(100%)';
+    
+    el.innerHTML = `
+      <div style="font-size:32px;margin-bottom:8px;">${def.icono}</div>
+      <div style="font-size:12px;font-weight:800;color:var(--text-main);">${T(def.keyTitulo)}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${T(def.keyDesc)}</div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function evaluarLogros() {
+  if (!data.logros) data.logros = {};
+  let changed = false;
+  
+  // 1. Primera Sangre (Pagó su primera deuda)
+  if (!data.logros.primeraSangre) {
+    if (data.pagosDeuda && data.pagosDeuda.length > 0) {
+      data.logros.primeraSangre = true;
+      changed = true;
+      showToast('¡Logro Desbloqueado: Primera Sangre! 🩸');
+    }
+  }
+  
+  // 2. Mente de Hierro (Racha >= 7)
+  if (!data.logros.menteDeHierro) {
+    if (data.streaks && data.streaks.count >= 7) {
+      data.logros.menteDeHierro = true;
+      changed = true;
+      showToast('¡Logro Desbloqueado: Mente de Hierro! 🧠');
+    }
+  }
+  
+  // 3. Fondo Inicial (Saldo >= 100)
+  if (!data.logros.fondoInicial) {
+    if (data.fondoEmergencia && data.fondoEmergencia.saldo >= 100) {
+      data.logros.fondoInicial = true;
+      changed = true;
+      showToast('¡Logro Desbloqueado: Seguridad Inicial! 🛡️');
+    }
+  }
+  
+  if (changed) {
+    saveData();
+    if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: {y: 0.3} });
+    renderLogros();
   }
 }

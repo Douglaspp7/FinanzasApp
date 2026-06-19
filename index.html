@@ -352,11 +352,38 @@
     <section id="v-metas" class="vista">
       <!-- Tab Content: Objetivos & Retos -->
       <div id="section-metas-objetivos">
+        
+        <!-- Fondo de Paz (Emergency Fund) -->
+        <div class="card" style="margin-bottom:14px; background: linear-gradient(135deg, rgba(20,24,36,0.9), rgba(16,184,129,0.1)); border: 1px solid rgba(16,184,129,0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 style="font-size:16px;font-weight:800;margin-bottom:2px;" data-i18n="fondo_emergencia_titulo">🛡️ Fondo de Paz</h3>
+              <p style="font-size:12px;color:var(--text-muted);" data-i18n="fondo_emergencia_desc">Tu oxígeno financiero</p>
+            </div>
+            <button class="btn-icon" onclick="openFondoModal()" style="width:36px;height:36px;border-radius:12px;background:rgba(16,184,129,0.2);color:#10b981;">➕</button>
+          </div>
+          <div style="margin-top:16px; text-align:center;">
+            <div style="font-size:28px; font-weight:900; color:var(--text-main); font-family:var(--font-mono);" id="fondo-saldo-txt">$0.00</div>
+            <div style="margin-top:8px; display:inline-block; padding:4px 12px; background:rgba(255,255,255,0.05); border-radius:99px; font-size:12px; font-weight:700; color:var(--accent-gold);">
+              <span id="fondo-dias-txt">0</span> <span data-i18n="fondo_emergencia_dias">Días de Supervivencia</span> ⏳
+            </div>
+          </div>
+        </div>
+
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <h2 style="font-size:18px;font-weight:800;" id="metas-titulo" data-i18n="metas_titulo"></h2>
           <button class="btn-icon" id="btn-nueva-meta" style="width:auto;padding:0 14px;border-radius:99px;font-size:13px;font-weight:800;" data-i18n="metas_btn_nueva">➕ Meta</button>
         </div>
         <div id="metas-list"></div>
+
+        <!-- Reto 30 Días -->
+        <div class="card" style="margin-top:16px;">
+          <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" data-i18n="reto30_titulo">Reto 30 Días</h3>
+          <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" data-i18n="reto30_sub">Cero gastos hormiga</p>
+          <div id="reto30-container" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+
+        <!-- Reto 52 Semanas -->
         <div class="card" style="margin-top:8px;">
           <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;" id="reto52-titulo" data-i18n="reto52_titulo"></h3>
           <p style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px;" id="reto52-sub" data-i18n="reto52_sub"></p>
@@ -371,14 +398,21 @@
       <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;" id="perfil-titulo" data-i18n="perfil_titulo"></h2>
       <div class="card">
         <div style="display:flex;align-items:center;gap:14px;">
-          <div style="width:52px;height:52px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:24px;">💸</div>
+          <div style="width:52px;height:52px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>
           <div>
             <div style="font-weight:800;font-size:16px;" data-i18n="perfil_licencia">Modo de prueba</div>
             <div style="font-size:12px;font-weight:700;color:var(--primary);" data-i18n="login_verifying">Sin autenticación</div>
           </div>
         </div>
       </div>
-      <div class="card">
+
+      <!-- Mis Logros -->
+      <div class="card" style="margin-top:14px;">
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:12px;" data-i18n="logros_titulo">Mis Logros</h3>
+        <div id="logros-container" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px;"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
         <h3 style="font-size:15px;font-weight:800;margin-bottom:14px;" id="perfil-config-titulo" data-i18n="perfil_config_titulo"></h3>
         <div class="input-group">
           <label id="perfil-ingreso-lbl" data-i18n="perfil_ingreso_lbl"></label>
@@ -551,6 +585,19 @@
     </div>
     <button class="btn btn-primary" id="mam-btn-guardar" data-i18n="metas_abonar_btn">Abonar</button>
     <button class="btn btn-secondary" style="margin-top:10px;" id="mam-btn-cancelar" data-i18n="modal_cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: FONDO DE PAZ -->
+<div id="modal-fondo" class="modal-overlay">
+  <div class="modal-sheet">
+    <h3 data-i18n="fondo_emergencia_modal_titulo">Fondo de Paz</h3>
+    <div class="input-group">
+      <label data-i18n="fondo_emergencia_modal_lbl">Ingresar ahorro ($)</label>
+      <input type="number" id="mf-monto" inputmode="decimal" placeholder="0.00">
+    </div>
+    <button class="btn btn-primary" id="mf-btn-guardar" data-i18n="modal_guardar">Guardar</button>
+    <button class="btn btn-secondary" style="margin-top:10px;" id="mf-btn-cancelar" data-i18n="modal_cancelar">Cancelar</button>
   </div>
 </div>
 
