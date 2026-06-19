@@ -478,6 +478,8 @@ function renderDashboard() {
   } else {
     last8.forEach(tx => movContainer.appendChild(buildMovRow(tx, false)));
   }
+
+  evaluarCoach(ingresos, gastos);
 }
 
 function buildMovRow(tx, showDelete) {
@@ -1093,7 +1095,11 @@ function saveAbono() {
   closeModal('modal-abono');
 
   if (wasPagada && isPagada) {
-    triggerConfetti();
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#f59e0b', '#fbbf24'] });
+    } else {
+      triggerConfetti();
+    }
     toast('🎉 ¡FELICIDADES! Deuda liquidada.');
   } else {
     toast(T('modal_abono_toast'));
@@ -1548,17 +1554,36 @@ function finishOnboarding() {
   data.config.onboardingDone = true;
   onbTempDeudas.forEach(d => data.deudas.push(d));
   saveData();
-  showOnboardingResult();
-}
+  
+  // Show Fake Loading Step
+  document.querySelectorAll('.onb-step').forEach(s => s.classList.add('hidden'));
+  const step3 = document.getElementById('onb-step-3');
+  if (step3) step3.classList.remove('hidden');
 
-// Cierra el resultado y entra al dashboard
-function entrarDesdeResultado() {
-  const ov = document.getElementById('onb-result');
-  if (ov) ov.remove();
-  document.getElementById('screen-onboarding').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  updateHeader();
-  navTo('v-dashboard');
+  const msgEl = document.getElementById('onb-loading-msg');
+  
+  setTimeout(() => {
+    if (msgEl) msgEl.textContent = 'Diseñando ruta de escape...';
+  }, 1500);
+
+  setTimeout(() => {
+    if (msgEl) msgEl.textContent = '¡Plan Generado!';
+    
+    // Confetti!
+    if (typeof confetti === 'function') {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#f59e0b', '#fbbf24']
+      });
+    }
+
+    setTimeout(() => {
+      showOnboardingResult();
+    }, 1500);
+
+  }, 3000);
 }
 window.entrarDesdeResultado = entrarDesdeResultado;
 
@@ -3083,7 +3108,7 @@ function maybeDailyReminder() {
     saveData();
     const sb = (typeof calcularSnowball === 'function') ? calcularSnowball() : null;
     const cuerpo = (sb && sb.mesesTotales)
-      ? `Sigue tu plan: te faltan ${sb.mesesTotales} meses para ser libre de deudas 💪`
+      ? `Sigue tu plan: te faltan ${sb.mesesTotales} meses para ser libre de deudas 🏆`
       : 'Registra tus gastos de hoy y mantén el control de tu dinero 💸';
     new Notification('SinDeudas', { body: cuerpo, icon: 'app-icon.png' });
   } catch (e) {}
@@ -3094,18 +3119,18 @@ window.addEventListener('auth-success', () => setTimeout(maybeDailyReminder, 400
 function compartirProgreso() {
   const score = (typeof calcularHealthScore === 'function') ? calcularHealthScore() : { score: 0 };
   const sb = (typeof calcularSnowball === 'function') ? calcularSnowball() : null;
-  let txt = '💸 Estoy organizando mis finanzas con SinDeudas.\n';
+  let txt = '🚀 Estoy organizando mis finanzas con SinDeudas.\n';
   txt += `📊 Mi salud financiera: ${score.score}/100\n`;
   if (sb && sb.fechaLibertad) {
     const f = sb.fechaLibertad;
     const mes = MESES_ES[f.getMonth()];
-    txt += `🗓️ Seré libre de deudas en ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${f.getFullYear()} (en ${sb.mesesTotales} meses).\n`;
+    txt += `🎯 Seré libre de deudas en ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${f.getFullYear()} (en ${sb.mesesTotales} meses).\n`;
   }
-  txt += '\n¿Quieres salir de deudas tú también? 👉 https://sindeudas.pages.dev';
+  txt += '\n¿Quieres salir de deudas tú también? 👇 https://sindeudas.pages.dev';
   if (navigator.share) {
     navigator.share({ title: 'SinDeudas', text: txt }).catch(() => {});
   } else {
-    navigator.clipboard?.writeText(txt).then(() => toast('¡Copiado! Pégalo donde quieras 📋')).catch(() => alert(txt));
+    navigator.clipboard?.writeText(txt).then(() => toast('¡Copiado! Pégalo donde quieras ✅')).catch(() => alert(txt));
   }
 }
 window.compartirProgreso = compartirProgreso;
@@ -3118,3 +3143,45 @@ function abrirSoporteWhatsApp() {
   window.open(`https://wa.me/${WHATSAPP_SOPORTE}?text=${msg}`, '_blank');
 }
 window.abrirSoporteWhatsApp = abrirSoporteWhatsApp;
+
+// ===== COACH FINANCIERO =====
+function evaluarCoach(ingresos, gastos) {
+  const banner = document.getElementById('coach-banner');
+  const msgEl = document.getElementById('coach-msg');
+  const btnClose = document.getElementById('btn-close-coach');
+  
+  if (!banner || !msgEl || data.config.coachDismissed) return;
+
+  let msg = '';
+  const ratio = ingresos > 0 ? (gastos / ingresos) : 1;
+  const lastTxDate = data.transacciones.length > 0 ? new Date(Math.max(...data.transacciones.map(t => new Date(t.fecha)))) : null;
+  const daysSinceLastTx = lastTxDate ? Math.floor((new Date() - lastTxDate) / (1000 * 60 * 60 * 24)) : 0;
+  const activeDeudas = data.deudas.filter(d => d.saldoActual > 0.01).length;
+
+  if (ratio > 0.8) {
+    msg = "⚠️ Tus gastos están por encima del 80% de tus ingresos este mes. ¡Frena los gastos variables para evitar endeudarte más!";
+  } else if (daysSinceLastTx >= 2) {
+    msg = "👋 Te extrañamos. Un día sin registrar es un día cediendo el control a los bancos. ¡Anota tus gastos de hoy!";
+  } else if (activeDeudas > 0) {
+    msg = "❄️ Tienes deudas activas. Recuerda usar la estrategia de 'Bola de Nieve': enfócate en liquidar primero la más pequeña.";
+  } else {
+    const quotes = [
+      "Cada dólar que ahorras es un soldado que trabaja para ti.",
+      "La paz financiera no es ganar más, es controlar lo que tienes.",
+      "Estás haciendo un gran trabajo. ¡Sigue así!"
+    ];
+    msg = quotes[Math.floor(Math.random() * quotes.length)];
+  }
+
+  msgEl.textContent = msg;
+  banner.style.display = 'block';
+
+  if (btnClose) {
+    btnClose.onclick = () => {
+      banner.style.display = 'none';
+      // Mantenemos oculto por esta sesión
+      data.config.coachDismissed = true; 
+    };
+  }
+}
+>>>>>>> ef70256 (feat: fake AI no onboarding, coach financiero banner e confetti gamification)
