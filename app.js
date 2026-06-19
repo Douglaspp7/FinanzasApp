@@ -32,6 +32,13 @@ const DEFAULT_DATA = {
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let selectedTipo = 'i';
 let selectedCat = '';
+let selectedOwner = 'conjunta';
+const OWNERS = {
+  conjunta: '🤝 Conjunta',
+  eu: '👤 Yo',
+  parceiro: '👤 Pareja',
+  filho: '👶 Hijo(a)'
+};
 let modalDeudaEditId = null;
 let modalMetaEditId = null;
 let abonoDeudaId = null;
@@ -446,11 +453,12 @@ function buildMovRow(tx, showDelete) {
   const cleanCat = (tx.categoria || '').replace(/^[^\wÀ-ž]*/, '').trim();
   const catTrad  = T('cat_' + cleanCat);
   const nomeTrad = tx.descripcion || catTrad || (tx.tipo==='i' ? T('reg_ingreso') : T('reg_gasto'));
+  const ownerLbl = (tx.responsable && OWNERS[tx.responsable]) ? ' · ' + OWNERS[tx.responsable] : '';
   row.innerHTML = `
     <div class="mov-emoji">${icon}</div>
     <div class="mov-info">
       <div class="mov-nome">${nomeTrad}</div>
-      <div class="mov-data">${catTrad} · ${dateStr}</div>
+      <div class="mov-data">${catTrad} · ${dateStr}${ownerLbl}</div>
     </div>
     <div class="mov-monto" style="color:${color}">${sign}${fmt(tx.monto)}</div>
     ${showDelete ? `<button class="mov-del" onclick="eliminarMovimiento('${tx.id}')">✕</button>` : ''}`;
@@ -1642,6 +1650,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tipo-ingreso').addEventListener('click', () => setTipo('i'));
   document.getElementById('tipo-gasto').addEventListener('click',   () => setTipo('g'));
 
+  // Responsable (miembro de la familia) — selección
+  (function setupOwnerChips() {
+    const cont = document.getElementById('reg-owner');
+    if (!cont) return;
+    const chips = cont.querySelectorAll('.chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        selectedOwner = chip.getAttribute('data-owner') || 'conjunta';
+        chips.forEach(c => c.classList.toggle('selected', c === chip));
+      });
+    });
+  })();
+
   // Registrar transacción
   document.getElementById('btn-registrar').addEventListener('click', () => {
     const monto = parseFloat(document.getElementById('reg-monto').value);
@@ -1650,6 +1671,7 @@ document.addEventListener('DOMContentLoaded', () => {
     data.transacciones.push({
       id: uid(), tipo: selectedTipo, monto,
       descripcion: desc, categoria: selectedCat,
+      responsable: selectedOwner,
       fecha: new Date().toISOString()
     });
     saveData();
