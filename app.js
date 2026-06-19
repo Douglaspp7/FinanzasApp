@@ -1513,14 +1513,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tipo-ingreso').textContent = '💚 ' + T('reg_ingreso');
   document.getElementById('tipo-gasto').textContent = '🔴 ' + T('reg_gasto');
 
-  // Ir directo al app (sin auth)
-  if (!data.config.onboardingDone) {
-    showOnboarding();
-  } else {
-    document.getElementById('app').classList.remove('hidden');
-    updateHeader();
-    navTo('v-dashboard');
-  }
+  // Aguarda a autorização do Firebase para mostrar as telas
+  window.addEventListener('auth-success', () => {
+    if (!data.config.onboardingDone) {
+      showOnboarding();
+    } else {
+      document.getElementById('app').classList.remove('hidden');
+      updateHeader();
+      navTo('v-dashboard');
+    }
+  });
 
   // Navegación
   document.querySelectorAll('.nav-item').forEach(btn => {
