@@ -1,0 +1,29 @@
+{
+  "app": { "name": "AgendaPro", "tagline": "Seu negócio, organizado." },
+  "nav": {
+    "dashboard": "Início", "agenda": "Agenda", "clients": "Clientes",
+    "services": "Serviços", "products": "Produtos", "financial": "Finanças",
+    "reports": "Relatórios", "settings": "Configurações", "admin": "Admin"
+  },
+  "auth": {
+    "signIn": "Entrar", "signUp": "Criar conta", "signOut": "Sair",
+    "email": "E-mail", "password": "Senha", "confirmPassword": "Confirmar senha",
+    "forgotPassword": "Esqueceu a senha?", "resetPassword": "Redefinir senha",
+    "magicLink": "Entrar com link mágico",
+    "continueWithGoogle": "Continuar com Google", "continueWithApple": "Continuar com Apple",
+    "noAccount": "Não tem conta?", "haveAccount": "Já tem conta?",
+    "checkEmail": "Verifique seu e-mail", "magicLinkSent": "Enviamos um link de acesso para seu e-mail.",
+    "errors": {
+      "invalidEmail": "E-mail inválido", "weakPassword": "A senha deve ter pelo menos 8 caracteres",
+      "passwordMismatch": "As senhas não coincidem", "generic": "Algo deu errado. Tente novamente."
+    }
+  },
+  "common": {
+    "save": "Salvar", "cancel": "Cancelar", "delete": "Excluir", "edit": "Editar",
+    "create": "Criar", "search": "Buscar", "filter": "Filtrar", "loading": "Carregando...",
+    "error": "Erro", "success": "Sucesso!", "confirm": "Confirmar", "back": "Voltar",
+    "next": "Próximo", "yes": "Sim", "no": "Não", "all": "Todos", "none": "Nenhum",
+    "today": "Hoje", "yesterday": "Ontem", "thisWeek": "Esta semana", "thisMonth": "Este mês",
+    "noData": "Sem dados", "optional": "opcional", "required": "obrigatório"
+  }
+}

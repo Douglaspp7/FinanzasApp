@@ -1,0 +1,92 @@
+{
+  "app": { "name": "AgendaPro", "tagline": "Tu negocio, organizado." },
+  "nav": {
+    "dashboard": "Inicio", "agenda": "Agenda", "clients": "Clientes",
+    "services": "Servicios", "products": "Productos", "financial": "Finanzas",
+    "reports": "Reportes", "settings": "Configuración", "admin": "Admin"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión", "signUp": "Crear cuenta", "signOut": "Cerrar sesión",
+    "email": "Correo electrónico", "password": "Contraseña", "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?", "resetPassword": "Restablecer contraseña",
+    "magicLink": "Ingresar con enlace mágico",
+    "continueWithGoogle": "Continuar con Google", "continueWithApple": "Continuar con Apple",
+    "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
+    "checkEmail": "Revisa tu correo", "magicLinkSent": "Te enviamos un enlace de acceso a tu correo.",
+    "errors": {
+      "invalidEmail": "Correo inválido", "weakPassword": "La contraseña debe tener al menos 8 caracteres",
+      "passwordMismatch": "Las contraseñas no coinciden", "generic": "Algo salió mal. Intenta de nuevo."
+    }
+  },
+  "onboarding": {
+    "welcome": "¡Bienvenido a AgendaPro!", "subtitle": "Vamos a configurar tu negocio en 2 minutos.",
+    "step1Title": "¿Cuál es tu profesión?", "step2Title": "Información de tu negocio",
+    "businessName": "Nombre del negocio", "businessNamePlaceholder": "Ej: Barbería El Rey",
+    "country": "País", "currency": "Moneda", "timezone": "Zona horaria",
+    "primaryColor": "Color principal", "logo": "Logo (opcional)", "uploadLogo": "Subir logo",
+    "continue": "Continuar", "finish": "¡Empezar!", "skip": "Omitir por ahora"
+  },
+  "dashboard": {
+    "greeting": "Buenos días", "todayAppointments": "Citas de hoy",
+    "todayRevenue": "Ingresos de hoy", "monthRevenue": "Ingresos del mes",
+    "newClients": "Nuevos clientes", "nextAppointment": "Próxima cita",
+    "recentActivity": "Actividad reciente", "upcomingAppointments": "Próximas citas",
+    "birthdays": "Cumpleaños esta semana", "cancellations": "Cancelaciones",
+    "noAppointmentsToday": "Sin citas para hoy", "quickActions": "Acciones rápidas",
+    "newAppointment": "Nueva cita", "newClient": "Nuevo cliente"
+  },
+  "agenda": {
+    "title": "Agenda", "today": "Hoy", "day": "Día", "week": "Semana", "month": "Mes",
+    "newAppointment": "Nueva cita", "editAppointment": "Editar cita",
+    "deleteAppointment": "Eliminar cita", "confirmAppointment": "Confirmar",
+    "cancelAppointment": "Cancelar", "reschedule": "Reagendar", "duplicate": "Duplicar",
+    "blockTime": "Bloquear horario", "waitingList": "Lista de espera",
+    "status": {
+      "scheduled": "Programada", "confirmed": "Confirmada", "completed": "Completada",
+      "cancelled": "Cancelada", "no_show": "No asistió"
+    }
+  },
+  "clients": {
+    "title": "Clientes", "newClient": "Nuevo cliente", "editClient": "Editar cliente",
+    "fullName": "Nombre completo", "phone": "Teléfono", "whatsapp": "WhatsApp",
+    "email": "Correo", "birthday": "Cumpleaños", "notes": "Notas", "history": "Historial",
+    "photos": "Fotos", "totalSpent": "Total gastado", "lastVisit": "Última visita",
+    "nextVisit": "Próxima visita", "noClients": "Aún no tienes clientes",
+    "searchPlaceholder": "Buscar clientes..."
+  },
+  "services": {
+    "title": "Servicios", "newService": "Nuevo servicio", "name": "Nombre",
+    "description": "Descripción", "price": "Precio", "duration": "Duración",
+    "category": "Categoría", "color": "Color", "active": "Activo",
+    "durationMinutes": "minutos", "noServices": "Aún no tienes servicios"
+  },
+  "products": {
+    "title": "Productos", "newProduct": "Nuevo producto", "name": "Nombre",
+    "price": "Precio", "cost": "Costo", "stock": "Stock", "supplier": "Proveedor",
+    "lowStock": "Stock bajo", "noProducts": "Aún no tienes productos"
+  },
+  "financial": {
+    "title": "Finanzas", "income": "Ingresos", "expenses": "Gastos", "profit": "Utilidad",
+    "cashFlow": "Flujo de caja", "newTransaction": "Nueva transacción",
+    "categories": "Categorías", "exportPDF": "Exportar PDF", "exportExcel": "Exportar Excel",
+    "dre": "P&G Simplificado", "period": "Período"
+  },
+  "reports": {
+    "title": "Reportes", "revenue": "Ingresos", "clients": "Clientes",
+    "services": "Servicios", "products": "Productos", "export": "Exportar"
+  },
+  "settings": {
+    "title": "Configuración", "profile": "Perfil", "business": "Negocio", "team": "Equipo",
+    "language": "Idioma", "theme": "Tema", "currency": "Moneda", "schedule": "Horario",
+    "notifications": "Notificaciones", "integrations": "Integraciones",
+    "backup": "Respaldo", "plan": "Plan"
+  },
+  "common": {
+    "save": "Guardar", "cancel": "Cancelar", "delete": "Eliminar", "edit": "Editar",
+    "create": "Crear", "search": "Buscar", "filter": "Filtrar", "loading": "Cargando...",
+    "error": "Error", "success": "¡Éxito!", "confirm": "Confirmar", "back": "Volver",
+    "next": "Siguiente", "yes": "Sí", "no": "No", "all": "Todos", "none": "Ninguno",
+    "today": "Hoy", "yesterday": "Ayer", "thisWeek": "Esta semana", "thisMonth": "Este mes",
+    "noData": "Sin datos", "optional": "opcional", "required": "requerido"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "app": { "name": "AgendaPro", "tagline": "Your business, organized." },
+  "nav": {
+    "dashboard": "Home", "agenda": "Schedule", "clients": "Clients",
+    "services": "Services", "products": "Products", "financial": "Finances",
+    "reports": "Reports", "settings": "Settings", "admin": "Admin"
+  },
+  "auth": {
+    "signIn": "Sign in", "signUp": "Create account", "signOut": "Sign out",
+    "email": "Email", "password": "Password", "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot your password?", "resetPassword": "Reset password",
+    "magicLink": "Sign in with magic link",
+    "continueWithGoogle": "Continue with Google", "continueWithApple": "Continue with Apple",
+    "noAccount": "Don't have an account?", "haveAccount": "Already have an account?",
+    "checkEmail": "Check your email", "magicLinkSent": "We sent you a sign-in link to your email.",
+    "errors": {
+      "invalidEmail": "Invalid email", "weakPassword": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords don't match", "generic": "Something went wrong. Try again."
+    }
+  },
+  "common": {
+    "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",
+    "create": "Create", "search": "Search", "filter": "Filter", "loading": "Loading...",
+    "error": "Error", "success": "Success!", "confirm": "Confirm", "back": "Back",
+    "next": "Next", "yes": "Yes", "no": "No", "all": "All", "none": "None",
+    "today": "Today", "yesterday": "Yesterday", "thisWeek": "This week", "thisMonth": "This month",
+    "noData": "No data", "optional": "optional", "required": "required"
+  }
+}
