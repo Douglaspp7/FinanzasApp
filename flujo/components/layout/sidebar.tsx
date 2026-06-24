@@ -30,9 +30,15 @@ export function Sidebar() {
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-fg">F</div>
-          {!collapsed && <span className="text-[15px] font-semibold tracking-tight text-fg">Flujo</span>}
+        <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-3.5">
+          <img
+            src="/logo-icon.svg"
+            alt="NEXA"
+            className="h-7 w-7 shrink-0 object-contain"
+          />
+          {!collapsed && (
+            <span className="text-[15px] font-bold tracking-[0.12em] text-fg">NEXA</span>
+          )}
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2.5 py-3">

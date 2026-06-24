@@ -8,13 +8,13 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Flujo — SaaS financiero para PYMES LATAM",
-  description: "Gestión financiera, clientes, ventas y operaciones para pequeñas y medianas empresas de América Latina.",
+  title: "NEXA — Gestão financeira para pequenas empresas",
+  description: "Gestão financeira, clientes, vendas e operações para pequenas e médias empresas.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} dark h-full`} suppressHydrationWarning>
+    <html lang="pt" className={`${geistSans.variable} ${geistMono.variable} dark h-full`} suppressHydrationWarning>
       <body className="min-h-full">
         <Providers>
           <AppShell>{children}</AppShell>
